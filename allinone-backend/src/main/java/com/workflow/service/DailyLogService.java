@@ -86,9 +86,15 @@ public class DailyLogService {
             notif.setRelatedEntityId(saved.getId());
             notificationRepository.save(notif);
             notificationService.broadcastNotificationToRecipient(notif);
-            emailService.sendEmail(admin.getEmail(), "New Daily Log: " + employee.getName(),
-                    employee.getName() + " submitted a daily log for " + log.getLogDate()
-                    + ".\n\nDescription: " + (request.getWorkDescription() != null ? request.getWorkDescription() : "N/A"));
+
+            // 🛡️ Safely handle email notification submission
+            try {
+                emailService.sendEmail(admin.getEmail(), "New Daily Log: " + employee.getName(),
+                        employee.getName() + " submitted a daily log for " + log.getLogDate()
+                        + ".\n\nDescription: " + (request.getWorkDescription() != null ? request.getWorkDescription() : "N/A"));
+            } catch (Exception e) {
+                System.err.println("Outbound notification email skipped: Network or mail server unreachable.");
+            }
         }
 
         return saved;
@@ -180,15 +186,20 @@ public class DailyLogService {
             notif.setRelatedEntityId(saved.getId());
             notificationRepository.save(notif);
             notificationService.broadcastNotificationToRecipient(notif);
-            emailService.sendEmail(emp.getEmail(), "Daily Log Approved",
-                    "Your daily log for " + logDate + " has been approved.\n\n"
-                    + "Rs. " + addition + " credited (" + periodLabel + ").");
+
+            // 🛡️ Safely handle review approval confirmation email
+            try {
+                emailService.sendEmail(emp.getEmail(), "Daily Log Approved",
+                        "Your daily log for " + logDate + " has been approved.\n\n"
+                        + "Rs. " + addition + " credited (" + periodLabel + ").");
+            } catch (Exception e) {
+                System.err.println("Approval confirmation email skipped: Network or mail server unreachable.");
+            }
         }
 
         return saved;
     }
 
-    @Transactional
     public List<DailyLog> batchReviewDailyLogs(List<Long> ids, DailyLogReviewRequest request, Long reviewerId) {
         List<DailyLog> logs = dailyLogRepository.findByIdIn(ids);
         for (DailyLog log : logs) {

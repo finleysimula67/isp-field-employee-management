@@ -13,7 +13,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -74,10 +74,10 @@ app:
     cleanup-cron: "0 0 3 * * ?"
 
   cors:
-    origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    origins: ${CORS_ALLOWED_ORIGINS}
 
   oauth2:
-    redirect-uri: ${APP_OAUTH2_REDIRECT_URI:http://localhost:5173/oauth2/callback}
+    redirect-uri: ${APP_OAUTH2_REDIRECT_URI}
 
   jwt:
     secret: ${APP_JWT_SECRET}

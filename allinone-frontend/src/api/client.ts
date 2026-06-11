@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const client = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://allinone-backend-xoh0.onrender.com',
   headers: { 'Content-Type': 'application/json' },
 })
 

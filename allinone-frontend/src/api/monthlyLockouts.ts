@@ -1,0 +1,23 @@
+import client from './client'
+
+export async function getAllLockouts() {
+  const res = await client.get('/lockouts')
+  return res.data
+}
+
+export async function getLockoutStatus(yearMonth: string) {
+  const res = await client.get('/lockouts/status', { params: { yearMonth } })
+  return res.data
+}
+
+export async function lockMonth(yearMonth: string) {
+  const params = new URLSearchParams()
+  params.append('yearMonth', yearMonth)
+  const res = await client.post('/lockouts/lock', params, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+  return res.data
+}
+
+export async function unlockMonth(yearMonth: string, reason: string) {
+  const res = await client.post(`/lockouts/unlock?yearMonth=${yearMonth}`, { reason })
+  return res.data
+}

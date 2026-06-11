@@ -1,0 +1,188 @@
+import { useEffect, useState } from 'react'
+import { getTasks, createTask } from '../../api/tasks'
+import { getEmployees } from '../../api/employees'
+import Toast from '../../components/Toast'
+import Skeleton from '../../components/Skeleton'
+
+const priorityColors: Record<string, string> = {
+  LOW: 'bg-gray-100 text-gray-700',
+  MEDIUM: 'bg-blue-100 text-blue-700',
+  HIGH: 'bg-orange-100 text-orange-700',
+  URGENT: 'bg-red-100 text-red-700',
+}
+
+const statusColors: Record<string, string> = {
+  OPEN: 'badge-pending',
+  IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
+  COMPLETED: 'badge-approved',
+  CANCELLED: 'bg-gray-100 text-gray-500',
+}
+
+const initialForm = {
+  assignedTo: '',
+  title: '',
+  description: '',
+  priority: 'MEDIUM',
+  scheduledDate: '',
+  customerName: '',
+  customerPhone: '',
+  customerAddress: '',
+}
+
+export default function TasksPage() {
+  const [tasks, setTasks] = useState<any[]>([])
+  const [employees, setEmployees] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filterStatus, setFilterStatus] = useState('')
+  const [form, setForm] = useState(initialForm)
+  const [submitting, setSubmitting] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+
+  const fetchData = () => {
+    setLoading(true)
+    const params: any = {}
+    if (filterStatus) params.status = filterStatus
+    Promise.all([getTasks(params), getEmployees()])
+      .then(([taskRes, empRes]) => {
+        setTasks(taskRes.data)
+        setEmployees(empRes.data)
+      })
+      .catch(() => setToast({ message: 'Failed to load data', type: 'error' }))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { fetchData() }, [])
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setToast(null)
+    try {
+      await createTask({
+        ...form,
+        assignedTo: Number(form.assignedTo),
+      })
+      setForm(initialForm)
+      fetchData()
+    } catch {
+      setToast({ message: 'Failed to create task', type: 'error' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-display text-2xl font-bold text-gray-900">Tasks</h1>
+      </div>
+      <div className="card p-6 mb-6">
+        <h2 className="font-display text-lg font-bold text-gray-900 mb-4">Create Task</h2>
+        <Toast message={toast?.message || ''} type={toast?.type || 'info'} visible={!!toast} onClose={() => setToast(null)} />
+        <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Assigned To</label>
+            <select value={form.assignedTo} onChange={e => setForm(f => ({ ...f, assignedTo: e.target.value }))} className="input-field" required>
+              <option value="">Select employee</option>
+              {employees.filter(e => e.isActive).map((emp: any) => (
+                <option key={emp.id} value={emp.id}>{emp.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Priority</label>
+            <select value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))} className="input-field">
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+              <option value="URGENT">Urgent</option>
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Title</label>
+            <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="input-field w-full" required />
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">Description</label>
+            <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="input-field w-full" rows={3} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Scheduled Date</label>
+            <input type="date" value={form.scheduledDate} onChange={e => setForm(f => ({ ...f, scheduledDate: e.target.value }))} className="input-field w-full" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Customer Name</label>
+            <input value={form.customerName} onChange={e => setForm(f => ({ ...f, customerName: e.target.value }))} className="input-field w-full" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Customer Phone</label>
+            <input value={form.customerPhone} onChange={e => setForm(f => ({ ...f, customerPhone: e.target.value }))} className="input-field w-full" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Customer Address</label>
+            <input value={form.customerAddress} onChange={e => setForm(f => ({ ...f, customerAddress: e.target.value }))} className="input-field w-full" />
+          </div>
+          <div className="md:col-span-2">
+            <button type="submit" disabled={submitting} className="btn-admin">{submitting ? 'Creating...' : 'Create Task'}</button>
+          </div>
+        </form>
+      </div>
+      <div className="card p-4 mb-6">
+        <div className="flex gap-4 items-end">
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Status</label>
+            <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); fetchData() }} className="input-field">
+              <option value="">All</option>
+              <option value="OPEN">Open</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+          <button onClick={fetchData} className="btn-admin">Filter</button>
+        </div>
+      </div>
+      <div className="card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-100">
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Assigned To</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Title</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Priority</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Status</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Scheduled</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <Skeleton variant="table-row" count={5} />
+            ) : tasks.length === 0 ? (
+              <tr><td colSpan={6} className="py-8 text-center text-gray-400">No tasks yet.</td></tr>
+            ) : tasks.map((task: any) => {
+              const emp = employees.find(e => e.id === task.assignedTo)
+              return (
+                <tr key={task.id} className="border-b border-gray-50 hover:bg-gray-50">
+                  <td className="py-3 px-4 font-medium">{emp?.name || `#${task.assignedTo}`}</td>
+                  <td className="py-3 px-4 text-gray-500">{task.title}</td>
+                  <td className="py-3 px-4">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${priorityColors[task.priority] || 'bg-gray-100 text-gray-700'}`}>
+                      {task.priority}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className={statusColors[task.status] || 'badge-pending'}>{task.status?.replace(/_/g, ' ')}</span>
+                  </td>
+                  <td className="py-3 px-4 text-gray-500">{task.scheduledDate || '—'}</td>
+                  <td className="py-3 px-4">
+                    <span className="text-gray-400 text-xs">—</span>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}

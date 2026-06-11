@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-white text-gray-900 antialiased; }
+}
+
+@layer components {
+  .btn-primary { @apply bg-brand-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-brand-700 transition-all duration-200 active:scale-95; }
+  .btn-secondary { @apply bg-white text-brand-600 border-2 border-brand-600 px-6 py-3 rounded-lg font-semibold hover:bg-brand-50 transition-all duration-200; }
+  .btn-admin { @apply bg-admin-primary text-white px-4 py-2 rounded-md font-medium hover:bg-admin-primary-hover transition-colors text-sm; }
+  .btn-ghost { @apply text-gray-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition-colors text-sm; }
+  .btn-outline { @apply bg-white text-admin-primary border-2 border-admin-primary px-4 py-2 rounded-md font-medium hover:bg-admin-primary/5 transition-colors text-sm; }
+  .input-field { @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all; }
+  .card { @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6; }
+  .badge-pending { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-pending-bg text-status-pending-text; }
+  .badge-approved { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-approved-bg text-status-approved-text; }
+  .badge-rejected { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-rejected-bg text-status-rejected-text; }
+  .badge-revision { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-revision-bg text-status-revision-text; }
+  .badge-locked { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-locked-bg text-status-locked-text; }
+}

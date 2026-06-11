@@ -84,5 +84,5 @@ app:
     expiration-ms: 86400000
 
   auth:
-    allowed-emails: ${ALLOWED_EMAILS:admin@workflow.com,employee@workflow.com,manager@workflow.com}
-    default-password: ${APP_DEFAULT_PASSWORD:ChangeMe123!}
+    allowed-emails: ${ALLOWED_EMAILS}
+    default-password: ${APP_DEFAULT_PASSWORD}

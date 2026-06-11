@@ -1,0 +1,10 @@
+allinone-frontend/node_modules/.bin/browserslist.ps1
+/allinone-frontend/node_modules/.bin
+/allinone-frontend/node_modules/.vite/deps
+*.md
+/allinone-frontend/node_modules/@apideck/better-ajv-errors/src/lib
+/allinone-frontend/node_modules/@apideck/better-ajv-errors/src/types
+allinone-frontend/node_modules/@apideck/better-ajv-errors/src/index.test.ts
+/allinone-frontend/node_modules
+/allinone-backend/target
+/allinone-frontend/dist

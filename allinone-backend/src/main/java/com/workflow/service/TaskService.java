@@ -1,0 +1,122 @@
+package com.workflow.service;
+
+import com.workflow.dto.TaskRequest;
+import com.workflow.dto.TaskStatusUpdateRequest;
+import com.workflow.entity.*;
+import com.workflow.repository.*;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class TaskService {
+    private final TaskRepository taskRepository;
+    private final EmployeeRepository employeeRepository;
+    private final NotificationRepository notificationRepository;
+    private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
+
+    public TaskService(TaskRepository tr, EmployeeRepository er, NotificationRepository nr, AuditLogService als,
+                       NotificationService notificationService) {
+        this.taskRepository = tr; this.employeeRepository = er; this.notificationRepository = nr; this.auditLogService = als;
+        this.notificationService = notificationService;
+    }
+
+    public List<Task> getTasks(Long assignedTo, String status) {
+        List<Task> tasks;
+        if (assignedTo != null) {
+            tasks = taskRepository.findByAssignedToIdOrderByScheduledDateAsc(assignedTo);
+        } else {
+            tasks = taskRepository.findAll(org.springframework.data.domain.Sort.by(
+                    org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        }
+        if (status != null)
+            tasks = tasks.stream().filter(t -> t.getStatus().name().equals(status)).collect(Collectors.toList());
+        return tasks;
+    }
+
+    public Task getTask(Long id) {
+        return taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+    }
+
+    @Transactional
+    public Task createTask(TaskRequest request, Long assignedById) {
+        Employee assignedTo = employeeRepository.findById(request.getAssignedTo())
+                .orElseThrow(() -> new RuntimeException("Assigned employee not found"));
+        Employee assignedBy = employeeRepository.findById(assignedById)
+                .orElseThrow(() -> new RuntimeException("Assignee not found"));
+        Task task = new Task();
+        task.setAssignedBy(assignedBy);
+        task.setAssignedTo(assignedTo);
+        task.setTitle(request.getTitle());
+        task.setDescription(request.getDescription());
+        if (request.getPriority() != null) task.setPriority(TaskPriority.valueOf(request.getPriority()));
+        if (request.getScheduledDate() != null) task.setScheduledDate(LocalDate.parse(request.getScheduledDate()));
+        task.setCustomerName(request.getCustomerName());
+        task.setCustomerPhone(request.getCustomerPhone());
+        task.setCustomerAddress(request.getCustomerAddress());
+        task.setStatus(TaskStatus.OPEN);
+        Task saved = taskRepository.save(task);
+        auditLogService.log("Task", saved.getId(), "CREATED", null, "OPEN", assignedTo.getEmail());
+        Notification notification = new Notification();
+        notification.setRecipient(assignedTo);
+        notification.setType("TASK_ASSIGNED");
+        notification.setTitle("New Task: " + saved.getTitle());
+        notification.setBody("You have been assigned a new task by " + assignedBy.getName());
+        notification.setRelatedEntityType("Task");
+        notification.setRelatedEntityId(saved.getId());
+        notificationRepository.save(notification);
+        notificationService.broadcastNotificationToRecipient(notification);
+        return saved;
+    }
+
+    @Transactional
+    public Task updateTaskStatus(Long id, TaskStatusUpdateRequest request, Long currentUserId) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        Employee currentUser = employeeRepository.findById(currentUserId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        boolean isAssigned = task.getAssignedTo().getId().equals(currentUserId);
+        boolean isManagerOrAdmin = currentUser.getRole() == Role.BRANCH_MANAGER
+                || currentUser.getRole() == Role.SUPER_ADMIN;
+        if (!isAssigned && !isManagerOrAdmin)
+            throw new AccessDeniedException("Not authorized to update this task");
+        TaskStatus newStatus = TaskStatus.valueOf(request.getStatus());
+        task.setStatus(newStatus);
+        if (newStatus == TaskStatus.COMPLETED)
+            task.setCompletedAt(LocalDateTime.now());
+        Task saved = taskRepository.save(task);
+        auditLogService.log("Task", id, "STATUS_CHANGED", task.getStatus().name(), newStatus.name(), currentUser.getEmail());
+
+        if (!isManagerOrAdmin) {
+            List<Employee> admins = employeeRepository.findByRoleIn(
+                    List.of(Role.SUPER_ADMIN, Role.BRANCH_MANAGER));
+            for (Employee admin : admins) {
+                if (admin.getId().equals(currentUserId)) continue;
+                Notification adminNotif = new Notification();
+                adminNotif.setRecipient(admin);
+                adminNotif.setType("TASK_STATUS_UPDATED");
+                adminNotif.setTitle("Task " + newStatus.name() + ": " + saved.getTitle());
+                adminNotif.setBody(currentUser.getName() + " updated task status to " + newStatus.name());
+                adminNotif.setRelatedEntityType("Task");
+                adminNotif.setRelatedEntityId(saved.getId());
+                notificationRepository.save(adminNotif);
+                notificationService.broadcastNotificationToRecipient(adminNotif);
+            }
+        }
+
+        return saved;
+    }
+
+    public List<Task> getMyTasks(Long employeeId, String status) {
+        List<Task> tasks = taskRepository.findByAssignedToIdOrderByScheduledDateAsc(employeeId);
+        if (status != null)
+            tasks = tasks.stream().filter(t -> t.getStatus().name().equals(status)).collect(Collectors.toList());
+        return tasks;
+    }
+}

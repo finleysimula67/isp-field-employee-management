@@ -1,0 +1,88 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: workflow-backend
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google}
+            scope:
+              - email
+              - profile
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+  endpoint:
+    health:
+      show-details: always
+
+app:
+  upload:
+    dir: uploads
+    cleanup-days: 30
+    cleanup-cron: "0 0 3 * * ?"
+
+  cors:
+    origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+  oauth2:
+    redirect-uri: ${APP_OAUTH2_REDIRECT_URI:http://localhost:5173/oauth2/callback}
+
+  jwt:
+    secret: ${APP_JWT_SECRET}
+    expiration-ms: 86400000
+
+  auth:
+    allowed-emails: ${ALLOWED_EMAILS:admin@workflow.com,employee@workflow.com,manager@workflow.com}
+    default-password: ${APP_DEFAULT_PASSWORD:ChangeMe123!}

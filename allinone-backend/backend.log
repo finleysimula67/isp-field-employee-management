@@ -1,0 +1,69 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.4)
+
+2026-06-04T09:23:45.087+05:45  INFO 8188 --- [workflow-backend] [           main] com.workflow.WorkflowApplication         : Starting WorkflowApplication v0.0.1-SNAPSHOT using Java 25.0.2 with PID 8188 (X:\all-in-one\allinone-backend\target\workflow-backend-0.0.1-SNAPSHOT.jar started by Nabin Oli in X:\all-in-one)
+2026-06-04T09:23:45.091+05:45  INFO 8188 --- [workflow-backend] [           main] com.workflow.WorkflowApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-06-04T09:23:47.068+05:45  INFO 8188 --- [workflow-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-04T09:23:47.405+05:45  INFO 8188 --- [workflow-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 297 ms. Found 12 JPA repository interfaces.
+2026-06-04T09:23:51.437+05:45  INFO 8188 --- [workflow-backend] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-06-04T09:23:51.514+05:45  INFO 8188 --- [workflow-backend] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-06-04T09:23:51.514+05:45  INFO 8188 --- [workflow-backend] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.39]
+2026-06-04T09:23:51.658+05:45  INFO 8188 --- [workflow-backend] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-06-04T09:23:51.661+05:45  INFO 8188 --- [workflow-backend] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 6479 ms
+2026-06-04T09:23:52.451+05:45  INFO 8188 --- [workflow-backend] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-04T09:23:52.778+05:45  INFO 8188 --- [workflow-backend] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.11.Final
+2026-06-04T09:23:52.942+05:45  INFO 8188 --- [workflow-backend] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-04T09:23:54.492+05:45  INFO 8188 --- [workflow-backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-04T09:23:54.589+05:45  INFO 8188 --- [workflow-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-06-04T09:23:55.289+05:45  INFO 8188 --- [workflow-backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@3c6bd624
+2026-06-04T09:23:55.296+05:45  INFO 8188 --- [workflow-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-06-04T09:23:55.417+05:45  WARN 8188 --- [workflow-backend] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-06-04T09:23:55.472+05:45  INFO 8188 --- [workflow-backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 18.3
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-06-04T09:24:00.435+05:45  INFO 8188 --- [workflow-backend] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-06-04T09:24:00.642+05:45  INFO 8188 --- [workflow-backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-04T09:24:02.717+05:45  WARN 8188 --- [workflow-backend] [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'dataInitializer' defined in URL [jar:nested:/X:/all-in-one/allinone-backend/target/workflow-backend-0.0.1-SNAPSHOT.jar/!BOOT-INF/classes/!/com/workflow/config/DataInitializer.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'securityConfig' defined in URL [jar:nested:/X:/all-in-one/allinone-backend/target/workflow-backend-0.0.1-SNAPSHOT.jar/!BOOT-INF/classes/!/com/workflow/config/SecurityConfig.class]: Unsatisfied dependency expressed through constructor parameter 3: Error creating bean with name 'OAuth2SuccessHandler' defined in URL [jar:nested:/X:/all-in-one/allinone-backend/target/workflow-backend-0.0.1-SNAPSHOT.jar/!BOOT-INF/classes/!/com/workflow/security/OAuth2SuccessHandler.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'authService' defined in URL [jar:nested:/X:/all-in-one/allinone-backend/target/workflow-backend-0.0.1-SNAPSHOT.jar/!BOOT-INF/classes/!/com/workflow/service/AuthService.class]: Unsatisfied dependency expressed through constructor parameter 4: Error creating bean with name 'securityConfig': Requested bean is currently in creation: Is there an unresolvable circular reference or an asynchronous initialization dependency?
+2026-06-04T09:24:02.720+05:45  INFO 8188 --- [workflow-backend] [           main] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-06-04T09:24:02.729+05:45  INFO 8188 --- [workflow-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-06-04T09:24:02.839+05:45  INFO 8188 --- [workflow-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-06-04T09:24:02.864+05:45  INFO 8188 --- [workflow-backend] [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2026-06-04T09:24:02.898+05:45  INFO 8188 --- [workflow-backend] [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-06-04T09:24:02.967+05:45 ERROR 8188 --- [workflow-backend] [           main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+The dependencies of some of the beans in the application context form a cycle:
+
+   dataInitializer defined in URL [jar:nested:/X:/all-in-one/allinone-backend/target/workflow-backend-0.0.1-SNAPSHOT.jar/!BOOT-INF/classes/!/com/workflow/config/DataInitializer.class]
+┌─────┐
+|  securityConfig defined in URL [jar:nested:/X:/all-in-one/allinone-backend/target/workflow-backend-0.0.1-SNAPSHOT.jar/!BOOT-INF/classes/!/com/workflow/config/SecurityConfig.class]
+↑     ↓
+|  OAuth2SuccessHandler defined in URL [jar:nested:/X:/all-in-one/allinone-backend/target/workflow-backend-0.0.1-SNAPSHOT.jar/!BOOT-INF/classes/!/com/workflow/security/OAuth2SuccessHandler.class]
+↑     ↓
+|  authService defined in URL [jar:nested:/X:/all-in-one/allinone-backend/target/workflow-backend-0.0.1-SNAPSHOT.jar/!BOOT-INF/classes/!/com/workflow/service/AuthService.class]
+└─────┘
+
+
+Action:
+
+Relying upon circular references is discouraged and they are prohibited by default. Update your application to remove the dependency cycle between beans. As a last resort, it may be possible to break the cycle automatically by setting spring.main.allow-circular-references to true.
+

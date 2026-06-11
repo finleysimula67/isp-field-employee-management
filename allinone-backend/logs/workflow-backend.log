@@ -1,0 +1,41 @@
+2026-06-09 17:47:05.844 INFO  [main] com.workflow.WorkflowApplication - Starting WorkflowApplication using Java 25.0.2 with PID 5244 (X:\all-in-one\isp-field-employee-management\allinone-backend\target\classes started by Nabin Oli in X:\all-in-one\isp-field-employee-management\allinone-backend)
+2026-06-09 17:47:05.850 DEBUG [main] com.workflow.WorkflowApplication - Running with Spring Boot v3.4.4, Spring v6.2.5
+2026-06-09 17:47:05.851 INFO  [main] com.workflow.WorkflowApplication - No active profile set, falling back to 1 default profile: "default"
+2026-06-09 17:47:07.950 INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-09 17:47:07.951 INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.39]
+2026-06-09 17:47:08.019 INFO  [main] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-09 17:47:08.768 INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-06-09 17:47:08.997 INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@342dc040
+2026-06-09 17:47:09.006 INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-06-09 17:47:09.082 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-06-09 17:47:10.748 DEBUG [main] c.w.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2026-06-09 17:47:11.092 WARN  [main] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-06-09 17:47:11.568 WARN  [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-06-09 17:47:12.643 INFO  [main] com.workflow.WorkflowApplication - Started WorkflowApplication in 7.445 seconds (process running for 7.879)
+2026-06-09 17:50:13.973 INFO  [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-06-09 18:00:33.974 INFO  [main] c.w.controller.AuthControllerTest - Starting AuthControllerTest using Java 25.0.2 with PID 2852 (started by Nabin Oli in X:\all-in-one\isp-field-employee-management\allinone-backend)
+2026-06-09 18:00:33.977 DEBUG [main] c.w.controller.AuthControllerTest - Running with Spring Boot v3.4.4, Spring v6.2.5
+2026-06-09 18:00:33.978 INFO  [main] c.w.controller.AuthControllerTest - No active profile set, falling back to 1 default profile: "default"
+2026-06-09 18:00:37.852 INFO  [main] c.w.controller.AuthControllerTest - Started AuthControllerTest in 4.627 seconds (process running for 6.643)
+2026-06-09 18:00:38.640 INFO  [main] c.w.c.DailyLogControllerTest - Starting DailyLogControllerTest using Java 25.0.2 with PID 2852 (started by Nabin Oli in X:\all-in-one\isp-field-employee-management\allinone-backend)
+2026-06-09 18:00:38.640 DEBUG [main] c.w.c.DailyLogControllerTest - Running with Spring Boot v3.4.4, Spring v6.2.5
+2026-06-09 18:00:38.640 INFO  [main] c.w.c.DailyLogControllerTest - No active profile set, falling back to 1 default profile: "default"
+2026-06-09 18:00:41.212 INFO  [main] c.w.c.DailyLogControllerTest - Started DailyLogControllerTest in 2.635 seconds (process running for 10.004)
+2026-06-09 18:00:41.538 INFO  [main] c.w.c.EmployeeControllerTest - Starting EmployeeControllerTest using Java 25.0.2 with PID 2852 (started by Nabin Oli in X:\all-in-one\isp-field-employee-management\allinone-backend)
+2026-06-09 18:00:41.539 DEBUG [main] c.w.c.EmployeeControllerTest - Running with Spring Boot v3.4.4, Spring v6.2.5
+2026-06-09 18:00:41.539 INFO  [main] c.w.c.EmployeeControllerTest - No active profile set, falling back to 1 default profile: "default"
+2026-06-09 18:00:42.184 INFO  [main] c.w.c.EmployeeControllerTest - Started EmployeeControllerTest in 0.689 seconds (process running for 10.975)
+2026-06-09 18:00:42.411 INFO  [main] c.w.controller.PayrollControllerTest - Starting PayrollControllerTest using Java 25.0.2 with PID 2852 (started by Nabin Oli in X:\all-in-one\isp-field-employee-management\allinone-backend)
+2026-06-09 18:00:42.412 DEBUG [main] c.w.controller.PayrollControllerTest - Running with Spring Boot v3.4.4, Spring v6.2.5
+2026-06-09 18:00:42.412 INFO  [main] c.w.controller.PayrollControllerTest - No active profile set, falling back to 1 default profile: "default"
+2026-06-09 18:00:42.959 INFO  [main] c.w.controller.PayrollControllerTest - Started PayrollControllerTest in 0.596 seconds (process running for 11.75)
+2026-06-09 18:00:43.203 INFO  [main] c.w.service.AttendanceServiceTest - Starting AttendanceServiceTest using Java 25.0.2 with PID 2852 (started by Nabin Oli in X:\all-in-one\isp-field-employee-management\allinone-backend)
+2026-06-09 18:00:43.204 DEBUG [main] c.w.service.AttendanceServiceTest - Running with Spring Boot v3.4.4, Spring v6.2.5
+2026-06-09 18:00:43.205 INFO  [main] c.w.service.AttendanceServiceTest - The following 1 profile is active: "test"
+2026-06-09 18:00:44.706 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-06-09 18:00:47.108 INFO  [main] c.w.service.AttendanceServiceTest - Started AttendanceServiceTest in 3.967 seconds (process running for 15.899)
+2026-06-09 18:00:47.729 INFO  [main] c.workflow.service.AuthServiceTest - Starting AuthServiceTest using Java 25.0.2 with PID 2852 (started by Nabin Oli in X:\all-in-one\isp-field-employee-management\allinone-backend)
+2026-06-09 18:00:47.729 DEBUG [main] c.workflow.service.AuthServiceTest - Running with Spring Boot v3.4.4, Spring v6.2.5
+2026-06-09 18:00:47.729 INFO  [main] c.workflow.service.AuthServiceTest - The following 1 profile is active: "test"
+2026-06-09 18:00:47.963 WARN  [main] org.hibernate.orm.deprecation - HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-06-09 18:00:48.654 INFO  [main] c.workflow.service.AuthServiceTest - Started AuthServiceTest in 0.964 seconds (process running for 17.445)

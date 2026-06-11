@@ -20,6 +20,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -31,10 +34,13 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    @Value("${app.cors.origins:http://localhost:5173,http://localhost:3000}")
+
+    // 🔑 Linked directly to your application.yml: ${CORS_ALLOWED_ORIGINS}
+    @Value("${app.cors.origins:http://localhost:5173,http://localhost:3000,https://allinone-rolpa.vercel.app}")
     private String corsOrigins;
 
-    @Value("${app.oauth2.redirect-uri:http://localhost:5173/oauth2/callback}")
+    // 🔑 Linked directly to your application.yml: ${APP_OAUTH2_REDIRECT_URI}
+    @Value("${app.oauth2.redirect-uri:https://allinone-rolpa.vercel.app/oauth2/callback}")
     private String oauth2RedirectUri;
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -44,8 +50,10 @@ public class SecurityConfig {
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, GoogleOAuth2UserService googleOAuth2UserService,
                           CustomUserDetailsService userDetailsService, @Lazy OAuth2SuccessHandler oauth2SuccessHandler) {
-        this.jwtAuthFilter = jwtAuthFilter; this.googleOAuth2UserService = googleOAuth2UserService;
-        this.userDetailsService = userDetailsService; this.oauth2SuccessHandler = oauth2SuccessHandler;
+        this.jwtAuthFilter = jwtAuthFilter; 
+        this.googleOAuth2UserService = googleOAuth2UserService;
+        this.userDetailsService = userDetailsService; 
+        this.oauth2SuccessHandler = oauth2SuccessHandler;
     }
 
     @Bean
@@ -60,6 +68,10 @@ public class SecurityConfig {
                 .anyRequest().authenticated())
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(authorization -> authorization
+                    .baseUri("/oauth2/authorization")
+                    // ⭐ Crucial: Use Session Repository to preserve cookies during Vercel -> Render cross-domain transfers
+                    .authorizationRequestRepository(cookieAuthorizationRequestRepository()))
                 .userInfoEndpoint(userInfo -> userInfo.userService(googleOAuth2UserService))
                 .successHandler(oauth2SuccessHandler)
                 .failureHandler((request, response, exception) -> {
@@ -73,6 +85,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> cookieAuthorizationRequestRepository() {
+        return new HttpSessionOAuth2AuthorizationRequestRepository();
+    }
+
+    @Bean
     public DaoAuthenticationProvider authProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
@@ -81,7 +98,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+    public PasswordEncoder passwordEncoder() { 
+        return new BCryptPasswordEncoder(); 
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

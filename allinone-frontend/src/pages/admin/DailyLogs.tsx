@@ -134,7 +134,7 @@ export default function DailyLogsPage() {
           <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
         </div>
       )}
-      <div className="card overflow-hidden">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">

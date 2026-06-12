@@ -300,7 +300,7 @@ export default function EmployeesPage() {
         ))}
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">

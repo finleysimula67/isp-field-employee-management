@@ -93,14 +93,14 @@ export default function DailyLogsPage() {
         <h1 className="font-display text-2xl font-bold text-gray-900">Daily Logs</h1>
       </div>
       <div className="card p-4 mb-6">
-        <div className="flex gap-4 items-end">
-          <div>
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="w-full sm:w-auto">
             <label className="text-xs font-medium text-gray-500 block mb-1">Date</label>
-            <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="input-field" />
+            <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="input-field w-full sm:w-auto" />
           </div>
-          <div>
+          <div className="flex-1 min-w-[120px]">
             <label className="text-xs font-medium text-gray-500 block mb-1">Status</label>
-            <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); fetchData() }} className="input-field">
+            <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); fetchData() }} className="input-field w-full">
               <option value="">All</option>
               <option value="PENDING">Pending</option>
               <option value="APPROVED">Approved</option>
@@ -108,9 +108,9 @@ export default function DailyLogsPage() {
               <option value="NEEDS_REVISION">Needs Revision</option>
             </select>
           </div>
-          <div>
+          <div className="flex-1 min-w-[140px]">
             <label className="text-xs font-medium text-gray-500 block mb-1">Employee</label>
-            <select value={filterEmployee} onChange={e => { setFilterEmployee(e.target.value); fetchData() }} className="input-field">
+            <select value={filterEmployee} onChange={e => { setFilterEmployee(e.target.value); fetchData() }} className="input-field w-full">
               <option value="">All</option>
               {employees.map((e: any) => (
                 <option key={e.id} value={e.id}>{e.name}</option>
@@ -121,7 +121,7 @@ export default function DailyLogsPage() {
         </div>
       </div>
       {selectedIds.length > 0 && (
-        <div className="card p-3 mb-4 flex items-center gap-4 bg-blue-50 border-blue-200">
+        <div className="card p-3 mb-4 flex flex-wrap items-center gap-3 bg-blue-50 border-blue-200">
           <span className="text-sm font-medium text-blue-800">{selectedIds.length} selected</span>
           <select value={batchAction} onChange={e => setBatchAction(e.target.value)} className="input-field text-xs w-auto">
             <option value="APPROVED">Approve</option>

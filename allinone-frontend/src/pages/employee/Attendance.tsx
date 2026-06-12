@@ -81,31 +81,28 @@ export default function EmployeeAttendance() {
               <span className="text-blue-700">🏖️ Leave: {attendance.stats?.onLeave || 0}</span>
               <span className="text-purple-700">🎉 Holiday: {attendance.stats?.holiday || 0}</span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs border-collapse">
-                <thead>
-                  <tr>
-                    {dayHeaders.map(d => (
-                      <th key={d} className="w-9 text-center py-2 font-medium text-gray-400">{d}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {dayHeaders.map(d => {
-                      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-                      const status = attendance.days?.[dateStr] || 'ABSENT'
-                      return (
-                        <td key={d} className="p-0.5 text-center">
-                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded text-[10px] font-bold ${STATUS_COLORS[status] || 'bg-gray-100 text-gray-400'}`}>
-                            {status === 'PRESENT' ? 'P' : status === 'PENDING' ? 'Pd' : status === 'ABSENT' ? 'A' : status === 'ON_LEAVE' ? 'L' : 'H'}
-                          </span>
-                        </td>
-                      )
-                    })}
-                  </tr>
-                </tbody>
-              </table>
+            
+          <div className="overflow-x-auto">
+              <div className="grid grid-cols-7 gap-1 min-w-[300px]">
+                {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+                  <div key={d} className="text-center text-[10px] font-medium text-gray-400 py-1">{d}</div>
+                ))}
+                {Array.from({ length: new Date(year, month - 1, 1).getDay() }, (_, i) => (
+                  <div key={`empty-${i}`} />
+                ))}
+                {dayHeaders.map(d => {
+                  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+                  const status = attendance.days?.[dateStr] || 'ABSENT'
+                  return (
+                    <div key={d} className="text-center">
+                      <div className="text-[10px] text-gray-400 mb-0.5">{d}</div>
+                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded text-[10px] font-bold ${STATUS_COLORS[status] || 'bg-gray-100 text-gray-400'}`}>
+                        {status === 'PRESENT' ? 'P' : status === 'PENDING' ? 'Pd' : status === 'ABSENT' ? 'A' : status === 'ON_LEAVE' ? 'L' : 'H'}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
 

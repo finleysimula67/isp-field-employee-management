@@ -136,7 +136,7 @@ export default function PayrollPage() {
           <button onClick={fetchData} className="btn-admin">Filter</button>
         </div>
       </div>
-      <div className="card overflow-hidden">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">

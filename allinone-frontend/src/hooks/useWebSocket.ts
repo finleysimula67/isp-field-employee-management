@@ -1,8 +1,9 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { Client, type IMessage } from '@stomp/stompjs'
+import SockJS from 'sockjs-client'
 import { useAuth } from '../contexts/AuthContext'
 
-const WS_URL = 'ws://localhost:8080/ws'
+const WS_URL = import.meta.env.VITE_WS_URL || 'https://allinone-backend-xoh0.onrender.com/ws'
 
 interface UseWebSocketOptions {
   onNotification?: (data: any) => void
@@ -19,7 +20,7 @@ export function useWebSocket({ onNotification, onCountUpdate }: UseWebSocketOpti
     if (!token || !user) return
 
     const client = new Client({
-      brokerURL: WS_URL,
+      webSocketFactory: () => new SockJS(WS_URL),
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,

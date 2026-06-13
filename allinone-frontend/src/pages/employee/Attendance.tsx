@@ -106,7 +106,7 @@ export default function EmployeeAttendance() {
             </div>
           </div>
 
-          <div className="card overflow-hidden">
+          <div className="card overflow-x-auto">
             <div className="p-4 border-b border-gray-100">
               <h2 className="font-display text-lg font-bold text-gray-900">My Wages — {monthNames[month]} {year}</h2>
             </div>

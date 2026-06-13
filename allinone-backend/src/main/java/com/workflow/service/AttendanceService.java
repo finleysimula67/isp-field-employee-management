@@ -159,7 +159,10 @@ public class AttendanceService {
         Map<Long, Long> approvedCounts = dailyLogRepository
                 .findByLogDateBetweenAndStatus(start, end, LogStatus.APPROVED).stream()
                 .collect(Collectors.groupingBy(
-                        dl -> dl.getEmployee().getId(), Collectors.counting()));
+                        dl -> dl.getEmployee().getId(),
+                        Collectors.mapping(DailyLog::getLogDate, Collectors.toSet())))
+                .entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> (long) e.getValue().size()));
 
         Set<LocalDate> holidays = holidayRepository.findByDateBetween(start, end).stream()
                 .map(Holiday::getDate).collect(Collectors.toSet());
@@ -194,7 +197,10 @@ public class AttendanceService {
 
         long present = dailyLogRepository
                 .findByEmployeeIdAndLogDateBetween(employeeId, start, end).stream()
-                .filter(l -> l.getStatus() == LogStatus.APPROVED).count();
+                .filter(l -> l.getStatus() == LogStatus.APPROVED)
+                .map(DailyLog::getLogDate)
+                .distinct()
+                .count();
 
         Set<LocalDate> holidays = holidayRepository.findByDateBetween(start, end).stream()
                 .map(Holiday::getDate).collect(Collectors.toSet());

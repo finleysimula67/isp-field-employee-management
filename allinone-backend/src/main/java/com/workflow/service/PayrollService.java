@@ -35,7 +35,7 @@ public class PayrollService {
         LocalDate periodEnd = LocalDate.parse(request.getPeriodEnd());
         List<DailyLog> logs = dailyLogRepository.findByEmployeeAndLogDateBetween(employee, periodStart, periodEnd)
                 .stream().filter(l -> l.getStatus() == LogStatus.APPROVED).collect(Collectors.toList());
-        int daysWorked = logs.size();
+        int daysWorked = (int) logs.stream().map(DailyLog::getLogDate).distinct().count();
         BigDecimal totalHours = logs.stream().map(l -> l.getHoursWorked() != null ? l.getHoursWorked() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal wageRateAtTime;

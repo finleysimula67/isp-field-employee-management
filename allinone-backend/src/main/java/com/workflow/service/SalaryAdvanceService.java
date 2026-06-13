@@ -89,10 +89,14 @@ public class SalaryAdvanceService {
             adminNotif.setRelatedEntityId(saved.getId());
             notificationRepository.save(adminNotif);
             notificationService.broadcastNotificationToRecipient(adminNotif);
-            emailService.sendEmail(admin.getEmail(), "New Salary Advance: " + employee.getName(),
-                    employee.getName() + " requested a salary advance of Rs. "
-                    + String.format("%.0f", request.getAmount())
-                    + ".\n\nReason: " + (request.getReason() != null ? request.getReason() : "N/A"));
+            try {
+                emailService.sendEmail(admin.getEmail(), "New Salary Advance: " + employee.getName(),
+                        employee.getName() + " requested a salary advance of Rs. "
+                        + String.format("%.0f", request.getAmount())
+                        + ".\n\nReason: " + (request.getReason() != null ? request.getReason() : "N/A"));
+            } catch (Exception e) {
+                System.err.println("Advance request notification email skipped: " + e.getMessage());
+            }
         }
 
         return saved;
@@ -123,10 +127,14 @@ public class SalaryAdvanceService {
         notification.setRelatedEntityId(advance.getId());
         notificationRepository.save(notification);
         notificationService.broadcastNotificationToRecipient(notification);
-        emailService.sendEmail(advance.getEmployee().getEmail(), "Salary Advance " + newStatus.name(),
-                "Your salary advance of Rs. " + String.format("%.0f", advance.getAmount())
-                + " has been " + newStatus.name() + ".\n\nNotes: "
-                + (request.getNotes() != null ? request.getNotes() : "N/A"));
+        try {
+            emailService.sendEmail(advance.getEmployee().getEmail(), "Salary Advance " + newStatus.name(),
+                    "Your salary advance of Rs. " + String.format("%.0f", advance.getAmount())
+                    + " has been " + newStatus.name() + ".\n\nNotes: "
+                    + (request.getNotes() != null ? request.getNotes() : "N/A"));
+        } catch (Exception e) {
+            System.err.println("Advance review notification email skipped: " + e.getMessage());
+        }
         SalaryAdvance saved = salaryAdvanceRepository.save(advance);
         auditLogService.log("SalaryAdvance", id, "REVIEWED", "PENDING", newStatus.name(), reviewer.getEmail());
         return saved;
@@ -165,10 +173,14 @@ public class SalaryAdvanceService {
         notification.setRelatedEntityId(saved.getId());
         notificationRepository.save(notification);
         notificationService.broadcastNotificationToRecipient(notification);
-        emailService.sendEmail(employee.getEmail(), "Advance Disbursed",
-                "A manual salary advance of Rs. " + String.format("%.0f", request.getAmount())
-                + " has been disbursed by " + createdBy.getName() + "."
-                + (request.getReason() != null ? "\n\nReason: " + request.getReason() : ""));
+        try {
+            emailService.sendEmail(employee.getEmail(), "Advance Disbursed",
+                    "A manual salary advance of Rs. " + String.format("%.0f", request.getAmount())
+                    + " has been disbursed by " + createdBy.getName() + "."
+                    + (request.getReason() != null ? "\n\nReason: " + request.getReason() : ""));
+        } catch (Exception e) {
+            System.err.println("Manual advance notification email skipped: " + e.getMessage());
+        }
         auditLogService.log("SalaryAdvance", saved.getId(), "MANUAL_CREATED", null, "DISBURSED", employee.getEmail());
         return saved;
     }
@@ -176,7 +188,11 @@ public class SalaryAdvanceService {
     public Map<String, BigDecimal> getEmployeeBalance(Long employeeId) {
         Employee emp = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
-        long approvedDays = dailyLogRepository.countByEmployeeIdAndStatus(employeeId, LogStatus.APPROVED);
+        long approvedDays = dailyLogRepository.findByEmployeeIdOrderByLogDateDesc(employeeId).stream()
+                .filter(l -> l.getStatus() == LogStatus.APPROVED)
+                .map(DailyLog::getLogDate)
+                .distinct()
+                .count();
         BigDecimal dailyRate = emp.getDailyRate() != null ? emp.getDailyRate() : BigDecimal.valueOf(800);
         BigDecimal totalEarned = dailyRate.multiply(BigDecimal.valueOf(approvedDays));
 

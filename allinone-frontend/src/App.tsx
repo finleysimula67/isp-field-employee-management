@@ -30,6 +30,7 @@ import HolidaysPage from './pages/admin/Holidays'
 import AuditLogsPage from './pages/admin/AuditLogs'
 import MonthlyLockoutsPage from './pages/admin/MonthlyLockouts'
 import EmailAllowListPage from './pages/admin/EmailAllowList'
+import ManualLogsPage from './pages/admin/ManualLogs'
 import ProfilePage from './pages/admin/Profile'
 
 import EmpDashboard from './pages/employee/Dashboard'
@@ -78,6 +79,7 @@ export default function App() {
           <Route path="audit-logs" element={<AuditLogsPage />} />
           <Route path="monthly-lockouts" element={<MonthlyLockoutsPage />} />
           <Route path="email-allow-list" element={<EmailAllowListPage />} />
+          <Route path="manual-logs" element={<ManualLogsPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 

@@ -10,8 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,9 +71,20 @@ public class DailyLogService {
         log.setWorkDescription(request.getWorkDescription());
         log.setPhotoUrls(request.getPhotoUrls());
         if (request.getAssignedTaskId() != null) log.setAssignedTaskId(request.getAssignedTaskId());
-        log.setStatus(LogStatus.PENDING);
+
+        LocalDate logDate = log.getLogDate();
+        boolean hasApprovedDuplicate = dailyLogRepository.findByEmployeeAndLogDateBetween(employee, logDate, logDate)
+                .stream().anyMatch(l -> l.getStatus() == LogStatus.APPROVED && !l.getId().equals(log.getId()));
+
+        if (hasApprovedDuplicate) {
+            log.setStatus(LogStatus.REJECTED);
+            log.setReviewComment("Auto-rejected: Duplicate entry - employee already has an approved log for " + logDate);
+        } else {
+            log.setStatus(LogStatus.PENDING);
+        }
+
         DailyLog saved = dailyLogRepository.save(log);
-        auditLogService.log("DailyLog", saved.getId(), "CREATED", null, "PENDING", employee.getEmail());
+        auditLogService.log("DailyLog", saved.getId(), "CREATED", null, saved.getStatus().name(), employee.getEmail());
 
         List<Employee> admins = employeeRepository.findByRoleIn(
                 List.of(Role.SUPER_ADMIN, Role.BRANCH_MANAGER));
@@ -157,22 +170,29 @@ public class DailyLogService {
                 payroll.setStatus(PayrollStatus.CALCULATED);
             }
 
-            payroll.setDaysWorked(payroll.getDaysWorked() + 1);
-            if (log.getHoursWorked() != null) {
-                payroll.setTotalHours(payroll.getTotalHours().add(log.getHoursWorked()));
-            }
+            List<DailyLog> approvedLogs = dailyLogRepository.findByEmployeeAndLogDateBetween(emp, periodStart, periodEnd)
+                    .stream().filter(l -> l.getStatus() == LogStatus.APPROVED).collect(Collectors.toList());
+            Set<LocalDate> uniqueDates = approvedLogs.stream().map(DailyLog::getLogDate).collect(Collectors.toSet());
+            int daysWorked = uniqueDates.size();
+            BigDecimal totalHours = approvedLogs.stream()
+                    .filter(l -> l.getHoursWorked() != null)
+                    .map(DailyLog::getHoursWorked)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            payroll.setDaysWorked(daysWorked);
+            payroll.setTotalHours(totalHours);
 
             BigDecimal wageRate = emp.getDailyRate() != null ? emp.getDailyRate() : BigDecimal.valueOf(800);
             payroll.setWageRateAtTime(wageRate);
 
-            BigDecimal addition;
-            if (emp.getWageType() == WageType.HOURLY && log.getHoursWorked() != null) {
-                addition = wageRate.multiply(log.getHoursWorked());
+            if (emp.getWageType() == WageType.HOURLY) {
+                payroll.setGrossPay(wageRate.multiply(totalHours));
+                payroll.setNetPay(wageRate.multiply(totalHours));
             } else {
-                addition = wageRate;
+                BigDecimal gross = wageRate.multiply(BigDecimal.valueOf(daysWorked));
+                payroll.setGrossPay(gross);
+                payroll.setNetPay(gross);
             }
-            payroll.setGrossPay(payroll.getGrossPay().add(addition));
-            payroll.setNetPay(payroll.getNetPay().add(addition));
             payrollRecordRepository.save(payroll);
             auditLogService.log("PayrollRecord", payroll.getId(), "AUTO_CALCULATED",
                     null, payroll.getStatus().name(), emp.getEmail());
@@ -181,17 +201,14 @@ public class DailyLogService {
             notif.setRecipient(emp);
             notif.setType("DAILY_LOG_APPROVED");
             notif.setTitle("Daily Log Approved");
-            notif.setBody("Rs. " + addition + " credited for " + logDate + " (" + periodLabel + ")");
+            notif.setBody("Approved for " + logDate + " (" + periodLabel + ")");
             notif.setRelatedEntityType("DailyLog");
             notif.setRelatedEntityId(saved.getId());
             notificationRepository.save(notif);
             notificationService.broadcastNotificationToRecipient(notif);
-
-            // 🛡️ Safely handle review approval confirmation email
             try {
                 emailService.sendEmail(emp.getEmail(), "Daily Log Approved",
-                        "Your daily log for " + logDate + " has been approved.\n\n"
-                        + "Rs. " + addition + " credited (" + periodLabel + ").");
+                        "Your daily log for " + logDate + " has been approved.");
             } catch (Exception e) {
                 System.err.println("Approval confirmation email skipped: Network or mail server unreachable.");
             }
@@ -220,7 +237,12 @@ public class DailyLogService {
     public Map<String, Object> getEarningsSummary(Long employeeId) {
         Employee emp = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
-        long approvedDays = dailyLogRepository.countByEmployeeIdAndStatus(employeeId, LogStatus.APPROVED);
+        List<DailyLog> allLogs = dailyLogRepository.findByEmployeeIdOrderByLogDateDesc(employeeId);
+        long approvedDays = allLogs.stream()
+                .filter(l -> l.getStatus() == LogStatus.APPROVED)
+                .map(DailyLog::getLogDate)
+                .distinct()
+                .count();
         BigDecimal dailyRate = emp.getDailyRate() != null ? emp.getDailyRate() : BigDecimal.valueOf(800);
         BigDecimal totalEarned = dailyRate.multiply(BigDecimal.valueOf(approvedDays));
         Map<String, Object> result = new HashMap<>();

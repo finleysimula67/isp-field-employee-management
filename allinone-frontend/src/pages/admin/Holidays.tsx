@@ -73,7 +73,7 @@ export default function HolidaysPage() {
           </div>
         </form>
       </div>
-      <div className="card overflow-hidden">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">

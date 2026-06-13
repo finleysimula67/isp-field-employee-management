@@ -79,10 +79,14 @@ public class LeaveRequestService {
             adminNotif.setRelatedEntityId(saved.getId());
             notificationRepository.save(adminNotif);
             notificationService.broadcastNotificationToRecipient(adminNotif);
-            emailService.sendEmail(admin.getEmail(), "New Leave Request: " + employee.getName(),
-                    employee.getName() + " requested " + durationDays + " day(s) of "
-                    + request.getLeaveType() + " leave (" + startDate + " to " + endDate + ").\n\n"
-                    + "Reason: " + (request.getReason() != null ? request.getReason() : "N/A"));
+            try {
+                emailService.sendEmail(admin.getEmail(), "New Leave Request: " + employee.getName(),
+                        employee.getName() + " requested " + durationDays + " day(s) of "
+                        + request.getLeaveType() + " leave (" + startDate + " to " + endDate + ").\n\n"
+                        + "Reason: " + (request.getReason() != null ? request.getReason() : "N/A"));
+            } catch (Exception e) {
+                System.err.println("Leave request notification email skipped: " + e.getMessage());
+            }
         }
 
         return saved;
@@ -117,10 +121,14 @@ public class LeaveRequestService {
         notification.setRelatedEntityId(leaveRequest.getId());
         notificationRepository.save(notification);
         notificationService.broadcastNotificationToRecipient(notification);
-        emailService.sendEmail(leaveRequest.getEmployee().getEmail(), "Leave Request " + newStatus.name(),
-                "Your leave request (" + leaveRequest.getStartDate() + " to " + leaveRequest.getEndDate()
-                + ") has been " + newStatus.name() + ".\n\nComment: "
-                + (request.getReviewComment() != null ? request.getReviewComment() : "N/A"));
+        try {
+            emailService.sendEmail(leaveRequest.getEmployee().getEmail(), "Leave Request " + newStatus.name(),
+                    "Your leave request (" + leaveRequest.getStartDate() + " to " + leaveRequest.getEndDate()
+                    + ") has been " + newStatus.name() + ".\n\nComment: "
+                    + (request.getReviewComment() != null ? request.getReviewComment() : "N/A"));
+        } catch (Exception e) {
+            System.err.println("Leave review notification email skipped: " + e.getMessage());
+        }
         LeaveRequest saved = leaveRequestRepository.save(leaveRequest);
         auditLogService.log("LeaveRequest", id, "REVIEWED", "PENDING", newStatus.name(), reviewer.getEmail());
         return saved;

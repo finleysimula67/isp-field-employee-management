@@ -21,6 +21,7 @@ const sidebarLinks = [
   { path: '/admin/audit-logs', label: 'Audit Logs', icon: '📋' },
   { path: '/admin/monthly-lockouts', label: 'Lockouts', icon: '🔒' },
   { path: '/admin/email-allow-list', label: 'Allow List', icon: '📧' },
+  { path: '/admin/manual-logs', label: 'Manual Logs', icon: '📝' },
   { path: '/admin/profile', label: 'Profile', icon: '👤' },
 ]
 

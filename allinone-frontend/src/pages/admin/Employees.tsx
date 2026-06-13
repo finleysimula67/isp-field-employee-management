@@ -9,7 +9,7 @@ import Skeleton from '../../components/Skeleton'
 type Filter = 'all' | 'pending' | 'approved'
 
 const defaultForm = {
-  email: '', name: '', password: '', role: 'FIELD_EMPLOYEE', branchId: '',
+  email: '', name: '', phone: '', password: '', role: 'FIELD_EMPLOYEE', branchId: '',
   authType: 'LOCAL_ONLY', wageType: 'DAILY', dailyRate: '', hourlyWage: '',
   totalLeaveDaysPerYear: '', remainingLeaveDays: '', carryOverLeave: '', maxAdvanceLimit: '',
 }
@@ -64,6 +64,7 @@ export default function EmployeesPage() {
     setForm({
       email: emp.email,
       name: emp.name,
+      phone: emp.phone?.toString() || '',
       password: '',
       role: emp.role,
       branchId: emp.branchId?.toString() || '',
@@ -89,6 +90,7 @@ export default function EmployeesPage() {
       if (editingEmployee) {
         await updateEmployee(editingEmployee.id, {
           name: form.name.trim(),
+          phone: form.phone.trim() || null,
           role: form.role,
           branchId: form.branchId ? Number(form.branchId) : null,
           wageType: form.wageType || undefined,
@@ -104,6 +106,7 @@ export default function EmployeesPage() {
         await createEmployee({
           email: form.email.trim(),
           name: form.name.trim(),
+          phone: form.phone.trim() || null,
           password: form.password || undefined,
           role: form.role,
           branchId: form.branchId ? Number(form.branchId) : null,
@@ -197,12 +200,16 @@ export default function EmployeesPage() {
                   <label className="text-xs font-medium text-gray-500 block mb-1">Email *</label>
                   <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input-field w-full" required />
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-500 block mb-1">Name *</label>
-                  <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="input-field w-full" required />
-                </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 block mb-1">Name *</label>
+                <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="input-field w-full" required />
               </div>
               <div>
+                <label className="text-xs font-medium text-gray-500 block mb-1">Phone</label>
+                <input type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="input-field w-full" placeholder="98XXXXXXXX" />
+              </div>
+            </div>
+            <div>
                 <label className="text-xs font-medium text-gray-500 block mb-1">Role</label>
                 <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className="input-field w-full">
                   <option value="FIELD_EMPLOYEE">Field Employee</option>
@@ -305,6 +312,7 @@ export default function EmployeesPage() {
           <thead>
             <tr className="border-b border-gray-100">
               <th className="text-left py-3 px-4 font-medium text-gray-500">Name</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Phone</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Email</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Role</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Leave</th>
@@ -317,13 +325,14 @@ export default function EmployeesPage() {
             {loading ? (
               <Skeleton variant="table-row" count={5} />
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="py-8 text-center text-gray-400">Nothing here yet</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-gray-400">Nothing here yet</td></tr>
             ) : filtered.map((emp) => (
               <tr key={emp.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="py-3 px-4 font-medium">
                   {emp.name}
                   {emp.isOwner && <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium">Owner</span>}
                 </td>
+                <td className="py-3 px-4 text-gray-500">{emp.phone || '—'}</td>
                 <td className="py-3 px-4 text-gray-500">{emp.email}</td>
                 <td className="py-3 px-4">
                   <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">

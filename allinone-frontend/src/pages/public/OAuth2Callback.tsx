@@ -43,6 +43,7 @@ export default function OAuth2Callback() {
       email: email || '',
       name: name || '',
       role: role as Employee['role'],
+      phone: null,
       branchId: null,
       branchName: null,
       authType: 'GOOGLE_ONLY',

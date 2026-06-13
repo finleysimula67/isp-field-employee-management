@@ -44,6 +44,7 @@ public class EmployeeService {
         );
         if (request.getBranchId() != null)
             branchRepository.findById(request.getBranchId()).ifPresent(employee::setBranch);
+        if (request.getPhone() != null) employee.setPhone(request.getPhone());
         employee = employeeRepository.save(employee);
         auditLogService.log("Employee", employee.getId(), "CREATED_ADMIN", null, null, employee.getEmail());
         return toResponse(employee);
@@ -53,6 +54,7 @@ public class EmployeeService {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         if (request.getName() != null) employee.setName(request.getName());
+        if (request.getPhone() != null) employee.setPhone(request.getPhone());
         if (request.getRole() != null) employee.setRole(request.getRole());
         if (request.getBranchId() != null)
             branchRepository.findById(request.getBranchId()).ifPresent(employee::setBranch);
@@ -117,6 +119,7 @@ public class EmployeeService {
         EmployeeResponse r = new EmployeeResponse();
         r.setId(e.getId()); r.setEmail(e.getEmail()); r.setName(e.getName());
         r.setRole(e.getRole().name());
+        r.setPhone(e.getPhone());
         r.setBranchName(e.getBranch() != null ? e.getBranch().getName() : null);
         r.setBranchId(e.getBranch() != null ? e.getBranch().getId() : null);
         r.setIsActive(e.getIsActive()); r.setIsAccountApproved(e.getIsAccountApproved());

@@ -24,6 +24,7 @@ export async function approveEmployee(id: number): Promise<ApiResponse<Employee>
 export async function createEmployee(data: {
   email: string
   name: string
+  phone?: string | null
   password?: string
   role: string
   branchId?: number | null
@@ -39,6 +40,7 @@ export async function createEmployee(data: {
 
 export async function updateEmployee(id: number, data: {
   name?: string
+  phone?: string | null
   role?: string
   branchId?: number | null
   wageType?: string

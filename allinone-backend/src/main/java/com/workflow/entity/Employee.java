@@ -30,6 +30,7 @@ public class Employee {
     @Column(name = "carry_over_leave") private BigDecimal carryOverLeave;
     @Column(name = "reset_token") private String resetToken;
     @Column(name = "reset_token_expiry") private LocalDateTime resetTokenExpiry;
+    @Column(name = "phone") private String phone;
     @Column(name = "is_owner") private Boolean isOwner;
     @Column(name = "max_advance_limit") private BigDecimal maxAdvanceLimit;
     @Column(name = "created_at", updatable = false) private LocalDateTime createdAt;
@@ -69,6 +70,8 @@ public class Employee {
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
     public Boolean getIsAccountApproved() { return isAccountApproved; }
     public void setIsAccountApproved(Boolean isAccountApproved) { this.isAccountApproved = isAccountApproved; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
     public Boolean getIsOwner() { return isOwner; }
     public void setIsOwner(Boolean isOwner) { this.isOwner = isOwner; }
     public BigDecimal getMaxAdvanceLimit() { return maxAdvanceLimit; }

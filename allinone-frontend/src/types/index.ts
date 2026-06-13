@@ -2,6 +2,7 @@ export interface Employee {
   id: number
   email: string
   name: string
+  phone: string | null
   role: 'SUPER_ADMIN' | 'BRANCH_MANAGER' | 'FIELD_EMPLOYEE'
   branchId: number | null
   branchName: string | null

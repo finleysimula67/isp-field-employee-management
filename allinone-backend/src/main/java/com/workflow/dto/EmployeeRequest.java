@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 public class EmployeeRequest {
     private String email;
     private String name;
+    private String phone;
     private Role role;
     private Long branchId;
     private String password;
@@ -24,6 +25,8 @@ public class EmployeeRequest {
     public void setEmail(String email) { this.email = email; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
     public Long getBranchId() { return branchId; }

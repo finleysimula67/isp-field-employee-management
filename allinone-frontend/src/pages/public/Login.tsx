@@ -28,6 +28,7 @@ export default function LoginPage() {
           id: res.data.userId,
           email: res.data.email,
           name: res.data.name,
+          phone: null,
           role: res.data.role as Employee['role'],
           branchId: null, branchName: null, authType: 'LOCAL_ONLY',
           isActive: true, isAccountApproved: true,

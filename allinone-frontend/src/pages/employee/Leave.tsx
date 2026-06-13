@@ -47,8 +47,9 @@ export default function LeavePage() {
       await createLeaveRequest({ ...form, employeeId: user?.id })
       setForm(initialForm)
       fetchRequests()
-    } catch {
-      setToast({ message: 'Failed to submit leave request', type: 'error' })
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to submit leave request'
+      setToast({ message: msg, type: 'error' })
     } finally {
       setSubmitting(false)
     }

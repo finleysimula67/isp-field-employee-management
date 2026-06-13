@@ -4,6 +4,7 @@ import com.workflow.dto.*;
 import com.workflow.entity.Employee;
 import com.workflow.entity.LeaveRequest;
 import com.workflow.service.LeaveRequestService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -44,7 +45,7 @@ public class LeaveRequestController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<LeaveRequestResponse>> create(@RequestBody LeaveRequestRequest request,
+    public ResponseEntity<ApiResponse<LeaveRequestResponse>> create(@Valid @RequestBody LeaveRequestRequest request,
                                                                      @AuthenticationPrincipal Employee employee) {
         return ResponseEntity.ok(ApiResponse.ok("Leave request submitted",
                 toResponse(leaveRequestService.createLeaveRequest(request, employee.getId()))));

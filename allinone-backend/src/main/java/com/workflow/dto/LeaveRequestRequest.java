@@ -6,7 +6,7 @@ public class LeaveRequestRequest {
     @NotBlank private String leaveType;
     @NotBlank private String startDate;
     @NotBlank private String endDate;
-    @NotBlank private String reason;
+    private String reason;
 
     public LeaveRequestRequest() {}
 

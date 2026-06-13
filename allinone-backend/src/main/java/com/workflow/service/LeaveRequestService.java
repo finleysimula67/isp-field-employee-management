@@ -59,8 +59,10 @@ public class LeaveRequestService {
                         List.of(LeaveStatus.PENDING, LeaveStatus.APPROVED));
         if (!overlapping.isEmpty())
             throw new RuntimeException("Employee already has a pending or approved leave overlapping these dates");
+        BigDecimal remaining = employee.getRemainingLeaveDays();
+        if (remaining == null) remaining = BigDecimal.ZERO;
         int durationDays = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
-        if (employee.getRemainingLeaveDays().compareTo(BigDecimal.valueOf(durationDays)) < 0)
+        if (remaining.compareTo(BigDecimal.valueOf(durationDays)) < 0)
             throw new RuntimeException("Insufficient remaining leave days");
         LeaveRequest leaveRequest = new LeaveRequest();
         leaveRequest.setEmployee(employee);

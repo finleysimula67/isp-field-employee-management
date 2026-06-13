@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getMyLogs, createDailyLog } from '../../api/dailyLogs'
 import { uploadFile } from '../../api/upload'
 import { useAuth } from '../../contexts/AuthContext'
@@ -50,7 +50,7 @@ export default function DailyLogPage() {
   const [photoPreview, setPhotoPreview] = useState('')
   const [gettingLocation, setGettingLocation] = useState(false)
 
-  const fetchLogs = () => {
+  const fetchLogs = useCallback(() => {
     setLoading(true)
     const params: any = {}
     if (filterDate) params.date = filterDate
@@ -59,9 +59,9 @@ export default function DailyLogPage() {
       .then(res => setLogs(res.data))
       .catch(() => setToast({ message: 'Failed to load data', type: 'error' }))
       .finally(() => setLoading(false))
-  }
+  }, [filterDate, filterCategory])
 
-  useEffect(() => { fetchLogs() }, [])
+  useEffect(() => { fetchLogs() }, [fetchLogs])
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) { setToast({ message: 'Geolocation is not supported by your browser', type: 'error' }); return }
@@ -89,6 +89,7 @@ export default function DailyLogPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.category || !form.description) { setToast({ message: 'Work type and description are required', type: 'error' }); return }
+    if (form.startTime && form.endTime && form.startTime >= form.endTime) { setToast({ message: 'End time must be after start time', type: 'error' }); return }
     setSubmitting(true)
     setToast(null)
     try {
@@ -108,11 +109,12 @@ export default function DailyLogPage() {
         payload.photoUrls = [uploadRes.data.url]
       }
       if (!isOnline) {
+        payload.photoUrls = photoFile ? ['pending_upload'] : []
         await enqueue('/daily-logs', 'POST', payload, localStorage.getItem('token'))
         setForm(initialForm)
         setPhotoFile(null)
         setPhotoPreview('')
-        setToast({ message: 'Saved offline — will sync when connection resumes', type: 'info' })
+        setToast({ message: 'Saved offline — photo queued for upload when online', type: 'info' })
       } else {
         await createDailyLog(payload)
         setForm(initialForm)
@@ -148,7 +150,7 @@ export default function DailyLogPage() {
                     <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
                   ))}
                 </select>
-                <p className="text-xs text-emerald-600 mt-1">Rate: Rs. 800/day — added on admin approval</p>
+                <p className="text-xs text-emerald-600 mt-1">{user?.wageType === 'HOURLY' ? `Hourly: Rs. ${Number(user?.hourlyWage || 100).toFixed(2)}/hr` : `Rate: Rs. ${Number(user?.dailyRate || 800).toFixed(2)}/day`} — added on admin approval</p>
               </div>
               <TimePicker label="Start Time" value={form.startTime} onChange={v => setForm(f => ({ ...f, startTime: v }))} />
               <TimePicker label="End Time" value={form.endTime} onChange={v => setForm(f => ({ ...f, endTime: v }))} />

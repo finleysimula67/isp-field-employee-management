@@ -55,7 +55,12 @@ export default function BranchesPage() {
         })
         setToast({ message: 'Branch updated', type: 'success' })
       } else {
-        await createBranch(form.name, form.code || undefined, form.address || undefined)
+        await createBranch({
+          name: form.name,
+          code: form.code || undefined,
+          address: form.address || undefined,
+          managerId: form.managerId ? Number(form.managerId) : undefined,
+        })
         setToast({ message: 'Branch created', type: 'success' })
       }
       resetForm()

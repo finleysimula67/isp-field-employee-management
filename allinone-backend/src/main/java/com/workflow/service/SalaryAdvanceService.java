@@ -211,7 +211,7 @@ public class SalaryAdvanceService {
                 .map(SalaryAdvance::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalAdvanced = advances.stream()
-                .filter(a -> a.getStatus() != AdvanceStatus.REJECTED && a.getStatus() != AdvanceStatus.SETTLED
+                .filter(a -> (a.getStatus() == AdvanceStatus.APPROVED || a.getStatus() == AdvanceStatus.DISBURSED)
                         && !a.getIsSettled())
                 .map(SalaryAdvance::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

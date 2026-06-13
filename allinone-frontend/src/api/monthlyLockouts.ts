@@ -11,9 +11,7 @@ export async function getLockoutStatus(yearMonth: string) {
 }
 
 export async function lockMonth(yearMonth: string) {
-  const params = new URLSearchParams()
-  params.append('yearMonth', yearMonth)
-  const res = await client.post('/lockouts/lock', params, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+  const res = await client.post('/lockouts/lock', { yearMonth })
   return res.data
 }
 

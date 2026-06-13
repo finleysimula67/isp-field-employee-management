@@ -47,9 +47,15 @@ public class PayrollService {
             wageRateAtTime = employee.getDailyRate() != null ? employee.getDailyRate() : BigDecimal.ZERO;
             grossPay = wageRateAtTime.multiply(BigDecimal.valueOf(daysWorked));
         }
-        PayrollRecord record = new PayrollRecord();
-        record.setEmployee(employee);
-        record.setPeriodLabel(periodStart.getMonthValue() + "/" + periodStart.getYear());
+        String periodLabel = periodStart.getMonthValue() + "/" + periodStart.getYear();
+        List<PayrollRecord> existing = payrollRecordRepository.findByEmployeeIdOrderByPeriodStartDesc(employee.getId());
+        PayrollRecord record = existing.stream()
+                .filter(r -> r.getPeriodLabel().equals(periodLabel)
+                        && (r.getStatus() == PayrollStatus.DRAFT
+                                || r.getStatus() == PayrollStatus.CALCULATED))
+                .findFirst().orElseGet(PayrollRecord::new);
+        if (record.getId() == null) record.setEmployee(employee);
+        record.setPeriodLabel(periodLabel);
         record.setPeriodStart(periodStart);
         record.setPeriodEnd(periodEnd);
         record.setDaysWorked(daysWorked);
@@ -101,15 +107,31 @@ public class PayrollService {
             throw new RuntimeException("Payroll record must be in APPROVED status");
         Employee paidBy = employeeRepository.findById(paidById)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String yearMonth = record.getPeriodLabel().replace("/", "-");
+        if (yearMonth.length() == 4) yearMonth = "0" + yearMonth;
+        monthlyLockoutRepository.findByYearMonth(yearMonth).ifPresent(ml -> {
+            if (ml.getIsUnlocked() != null && !ml.getIsUnlocked())
+                throw new RuntimeException("Month " + yearMonth + " is locked. Unlock it before marking as paid.");
+        });
+
+        List<SalaryAdvance> unsettled = salaryAdvanceRepository
+                .findByEmployeeIdAndIsSettledFalseAndStatusIn(record.getEmployee().getId(),
+                        List.of(AdvanceStatus.DISBURSED, AdvanceStatus.APPROVED));
+        BigDecimal totalAdvanceDeduction = unsettled.stream()
+                .map(SalaryAdvance::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal netAfterAdvances = record.getGrossPay().subtract(totalAdvanceDeduction);
+        if (netAfterAdvances.compareTo(BigDecimal.ZERO) < 0) netAfterAdvances = BigDecimal.ZERO;
+        record.setNetPay(netAfterAdvances);
+        record.setDeductions(totalAdvanceDeduction);
+
         record.setStatus(PayrollStatus.PAID);
         record.setPaidAt(LocalDateTime.now());
         record.setPaidBy(paidBy);
         PayrollRecord saved = payrollRecordRepository.save(record);
         auditLogService.log("PayrollRecord", id, "PAID", "APPROVED", "PAID", paidBy.getEmail());
 
-        List<SalaryAdvance> unsettled = salaryAdvanceRepository
-                .findByEmployeeIdAndIsSettledFalseAndStatusIn(record.getEmployee().getId(),
-                        List.of(AdvanceStatus.DISBURSED, AdvanceStatus.APPROVED));
         for (SalaryAdvance adv : unsettled) {
             adv.setIsSettled(true);
             adv.setSettledInPayrollId(saved.getId());
@@ -125,6 +147,12 @@ public class PayrollService {
     public List<PayrollRecord> batchCalculate(PayrollBatchRequest request) {
         LocalDate periodStart = LocalDate.parse(request.getPeriodStart());
         LocalDate periodEnd = LocalDate.parse(request.getPeriodEnd());
+        String yearMonth = periodStart.getMonthValue() + "-" + periodStart.getYear();
+        if (yearMonth.length() == 4) yearMonth = "0" + yearMonth;
+        monthlyLockoutRepository.findByYearMonth(yearMonth).ifPresent(ml -> {
+            if (ml.getIsUnlocked() != null && !ml.getIsUnlocked())
+                throw new RuntimeException("Month " + yearMonth + " is locked. Unlock it before calculating payroll.");
+        });
         List<Employee> employees;
         if (request.getEmployeeIds() != null && !request.getEmployeeIds().isEmpty()) {
             employees = request.getEmployeeIds().stream()

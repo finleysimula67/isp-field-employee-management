@@ -3,8 +3,6 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import NotificationBell from '../components/NotificationBell'
 import OfflineIndicator from '../components/OfflineIndicator'
-import { processQueue } from '../services/syncService'
-import { useOnlineStatus } from '../hooks/useOnlineStatus'
 
 const sidebarLinks = [
   { path: '/admin', label: 'Dashboard', icon: '📊' },

@@ -19,3 +19,13 @@ export async function updateTaskStatus(id: number, data: { status: string }) {
   const res = await client.patch(`/tasks/${id}/status`, data)
   return res.data
 }
+
+export async function updateTask(id: number, data: any) {
+  const res = await client.put(`/tasks/${id}`, data)
+  return res.data
+}
+
+export async function deleteTask(id: number) {
+  const res = await client.delete(`/tasks/${id}`)
+  return res.data
+}

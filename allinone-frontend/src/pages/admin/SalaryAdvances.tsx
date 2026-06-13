@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getAdvances, reviewAdvance, manualAdvance, getBalanceForEmployee } from '../../api/salaryAdvances'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
@@ -25,7 +25,7 @@ export default function SalaryAdvancesPage() {
   const [manualSubmitting, setManualSubmitting] = useState(false)
   const [employeeBalance, setEmployeeBalance] = useState<any>(null)
 
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     setLoading(true)
     const params: any = {}
     if (filterStatus) params.status = filterStatus
@@ -36,9 +36,9 @@ export default function SalaryAdvancesPage() {
       })
       .catch(() => setToast({ message: 'Failed to load data', type: 'error' }))
       .finally(() => setLoading(false))
-  }
+  }, [filterStatus])
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { fetchData() }, [fetchData])
 
   const empMap = new Map(employees.map((e: any) => [e.id, e]))
 
@@ -132,7 +132,7 @@ export default function SalaryAdvancesPage() {
         <div className="flex gap-4 items-end">
           <div>
             <label className="text-xs font-medium text-gray-500 block mb-1">Status</label>
-            <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); fetchData() }} className="input-field">
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="input-field">
               <option value="">All</option>
               <option value="PENDING">Pending</option>
               <option value="APPROVED">Approved</option>

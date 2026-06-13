@@ -34,8 +34,16 @@ public class AttendanceService {
         List<DailyLog> logs = dailyLogRepository.findByLogDateBetween(start, end);
         List<LeaveRequest> leaves = leaveRequestRepository
                 .findByStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatus(end, start, LeaveStatus.APPROVED);
-        Set<LocalDate> holidays = holidayRepository.findByDateBetween(start, end).stream()
-                .map(Holiday::getDate).collect(Collectors.toSet());
+        Set<LocalDate> holidays = new HashSet<>(holidayRepository.findByDateBetween(start, end).stream()
+                .map(Holiday::getDate).collect(Collectors.toSet()));
+        for (Holiday h : holidayRepository.findAll()) {
+            if (Boolean.TRUE.equals(h.getIsRecurringYearly())
+                    && !holidays.contains(h.getDate())) {
+                LocalDate adjusted = h.getDate().withYear(year);
+                if (!adjusted.isBefore(start) && !adjusted.isAfter(end))
+                    holidays.add(adjusted);
+            }
+        }
 
         Map<Long, Map<LocalDate, DailyLog>> logMap = new HashMap<>();
         for (DailyLog log : logs) {
@@ -96,14 +104,24 @@ public class AttendanceService {
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate start = yearMonth.atDay(1);
         LocalDate end = yearMonth.atEndOfMonth();
+        Employee emp = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
 
         List<DailyLog> logs = dailyLogRepository.findByEmployeeIdAndLogDateBetween(employeeId, start, end);
         List<LeaveRequest> leaves = leaveRequestRepository
                 .findByStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatus(end, start, LeaveStatus.APPROVED)
                 .stream().filter(lr -> lr.getEmployee().getId().equals(employeeId))
                 .collect(Collectors.toList());
-        Set<LocalDate> holidays = holidayRepository.findByDateBetween(start, end).stream()
-                .map(Holiday::getDate).collect(Collectors.toSet());
+        Set<LocalDate> holidays = new HashSet<>(holidayRepository.findByDateBetween(start, end).stream()
+                .map(Holiday::getDate).collect(Collectors.toSet()));
+        for (Holiday h : holidayRepository.findAll()) {
+            if (Boolean.TRUE.equals(h.getIsRecurringYearly())
+                    && !holidays.contains(h.getDate())) {
+                LocalDate adjusted = h.getDate().withYear(year);
+                if (!adjusted.isBefore(start) && !adjusted.isAfter(end))
+                    holidays.add(adjusted);
+            }
+        }
 
         Map<LocalDate, DailyLog> logMap = logs.stream()
                 .collect(Collectors.toMap(DailyLog::getLogDate, l -> l, (a, b) -> a));
@@ -144,7 +162,7 @@ public class AttendanceService {
 
         AttendanceResponse ar = new AttendanceResponse();
         ar.setEmployeeId(employeeId);
-        ar.setEmployeeName(null);
+        ar.setEmployeeName(emp.getName());
         ar.setDays(days);
         ar.setStats(stats);
         return ar;
@@ -169,10 +187,19 @@ public class AttendanceService {
 
         long totalDays = yearMonth.lengthOfMonth() - holidays.size();
 
+        Map<Long, Set<LocalDate>> employeeLeaveDates = new HashMap<>();
+        for (LeaveRequest lr : leaves) {
+            for (LocalDate d = lr.getStartDate(); !d.isAfter(lr.getEndDate()); d = d.plusDays(1)) {
+                if (!d.isBefore(start) && !d.isAfter(end))
+                    employeeLeaveDates.computeIfAbsent(lr.getEmployee().getId(), k -> new HashSet<>()).add(d);
+            }
+        }
+
         List<WageSummaryResponse> result = new ArrayList<>();
         for (Employee emp : employees) {
             long present = approvedCounts.getOrDefault(emp.getId(), 0L);
-            long absent = totalDays - present;
+            long onLeave = employeeLeaveDates.getOrDefault(emp.getId(), Collections.emptySet()).size();
+            long absent = totalDays - present - onLeave;
             BigDecimal rate = emp.getDailyRate() != null ? emp.getDailyRate() : BigDecimal.valueOf(800);
             BigDecimal earned = rate.multiply(BigDecimal.valueOf(present));
 
@@ -202,10 +229,28 @@ public class AttendanceService {
                 .distinct()
                 .count();
 
-        Set<LocalDate> holidays = holidayRepository.findByDateBetween(start, end).stream()
-                .map(Holiday::getDate).collect(Collectors.toSet());
+        Set<LocalDate> holidays = new HashSet<>(holidayRepository.findByDateBetween(start, end).stream()
+                .map(Holiday::getDate).collect(Collectors.toSet()));
+        for (Holiday h : holidayRepository.findAll()) {
+            if (Boolean.TRUE.equals(h.getIsRecurringYearly())
+                    && !holidays.contains(h.getDate())) {
+                LocalDate adjusted = h.getDate().withYear(year);
+                if (!adjusted.isBefore(start) && !adjusted.isAfter(end))
+                    holidays.add(adjusted);
+            }
+        }
         long totalDays = yearMonth.lengthOfMonth() - holidays.size();
-        long absent = totalDays - present;
+        long onLeave = leaves.stream()
+                .filter(lr -> lr.getEmployee().getId().equals(employeeId))
+                .mapToLong(lr -> {
+                    LocalDate lStart = lr.getStartDate();
+                    LocalDate lEnd = lr.getEndDate();
+                    long days = 0;
+                    for (LocalDate d = lStart; !d.isAfter(lEnd) && !d.isAfter(end); d = d.plusDays(1))
+                        if (!d.isBefore(start) && !holidays.contains(d)) days++;
+                    return days;
+                }).sum();
+        long absent = totalDays - present - onLeave;
 
         BigDecimal rate = emp.getDailyRate() != null ? emp.getDailyRate() : BigDecimal.valueOf(800);
         BigDecimal earned = rate.multiply(BigDecimal.valueOf(present));

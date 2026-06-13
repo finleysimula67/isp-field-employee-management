@@ -43,7 +43,8 @@ public class EmployeeService {
                 request.getMaxAdvanceLimit() != null ? request.getMaxAdvanceLimit() : BigDecimal.valueOf(5000)
         );
         if (request.getBranchId() != null)
-            branchRepository.findById(request.getBranchId()).ifPresent(employee::setBranch);
+            employee.setBranch(branchRepository.findById(request.getBranchId())
+                    .orElseThrow(() -> new RuntimeException("Branch not found with id " + request.getBranchId())));
         if (request.getPhone() != null) employee.setPhone(request.getPhone());
         employee = employeeRepository.save(employee);
         auditLogService.log("Employee", employee.getId(), "CREATED_ADMIN", null, null, employee.getEmail());
@@ -57,7 +58,8 @@ public class EmployeeService {
         if (request.getPhone() != null) employee.setPhone(request.getPhone());
         if (request.getRole() != null) employee.setRole(request.getRole());
         if (request.getBranchId() != null)
-            branchRepository.findById(request.getBranchId()).ifPresent(employee::setBranch);
+            employee.setBranch(branchRepository.findById(request.getBranchId())
+                    .orElseThrow(() -> new RuntimeException("Branch not found with id " + request.getBranchId())));
         if (request.getWageType() != null) employee.setWageType(request.getWageType());
         if (request.getDailyRate() != null) employee.setDailyRate(request.getDailyRate());
         if (request.getHourlyWage() != null) employee.setHourlyWage(request.getHourlyWage());

@@ -47,11 +47,7 @@ public class NotificationService {
 
     @Transactional
     public void markAllAsRead(Long recipientId) {
-        List<Notification> notifications = notificationRepository.findByRecipientIdOrderByCreatedAtDesc(recipientId);
-        for (Notification n : notifications) {
-            if (!n.getIsRead()) n.setIsRead(true);
-        }
-        notificationRepository.saveAll(notifications);
+        notificationRepository.markAllAsReadByRecipientId(recipientId);
         broadcastUnreadCount(recipientId);
     }
 

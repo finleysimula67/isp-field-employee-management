@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getDailyLogs, reviewDailyLog, batchReviewDailyLogs } from '../../api/dailyLogs'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
@@ -25,7 +25,7 @@ export default function DailyLogsPage() {
   const [batchAction, setBatchAction] = useState('APPROVED')
   const [batchProcessing, setBatchProcessing] = useState(false)
 
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     setLoading(true)
     const params: any = {}
     if (filterStatus) params.status = filterStatus
@@ -38,9 +38,9 @@ export default function DailyLogsPage() {
       })
       .catch(() => setToast({ message: 'Failed to load data', type: 'error' }))
       .finally(() => setLoading(false))
-  }
+  }, [filterStatus, filterDate, filterEmployee])
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { fetchData() }, [fetchData])
 
   const empMap = new Map(employees.map((e: any) => [e.id, e]))
 
@@ -100,7 +100,7 @@ export default function DailyLogsPage() {
           </div>
           <div className="flex-1 min-w-[120px]">
             <label className="text-xs font-medium text-gray-500 block mb-1">Status</label>
-            <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); fetchData() }} className="input-field w-full">
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="input-field w-full">
               <option value="">All</option>
               <option value="PENDING">Pending</option>
               <option value="APPROVED">Approved</option>
@@ -110,7 +110,7 @@ export default function DailyLogsPage() {
           </div>
           <div className="flex-1 min-w-[140px]">
             <label className="text-xs font-medium text-gray-500 block mb-1">Employee</label>
-            <select value={filterEmployee} onChange={e => { setFilterEmployee(e.target.value); fetchData() }} className="input-field w-full">
+            <select value={filterEmployee} onChange={e => setFilterEmployee(e.target.value)} className="input-field w-full">
               <option value="">All</option>
               {employees.map((e: any) => (
                 <option key={e.id} value={e.id}>{e.name}</option>

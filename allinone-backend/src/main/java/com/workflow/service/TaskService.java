@@ -86,12 +86,13 @@ public class TaskService {
                 || currentUser.getRole() == Role.SUPER_ADMIN;
         if (!isAssigned && !isManagerOrAdmin)
             throw new AccessDeniedException("Not authorized to update this task");
+        TaskStatus oldStatus = task.getStatus();
         TaskStatus newStatus = TaskStatus.valueOf(request.getStatus());
         task.setStatus(newStatus);
         if (newStatus == TaskStatus.COMPLETED)
             task.setCompletedAt(LocalDateTime.now());
         Task saved = taskRepository.save(task);
-        auditLogService.log("Task", id, "STATUS_CHANGED", task.getStatus().name(), newStatus.name(), currentUser.getEmail());
+        auditLogService.log("Task", id, "STATUS_CHANGED", oldStatus.name(), newStatus.name(), currentUser.getEmail());
 
         if (!isManagerOrAdmin) {
             List<Employee> admins = employeeRepository.findByRoleIn(
@@ -118,5 +119,35 @@ public class TaskService {
         if (status != null)
             tasks = tasks.stream().filter(t -> t.getStatus().name().equals(status)).collect(Collectors.toList());
         return tasks;
+    }
+
+    @Transactional
+    public Task updateTask(Long id, TaskRequest request, Long currentUserId) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        if (request.getAssignedTo() != null) {
+            Employee assignedTo = employeeRepository.findById(request.getAssignedTo())
+                    .orElseThrow(() -> new RuntimeException("Assigned employee not found"));
+            task.setAssignedTo(assignedTo);
+        }
+        if (request.getTitle() != null) task.setTitle(request.getTitle());
+        if (request.getDescription() != null) task.setDescription(request.getDescription());
+        if (request.getPriority() != null) task.setPriority(TaskPriority.valueOf(request.getPriority()));
+        if (request.getScheduledDate() != null) task.setScheduledDate(LocalDate.parse(request.getScheduledDate()));
+        if (request.getCustomerName() != null) task.setCustomerName(request.getCustomerName());
+        if (request.getCustomerPhone() != null) task.setCustomerPhone(request.getCustomerPhone());
+        if (request.getCustomerAddress() != null) task.setCustomerAddress(request.getCustomerAddress());
+        Task saved = taskRepository.save(task);
+        auditLogService.log("Task", id, "UPDATED", null, null, String.valueOf(currentUserId));
+        return saved;
+    }
+
+    @Transactional
+    public void deleteTask(Long id) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        task.setStatus(TaskStatus.CANCELLED);
+        taskRepository.save(task);
+        auditLogService.log("Task", id, "CANCELLED", null, "CANCELLED", null);
     }
 }

@@ -52,9 +52,24 @@ public class TaskController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<TaskResponse>> updateStatus(@PathVariable Long id,
-                                                                   @RequestBody TaskStatusUpdateRequest request,
-                                                                   @AuthenticationPrincipal Employee employee) {
+                                                                    @RequestBody TaskStatusUpdateRequest request,
+                                                                    @AuthenticationPrincipal Employee employee) {
         return ResponseEntity.ok(ApiResponse.ok(toResponse(taskService.updateTaskStatus(id, request, employee.getId()))));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<TaskResponse>> update(@PathVariable Long id,
+                                                             @RequestBody TaskRequest request,
+                                                             @AuthenticationPrincipal Employee employee) {
+        return ResponseEntity.ok(ApiResponse.ok("Task updated", toResponse(taskService.updateTask(id, request, employee.getId()))));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.ok(ApiResponse.ok("Task deleted", null));
     }
 
     private TaskResponse toResponse(Task task) {

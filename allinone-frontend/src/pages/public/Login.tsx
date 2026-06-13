@@ -41,7 +41,7 @@ export default function LoginPage() {
           const empRes = await client.get(`/employees/${res.data.userId}`)
           authLogin(res.data.token, empRes.data.data as Employee)
         } catch {
-          // full details fetch failed — minimal employee already stored above
+          setError('Logged in but failed to load full profile — some data may be incomplete')
         }
         if (res.data.role === 'SUPER_ADMIN' || res.data.role === 'BRANCH_MANAGER') {
           navigate('/admin')

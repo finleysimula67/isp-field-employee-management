@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getPayrollRecords, calculatePayroll, approvePayroll, markPaid, batchCalculatePayroll } from '../../api/payroll'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
@@ -23,7 +23,7 @@ export default function PayrollPage() {
   const [batchLoading, setBatchLoading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     setLoading(true)
     const params: any = {}
     if (filterPeriod) params.periodLabel = filterPeriod
@@ -35,9 +35,9 @@ export default function PayrollPage() {
       })
       .catch(() => setToast({ message: 'Failed to load data', type: 'error' }))
       .finally(() => setLoading(false))
-  }
+  }, [filterPeriod, filterEmployee])
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { fetchData() }, [fetchData])
 
   const handleCalculate = async () => {
     if (!periodStart || !periodEnd) return
@@ -126,7 +126,7 @@ export default function PayrollPage() {
           </div>
           <div>
             <label className="text-xs font-medium text-gray-500 block mb-1">Employee</label>
-            <select value={filterEmployee} onChange={e => { setFilterEmployee(e.target.value); fetchData() }} className="input-field">
+            <select value={filterEmployee} onChange={e => setFilterEmployee(e.target.value)} className="input-field">
               <option value="">All</option>
               {employees.map((emp: any) => (
                 <option key={emp.id} value={emp.id}>{emp.name}</option>

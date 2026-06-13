@@ -65,8 +65,8 @@ public class MonthlyLockoutService {
         List<DailyLog> monthLogs = dailyLogRepository.findByLogDateBetween(startDate, endDate);
         for (DailyLog log : monthLogs) {
             log.setMonthLocked(true);
-            dailyLogRepository.save(log);
         }
+        if (!monthLogs.isEmpty()) dailyLogRepository.saveAll(monthLogs);
         MonthlyLockout saved = monthlyLockoutRepository.save(lockout);
         auditLogService.log("MonthlyLockout", saved.getId(), "LOCKED", null, null, yearMonth);
         return saved;
@@ -90,8 +90,8 @@ public class MonthlyLockoutService {
         List<DailyLog> monthLogs = dailyLogRepository.findByLogDateBetween(startDate, endDate);
         for (DailyLog log : monthLogs) {
             log.setMonthLocked(false);
-            dailyLogRepository.save(log);
         }
+        if (!monthLogs.isEmpty()) dailyLogRepository.saveAll(monthLogs);
         MonthlyLockout saved = monthlyLockoutRepository.save(lockout);
         auditLogService.log("MonthlyLockout", saved.getId(), "UNLOCKED", null, null, yearMonth);
         return saved;

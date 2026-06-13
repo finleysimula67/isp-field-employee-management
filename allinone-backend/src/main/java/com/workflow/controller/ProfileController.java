@@ -3,7 +3,6 @@ package com.workflow.controller;
 import com.workflow.dto.*;
 import com.workflow.entity.AuthType;
 import com.workflow.entity.Employee;
-import com.workflow.entity.WageType;
 import com.workflow.repository.EmployeeRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,9 +34,7 @@ public class ProfileController {
         Employee e = employeeRepository.findById(employee.getId())
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         if (request.getName() != null) e.setName(request.getName());
-        if (request.getWageType() != null) e.setWageType(WageType.valueOf(request.getWageType()));
-        if (request.getDailyRate() != null) e.setDailyRate(request.getDailyRate());
-        if (request.getHourlyWage() != null) e.setHourlyWage(request.getHourlyWage());
+        if (request.getPhone() != null) e.setPhone(request.getPhone());
         Employee saved = employeeRepository.save(e);
         return ResponseEntity.ok(ApiResponse.ok("Profile updated", toResponse(saved)));
     }
@@ -62,15 +59,19 @@ public class ProfileController {
         r.setId(e.getId());
         r.setEmail(e.getEmail());
         r.setName(e.getName());
+        r.setPhone(e.getPhone());
         r.setRole(e.getRole() != null ? e.getRole().name() : null);
         r.setBranchName(e.getBranch() != null ? e.getBranch().getName() : null);
         r.setBranchId(e.getBranch() != null ? e.getBranch().getId() : null);
         r.setIsActive(e.getIsActive());
         r.setIsAccountApproved(e.getIsAccountApproved());
+        r.setIsOwner(e.getIsOwner());
         r.setWageType(e.getWageType() != null ? e.getWageType().name() : null);
         r.setDailyRate(e.getDailyRate());
         r.setHourlyWage(e.getHourlyWage());
+        r.setTotalLeaveDaysPerYear(e.getTotalLeaveDaysPerYear());
         r.setRemainingLeaveDays(e.getRemainingLeaveDays());
+        r.setCarryOverLeave(e.getCarryOverLeave());
         r.setMaxAdvanceLimit(e.getMaxAdvanceLimit());
         r.setCreatedAt(e.getCreatedAt());
         return r;

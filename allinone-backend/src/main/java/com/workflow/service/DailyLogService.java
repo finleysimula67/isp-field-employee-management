@@ -60,9 +60,14 @@ public class DailyLogService {
         log.setEmployee(employee);
         if (request.getBranchId() != null)
             branchRepository.findById(request.getBranchId()).ifPresent(log::setBranch);
-        log.setLogDate(request.getLogDate() != null ? LocalDate.parse(request.getLogDate()) : LocalDate.now());
+        LocalDate logDate = request.getLogDate() != null ? LocalDate.parse(request.getLogDate()) : LocalDate.now();
+        if (logDate.isAfter(LocalDate.now()))
+            throw new RuntimeException("Log date cannot be in the future");
+        log.setLogDate(logDate);
         if (request.getStartTime() != null) log.setStartTime(LocalTime.parse(request.getStartTime()));
         if (request.getEndTime() != null) log.setEndTime(LocalTime.parse(request.getEndTime()));
+        if (log.getStartTime() != null && log.getEndTime() != null && log.getEndTime().isBefore(log.getStartTime()))
+            throw new RuntimeException("End time must be after start time");
         if (request.getHoursWorked() != null) log.setHoursWorked(BigDecimal.valueOf(request.getHoursWorked()));
         if (request.getCategory() != null) log.setCategory(LogCategory.valueOf(request.getCategory()));
         if (request.getLocationDescription() != null) log.setLocationDescription(request.getLocationDescription());
@@ -238,16 +243,29 @@ public class DailyLogService {
         Employee emp = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         List<DailyLog> allLogs = dailyLogRepository.findByEmployeeIdOrderByLogDateDesc(employeeId);
-        long approvedDays = allLogs.stream()
+        List<DailyLog> approved = allLogs.stream()
                 .filter(l -> l.getStatus() == LogStatus.APPROVED)
+                .collect(Collectors.toList());
+        long approvedDays = approved.stream()
                 .map(DailyLog::getLogDate)
                 .distinct()
                 .count();
-        BigDecimal dailyRate = emp.getDailyRate() != null ? emp.getDailyRate() : BigDecimal.valueOf(800);
-        BigDecimal totalEarned = dailyRate.multiply(BigDecimal.valueOf(approvedDays));
+        BigDecimal totalHours = approved.stream()
+                .filter(l -> l.getHoursWorked() != null)
+                .map(DailyLog::getHoursWorked)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal rate = emp.getDailyRate() != null ? emp.getDailyRate() : BigDecimal.valueOf(800);
+        BigDecimal totalEarned;
+        if (emp.getWageType() == WageType.HOURLY) {
+            BigDecimal hourlyRate = emp.getHourlyWage() != null ? emp.getHourlyWage() : BigDecimal.valueOf(100);
+            totalEarned = hourlyRate.multiply(totalHours);
+        } else {
+            totalEarned = rate.multiply(BigDecimal.valueOf(approvedDays));
+        }
         Map<String, Object> result = new HashMap<>();
         result.put("approvedDays", approvedDays);
-        result.put("dailyRate", dailyRate);
+        result.put("totalHours", totalHours);
+        result.put("dailyRate", rate);
         result.put("totalEarned", totalEarned);
         return result;
     }

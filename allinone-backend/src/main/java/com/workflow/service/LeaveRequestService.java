@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,7 +53,13 @@ public class LeaveRequestService {
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         LocalDate startDate = LocalDate.parse(request.getStartDate());
         LocalDate endDate = LocalDate.parse(request.getEndDate());
-        int durationDays = (int) Period.between(startDate, endDate).getDays() + 1;
+        List<LeaveRequest> overlapping = leaveRequestRepository
+                .findByEmployeeAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
+                        employee, endDate, startDate,
+                        List.of(LeaveStatus.PENDING, LeaveStatus.APPROVED));
+        if (!overlapping.isEmpty())
+            throw new RuntimeException("Employee already has a pending or approved leave overlapping these dates");
+        int durationDays = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
         if (employee.getRemainingLeaveDays().compareTo(BigDecimal.valueOf(durationDays)) < 0)
             throw new RuntimeException("Insufficient remaining leave days");
         LeaveRequest leaveRequest = new LeaveRequest();

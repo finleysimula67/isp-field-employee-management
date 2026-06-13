@@ -198,7 +198,7 @@ export default function EmployeesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-medium text-gray-500 block mb-1">Email *</label>
-                  <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input-field w-full" required />
+                  <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input-field w-full" required disabled={!!editingEmployee} />
                 </div>
               <div>
                 <label className="text-xs font-medium text-gray-500 block mb-1">Name *</label>
@@ -243,7 +243,7 @@ export default function EmployeesPage() {
                   </select>
                 </div>
               </div>
-              {form.authType !== 'GOOGLE_ONLY' && (
+              {!editingEmployee && form.authType !== 'GOOGLE_ONLY' && (
                 <div>
                   <label className="text-xs font-medium text-gray-500 block mb-1">Password {form.authType === 'LOCAL_ONLY' ? '*' : ''}</label>
                   <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input-field w-full" required={form.authType === 'LOCAL_ONLY'} />

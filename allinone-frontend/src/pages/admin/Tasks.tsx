@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getTasks, createTask } from '../../api/tasks'
+import { getTasks, createTask, updateTask, deleteTask } from '../../api/tasks'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
@@ -35,8 +35,10 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('')
   const [form, setForm] = useState(initialForm)
+  const [editingTask, setEditingTask] = useState<any | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   const fetchData = () => {
     setLoading(true)
@@ -71,15 +73,70 @@ export default function TasksPage() {
     }
   }
 
+  const handleEdit = (task: any) => {
+    setEditingTask(task)
+    setForm({
+      assignedTo: String(task.assignedTo || ''),
+      title: task.title || '',
+      description: task.description || '',
+      priority: task.priority || 'MEDIUM',
+      scheduledDate: task.scheduledDate || '',
+      customerName: task.customerName || '',
+      customerPhone: task.customerPhone || '',
+      customerAddress: task.customerAddress || '',
+    })
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingTask) return
+    setSubmitting(true)
+    setToast(null)
+    try {
+      await updateTask(editingTask.id, {
+        assignedTo: Number(form.assignedTo),
+        title: form.title,
+        description: form.description,
+        priority: form.priority,
+        scheduledDate: form.scheduledDate || null,
+        customerName: form.customerName || null,
+        customerPhone: form.customerPhone || null,
+        customerAddress: form.customerAddress || null,
+      })
+      setEditingTask(null)
+      setForm(initialForm)
+      setToast({ message: 'Task updated', type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Failed to update task', type: 'error' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Cancel this task?')) return
+    setDeletingId(id)
+    try {
+      await deleteTask(id)
+      setToast({ message: 'Task cancelled', type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Failed to cancel task', type: 'error' })
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl font-bold text-gray-900">Tasks</h1>
       </div>
       <div className="card p-6 mb-6">
-        <h2 className="font-display text-lg font-bold text-gray-900 mb-4">Create Task</h2>
+        <h2 className="font-display text-lg font-bold text-gray-900 mb-4">{editingTask ? 'Edit Task' : 'Create Task'}</h2>
         <Toast message={toast?.message || ''} type={toast?.type || 'info'} visible={!!toast} onClose={() => setToast(null)} />
-        <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={editingTask ? handleUpdate : handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-medium text-gray-500 block mb-1">Assigned To</label>
             <select value={form.assignedTo} onChange={e => setForm(f => ({ ...f, assignedTo: e.target.value }))} className="input-field" required>
@@ -122,8 +179,11 @@ export default function TasksPage() {
             <label className="text-xs font-medium text-gray-500 block mb-1">Customer Address</label>
             <input value={form.customerAddress} onChange={e => setForm(f => ({ ...f, customerAddress: e.target.value }))} className="input-field w-full" />
           </div>
-          <div className="md:col-span-2">
-            <button type="submit" disabled={submitting} className="btn-admin">{submitting ? 'Creating...' : 'Create Task'}</button>
+          <div className="md:col-span-2 flex gap-3">
+            <button type="submit" disabled={submitting} className="btn-admin">{submitting ? 'Saving...' : editingTask ? 'Update Task' : 'Create Task'}</button>
+            {editingTask && (
+              <button type="button" onClick={() => { setEditingTask(null); setForm(initialForm) }} className="btn-secondary">Cancel</button>
+            )}
           </div>
         </form>
       </div>
@@ -175,7 +235,12 @@ export default function TasksPage() {
                   </td>
                   <td className="py-3 px-4 text-gray-500">{task.scheduledDate || '—'}</td>
                   <td className="py-3 px-4">
-                    <span className="text-gray-400 text-xs">—</span>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleEdit(task)} className="text-xs text-blue-600 hover:text-blue-800">Edit</button>
+                      <button onClick={() => handleDelete(task.id)} disabled={deletingId === task.id} className="text-xs text-red-600 hover:text-red-800 disabled:opacity-50">
+                        {deletingId === task.id ? '...' : 'Cancel'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -22,7 +23,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -35,12 +41,11 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    // 🔑 Linked directly to your application.yml: ${CORS_ALLOWED_ORIGINS}
-    @Value("${app.cors.origins:http://localhost:5173,http://localhost:3000,https://allinone-rolpa.vercel.app}")
+    // 🔑 Explicitly checks the UPPERCASE Render Dashboard Variable names with defaults
+    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,https://allinone-rolpa.vercel.app}")
     private String corsOrigins;
 
-    // 🔑 Linked directly to your application.yml: ${APP_OAUTH2_REDIRECT_URI}
-    @Value("${app.oauth2.redirect-uri:https://allinone-rolpa.vercel.app/oauth2/callback}")
+    @Value("${APP_OAUTH2_REDIRECT_URI:https://allinone-rolpa.vercel.app/oauth2/callback}")
     private String oauth2RedirectUri;
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -70,8 +75,11 @@ public class SecurityConfig {
             .oauth2Login(oauth2 -> oauth2
                 .authorizationEndpoint(authorization -> authorization
                     .baseUri("/oauth2/authorization")
-                    // ⭐ Crucial: Use Session Repository to preserve cookies during Vercel -> Render cross-domain transfers
+                    // ⭐ Session Repository preserves cookie tracking during cross-domain flow
                     .authorizationRequestRepository(cookieAuthorizationRequestRepository()))
+                // 🛡️ Handles network token drops over unstable free cloud tier environments
+                .tokenEndpoint(token -> token
+                    .accessTokenResponseClient(accessTokenResponseClient()))
                 .userInfoEndpoint(userInfo -> userInfo.userService(googleOAuth2UserService))
                 .successHandler(oauth2SuccessHandler)
                 .failureHandler((request, response, exception) -> {
@@ -87,6 +95,21 @@ public class SecurityConfig {
     @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> cookieAuthorizationRequestRepository() {
         return new HttpSessionOAuth2AuthorizationRequestRepository();
+    }
+
+    @Bean
+    public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
+        DefaultAuthorizationCodeTokenResponseClient tokenResponseClient = new DefaultAuthorizationCodeTokenResponseClient();
+        
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(15000); 
+        requestFactory.setReadTimeout(15000);    
+        
+        RestTemplate restTemplate = new RestTemplate(requestFactory);
+        restTemplate.setErrorHandler(new DefaultResponseErrorHandler());
+        
+        tokenResponseClient.setRestOperations(restTemplate);
+        return tokenResponseClient;
     }
 
     @Bean

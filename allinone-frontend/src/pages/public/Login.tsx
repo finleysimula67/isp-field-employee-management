@@ -38,7 +38,7 @@ export default function LoginPage() {
         }
         authLogin(res.data.token, minimalEmployee)
         try {
-          const empRes = await client.get(`/employees/${res.data.userId}`)
+          const empRes = await client.get('/employees/me')
           authLogin(res.data.token, empRes.data.data as Employee)
         } catch {
           setError('Logged in but failed to load full profile — some data may be incomplete')

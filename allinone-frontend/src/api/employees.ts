@@ -11,6 +11,11 @@ export async function getEmployee(id: number): Promise<ApiResponse<Employee>> {
   return res.data
 }
 
+export async function getCurrentEmployee(): Promise<ApiResponse<Employee>> {
+  const res = await client.get('/employees/me')
+  return res.data
+}
+
 export async function transferOwnership(targetId: number): Promise<ApiResponse<Employee>> {
   const res = await client.put(`/employees/transfer-ownership/${targetId}`)
   return res.data

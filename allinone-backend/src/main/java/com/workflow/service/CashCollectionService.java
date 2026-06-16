@@ -76,7 +76,11 @@ public class CashCollectionService {
             notif.setRelatedEntityType("CashCollection");
             notif.setRelatedEntityId(saved.getId());
             notificationRepository.save(notif);
-            notificationService.broadcastNotificationToRecipient(notif);
+            try {
+                notificationService.broadcastNotificationToRecipient(notif);
+            } catch (Exception e) {
+                System.err.println("Cash collection notification broadcast skipped: " + e.getMessage());
+            }
 
             try {
                 emailService.sendEmail(admin.getEmail(), "New Cash Collection: " + employee.getName(),

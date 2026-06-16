@@ -52,18 +52,30 @@ public class NotificationService {
     }
 
     public void broadcastNotification(Long recipientId, Notification notification) {
-        messagingTemplate.convertAndSend("/topic/notifications/" + recipientId, toResponse(notification));
+        try {
+            messagingTemplate.convertAndSend("/topic/notifications/" + recipientId, toResponse(notification));
+        } catch (Exception e) {
+            System.err.println("WebSocket notification broadcast failed: " + e.getMessage());
+        }
     }
 
     public void broadcastUnreadCount(Long recipientId) {
-        long count = getUnreadCount(recipientId);
-        messagingTemplate.convertAndSend("/topic/notifications/" + recipientId + "/count", count);
+        try {
+            long count = getUnreadCount(recipientId);
+            messagingTemplate.convertAndSend("/topic/notifications/" + recipientId + "/count", count);
+        } catch (Exception e) {
+            System.err.println("WebSocket unread count broadcast failed: " + e.getMessage());
+        }
     }
 
     public void broadcastNotificationToRecipient(Notification notification) {
-        Long recipientId = notification.getRecipient().getId();
-        messagingTemplate.convertAndSend("/topic/notifications/" + recipientId, toResponse(notification));
-        broadcastUnreadCount(recipientId);
+        try {
+            Long recipientId = notification.getRecipient().getId();
+            messagingTemplate.convertAndSend("/topic/notifications/" + recipientId, toResponse(notification));
+            broadcastUnreadCount(recipientId);
+        } catch (Exception e) {
+            System.err.println("WebSocket notification broadcast failed: " + e.getMessage());
+        }
     }
 
     private NotificationResponse toResponse(Notification n) {

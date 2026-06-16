@@ -1,6 +1,5 @@
 package com.workflow.config;
 
-import com.workflow.security.CookieOAuth2AuthorizationRequestRepository;
 import com.workflow.security.CustomUserDetailsService;
 import com.workflow.security.GoogleOAuth2UserService;
 import com.workflow.security.JwtAuthenticationFilter;
@@ -22,6 +21,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
@@ -50,23 +52,20 @@ public class SecurityConfig {
     private final GoogleOAuth2UserService googleOAuth2UserService;
     private final CustomUserDetailsService userDetailsService;
     private final OAuth2SuccessHandler oauth2SuccessHandler;
-    private final CookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, GoogleOAuth2UserService googleOAuth2UserService,
-                          CustomUserDetailsService userDetailsService, @Lazy OAuth2SuccessHandler oauth2SuccessHandler,
-                          CookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository) {
+                          CustomUserDetailsService userDetailsService, @Lazy OAuth2SuccessHandler oauth2SuccessHandler) {
         this.jwtAuthFilter = jwtAuthFilter; 
         this.googleOAuth2UserService = googleOAuth2UserService;
         this.userDetailsService = userDetailsService; 
         this.oauth2SuccessHandler = oauth2SuccessHandler;
-        this.cookieOAuth2AuthorizationRequestRepository = cookieOAuth2AuthorizationRequestRepository;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/ws/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
@@ -77,7 +76,7 @@ public class SecurityConfig {
                 .authorizationEndpoint(authorization -> authorization
                     .baseUri("/oauth2/authorization")
                     // ⭐ Session Repository preserves cookie tracking during cross-domain flow
-                    .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository))
+                    .authorizationRequestRepository(authorizationRequestRepository()))
                 // 🛡️ Handles network token drops over unstable free cloud tier environments
                 .tokenEndpoint(token -> token
                     .accessTokenResponseClient(accessTokenResponseClient()))
@@ -91,6 +90,11 @@ public class SecurityConfig {
             .authenticationProvider(authProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Bean
+    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
+        return new HttpSessionOAuth2AuthorizationRequestRepository();
     }
 
     @Bean

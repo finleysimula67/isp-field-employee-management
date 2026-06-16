@@ -127,7 +127,7 @@ export default function AdminLayout() {
 
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-        <div className="flex justify-around max-w-lg mx-auto">
+        <div className="flex w-full">
           {[{ path: '/admin', label: 'Dashboard', icon: '📊' },
             { path: '/admin/employees', label: 'Employees', icon: '👥' },
             { path: '/admin/daily-logs', label: 'Logs', icon: '📋' },
@@ -140,12 +140,12 @@ export default function AdminLayout() {
               key={link.path}
               to={link.path}
               onClick={() => setSidebarOpen(false)}
-              className={`flex flex-col items-center py-1 px-1 text-[9px] leading-tight transition-colors flex-1 ${
+              className={`flex flex-col items-center justify-center py-1 px-0 text-[9px] leading-tight flex-1 min-w-0 ${
                 location.pathname === link.path ? 'text-admin-primary' : 'text-gray-400'
               }`}
             >
-              <span className="text-sm">{link.icon}</span>
-              <span className="mt-0.5 truncate max-w-full">{link.label}</span>
+              <span className="text-sm leading-none">{link.icon}</span>
+              <span className="mt-0.5 truncate max-w-full px-0.5 leading-none">{link.label}</span>
             </Link>
           ))}
         </div>

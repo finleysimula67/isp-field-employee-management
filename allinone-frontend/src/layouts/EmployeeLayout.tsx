@@ -98,22 +98,22 @@ export default function EmployeeLayout() {
           </div>
         </main>
       </div>
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-        <div className="flex justify-around max-w-lg mx-auto">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 ">
+        <div className="flex w-full">
           {bottomNav.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center py-1 px-1 text-[9px] leading-tight transition-colors flex-1 ${
+              className={`flex flex-col items-center justify-center py-1 px-0 text-[9px] leading-tight flex-1 min-w-0 ${
                 location.pathname === item.path
                   ? 'text-emp-primary'
                   : 'text-gray-400'
               } ${item.path === '/employee/cash-collection' ? 'relative' : ''}`}
             >
-              <span className={`text-sm ${item.path === '/employee/cash-collection' ? 'drop-shadow-sm' : ''}`}>{item.icon}</span>
-              <span className="mt-0.5 truncate max-w-full">{item.label}</span>
+              <span className={`text-sm leading-none ${item.path === '/employee/cash-collection' ? 'drop-shadow-sm' : ''}`}>{item.icon}</span>
+              <span className="mt-0.5 truncate max-w-full px-0.5 leading-none">{item.label}</span>
               {item.path === '/employee/cash-collection' && (
-                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                <span className="absolute -top-0.5 right-1 w-1.5 h-1.5 bg-emerald-400 rounded-full" />
               )}
             </Link>
           ))}

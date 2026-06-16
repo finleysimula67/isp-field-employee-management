@@ -1,5 +1,6 @@
 package com.workflow.config;
 
+import com.workflow.security.CookieOAuth2AuthorizationRequestRepository;
 import com.workflow.security.CustomUserDetailsService;
 import com.workflow.security.GoogleOAuth2UserService;
 import com.workflow.security.JwtAuthenticationFilter;
@@ -21,12 +22,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
-import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.cors.CorsConfiguration;
@@ -52,13 +50,16 @@ public class SecurityConfig {
     private final GoogleOAuth2UserService googleOAuth2UserService;
     private final CustomUserDetailsService userDetailsService;
     private final OAuth2SuccessHandler oauth2SuccessHandler;
+    private final CookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, GoogleOAuth2UserService googleOAuth2UserService,
-                          CustomUserDetailsService userDetailsService, @Lazy OAuth2SuccessHandler oauth2SuccessHandler) {
+                          CustomUserDetailsService userDetailsService, @Lazy OAuth2SuccessHandler oauth2SuccessHandler,
+                          CookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository) {
         this.jwtAuthFilter = jwtAuthFilter; 
         this.googleOAuth2UserService = googleOAuth2UserService;
         this.userDetailsService = userDetailsService; 
         this.oauth2SuccessHandler = oauth2SuccessHandler;
+        this.cookieOAuth2AuthorizationRequestRepository = cookieOAuth2AuthorizationRequestRepository;
     }
 
     @Bean
@@ -76,7 +77,7 @@ public class SecurityConfig {
                 .authorizationEndpoint(authorization -> authorization
                     .baseUri("/oauth2/authorization")
                     // ⭐ Session Repository preserves cookie tracking during cross-domain flow
-                    .authorizationRequestRepository(cookieAuthorizationRequestRepository()))
+                    .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository))
                 // 🛡️ Handles network token drops over unstable free cloud tier environments
                 .tokenEndpoint(token -> token
                     .accessTokenResponseClient(accessTokenResponseClient()))
@@ -90,11 +91,6 @@ public class SecurityConfig {
             .authenticationProvider(authProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
-    }
-
-    @Bean
-    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> cookieAuthorizationRequestRepository() {
-        return new HttpSessionOAuth2AuthorizationRequestRepository();
     }
 
     @Bean

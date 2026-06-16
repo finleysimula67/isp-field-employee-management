@@ -42,7 +42,7 @@ import java.util.List;
 public class SecurityConfig {
 
     // 🔑 Explicitly checks the UPPERCASE Render Dashboard Variable names with defaults
-    @Value("${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,https://allinone-rolpa.vercel.app}")
+    @Value("${CORS_ALLOWED_ORIGINS:https://allinone-rolpa.vercel.app}")
     private String corsOrigins;
 
     @Value("${APP_OAUTH2_REDIRECT_URI:https://allinone-rolpa.vercel.app/oauth2/callback}")

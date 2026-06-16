@@ -68,6 +68,8 @@ management:
       show-details: always
 
 app:
+  frontend-url: ${APP_FRONTEND_URL}
+
   upload:
     dir: uploads
     cleanup-days: 30

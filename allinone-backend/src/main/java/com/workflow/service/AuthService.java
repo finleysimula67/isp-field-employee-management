@@ -23,7 +23,7 @@ public class AuthService {
     private final AuditLogService auditLogService;
     private final EmailService emailService;
 
-    @Value("${app.frontend-url:http://localhost:5173}")
+    @Value("${app.frontend-url}")
     private String frontendUrl;
 
     public AuthService(EmployeeRepository er, BranchRepository br, EmailAllowListRepository eal,

@@ -108,11 +108,12 @@ public class PayrollService {
         Employee paidBy = employeeRepository.findById(paidById)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String yearMonth = record.getPeriodLabel().replace("/", "-");
-        if (yearMonth.length() == 4) yearMonth = "0" + yearMonth;
-        monthlyLockoutRepository.findByYearMonth(yearMonth).ifPresent(ml -> {
+        String ym1 = record.getPeriodLabel().replace("/", "-");
+        if (ym1.length() == 4) ym1 = "0" + ym1;
+        String yearMonth1 = ym1;
+        monthlyLockoutRepository.findByYearMonth(yearMonth1).ifPresent(ml -> {
             if (ml.getIsUnlocked() != null && !ml.getIsUnlocked())
-                throw new RuntimeException("Month " + yearMonth + " is locked. Unlock it before marking as paid.");
+                throw new RuntimeException("Month " + yearMonth1 + " is locked. Unlock it before marking as paid.");
         });
 
         List<SalaryAdvance> unsettled = salaryAdvanceRepository
@@ -147,11 +148,12 @@ public class PayrollService {
     public List<PayrollRecord> batchCalculate(PayrollBatchRequest request) {
         LocalDate periodStart = LocalDate.parse(request.getPeriodStart());
         LocalDate periodEnd = LocalDate.parse(request.getPeriodEnd());
-        String yearMonth = periodStart.getMonthValue() + "-" + periodStart.getYear();
-        if (yearMonth.length() == 4) yearMonth = "0" + yearMonth;
-        monthlyLockoutRepository.findByYearMonth(yearMonth).ifPresent(ml -> {
+        String ym2 = periodStart.getMonthValue() + "-" + periodStart.getYear();
+        if (ym2.length() == 4) ym2 = "0" + ym2;
+        String yearMonth2 = ym2;
+        monthlyLockoutRepository.findByYearMonth(yearMonth2).ifPresent(ml -> {
             if (ml.getIsUnlocked() != null && !ml.getIsUnlocked())
-                throw new RuntimeException("Month " + yearMonth + " is locked. Unlock it before calculating payroll.");
+                throw new RuntimeException("Month " + yearMonth2 + " is locked. Unlock it before calculating payroll.");
         });
         List<Employee> employees;
         if (request.getEmployeeIds() != null && !request.getEmployeeIds().isEmpty()) {

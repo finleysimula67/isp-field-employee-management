@@ -20,6 +20,7 @@ const sidebarLinks = [
   { path: '/admin/monthly-lockouts', label: 'Lockouts', icon: '🔒' },
   { path: '/admin/email-allow-list', label: 'Allow List', icon: '📧' },
   { path: '/admin/manual-logs', label: 'Manual Logs', icon: '📝' },
+  { path: '/admin/cash-collections', label: 'Cash Collections', icon: '💵' },
   { path: '/admin/profile', label: 'Profile', icon: '👤' },
 ]
 
@@ -127,16 +128,16 @@ export default function AdminLayout() {
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
         <div className="flex justify-around max-w-lg mx-auto">
-          {sidebarLinks.slice(0, 5).map((link) => (
+          {sidebarLinks.slice(0, 6).map((link) => (
             <Link
               key={link.path}
               to={link.path}
               onClick={() => setSidebarOpen(false)}
-              className={`flex flex-col items-center py-2 px-3 text-xs transition-colors ${
+              className={`flex flex-col items-center py-1.5 px-1.5 text-[10px] leading-tight transition-colors ${
                 location.pathname === link.path ? 'text-admin-primary' : 'text-gray-400'
               }`}
             >
-              <span className="text-lg">{link.icon}</span>
+              <span className="text-base">{link.icon}</span>
               <span className="mt-0.5">{link.label}</span>
             </Link>
           ))}

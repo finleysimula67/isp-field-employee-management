@@ -31,6 +31,7 @@ import AuditLogsPage from './pages/admin/AuditLogs'
 import MonthlyLockoutsPage from './pages/admin/MonthlyLockouts'
 import EmailAllowListPage from './pages/admin/EmailAllowList'
 import ManualLogsPage from './pages/admin/ManualLogs'
+import CashCollectionsPage from './pages/admin/CashCollections'
 import ProfilePage from './pages/admin/Profile'
 
 import EmpDashboard from './pages/employee/Dashboard'
@@ -40,6 +41,7 @@ import LeavePage from './pages/employee/Leave'
 import TasksPage from './pages/employee/Tasks'
 import WagesPage from './pages/employee/Wages'
 import EmpProfilePage from './pages/employee/Profile'
+import CashCollectionPage from './pages/employee/CashCollection'
 
 export default function App() {
   return (
@@ -80,6 +82,7 @@ export default function App() {
           <Route path="monthly-lockouts" element={<MonthlyLockoutsPage />} />
           <Route path="email-allow-list" element={<EmailAllowListPage />} />
           <Route path="manual-logs" element={<ManualLogsPage />} />
+          <Route path="cash-collections" element={<CashCollectionsPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 
@@ -97,6 +100,7 @@ export default function App() {
           <Route path="leave" element={<LeavePage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="wages" element={<WagesPage />} />
+          <Route path="cash-collection" element={<CashCollectionPage />} />
           <Route path="profile" element={<EmpProfilePage />} />
         </Route>
 

@@ -10,6 +10,7 @@ const sidebarLinks = [
   { path: '/employee', label: 'Dashboard', icon: '📊' },
   { path: '/employee/attendance', label: 'Attendance', icon: '📅' },
   { path: '/employee/daily-log', label: 'Daily Log', icon: '📋' },
+  { path: '/employee/cash-collection', label: 'Cash', icon: '💵' },
   { path: '/employee/leave', label: 'Leave', icon: '📝' },
   { path: '/employee/tasks', label: 'Tasks', icon: '✅' },
   { path: '/employee/wages', label: 'Wages', icon: '💰' },
@@ -20,6 +21,7 @@ const bottomNav = [
   { path: '/employee', label: 'Home', icon: '🏠' },
   { path: '/employee/attendance', label: 'Attend', icon: '📅' },
   { path: '/employee/daily-log', label: 'Log', icon: '📋' },
+  { path: '/employee/cash-collection', label: 'Cash', icon: '💵' },
   { path: '/employee/leave', label: 'Leave', icon: '📝' },
   { path: '/employee/tasks', label: 'Tasks', icon: '✅' },
   { path: '/employee/wages', label: 'Wages', icon: '💰' },
@@ -102,13 +104,13 @@ export default function EmployeeLayout() {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center py-2 px-3 text-xs transition-colors ${
+              className={`flex flex-col items-center py-1.5 px-1.5 text-[10px] leading-tight transition-colors ${
                 location.pathname === item.path
                   ? 'text-emp-primary'
                   : 'text-gray-400'
               }`}
             >
-              <span className="text-lg">{item.icon}</span>
+              <span className="text-base">{item.icon}</span>
               <span className="mt-0.5">{item.label}</span>
             </Link>
           ))}

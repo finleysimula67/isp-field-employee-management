@@ -77,7 +77,7 @@ public class DailyLogService {
         log.setPhotoUrls(request.getPhotoUrls());
         if (request.getAssignedTaskId() != null) log.setAssignedTaskId(request.getAssignedTaskId());
 
-        LocalDate logDate = log.getLogDate();
+        logDate = log.getLogDate();
         boolean hasApprovedDuplicate = dailyLogRepository.findByEmployeeAndLogDateBetween(employee, logDate, logDate)
                 .stream().anyMatch(l -> l.getStatus() == LogStatus.APPROVED && !l.getId().equals(log.getId()));
 

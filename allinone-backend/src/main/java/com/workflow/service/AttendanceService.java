@@ -187,6 +187,7 @@ public class AttendanceService {
 
         long totalDays = yearMonth.lengthOfMonth() - holidays.size();
 
+        List<LeaveRequest> leaves = leaveRequestRepository.findByStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatus(end, start, LeaveStatus.APPROVED);
         Map<Long, Set<LocalDate>> employeeLeaveDates = new HashMap<>();
         for (LeaveRequest lr : leaves) {
             for (LocalDate d = lr.getStartDate(); !d.isAfter(lr.getEndDate()); d = d.plusDays(1)) {
@@ -240,6 +241,7 @@ public class AttendanceService {
             }
         }
         long totalDays = yearMonth.lengthOfMonth() - holidays.size();
+        List<LeaveRequest> leaves = leaveRequestRepository.findByStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatus(end, start, LeaveStatus.APPROVED);
         long onLeave = leaves.stream()
                 .filter(lr -> lr.getEmployee().getId().equals(employeeId))
                 .mapToLong(lr -> {

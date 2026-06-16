@@ -9,7 +9,7 @@ public class EmployeeResponse {
     private Boolean isAccountApproved; private String wageType;
     private BigDecimal dailyRate; private BigDecimal hourlyWage;
     private BigDecimal totalLeaveDaysPerYear;
-    private BigDecimal remainingLeaveDays; private Boolean isOwner;
+    private BigDecimal remainingLeaveDays; private BigDecimal carryOverLeave; private Boolean isOwner;
     private BigDecimal maxAdvanceLimit;
     private LocalDateTime createdAt;
 
@@ -32,6 +32,8 @@ public class EmployeeResponse {
     public void setTotalLeaveDaysPerYear(BigDecimal totalLeaveDaysPerYear) { this.totalLeaveDaysPerYear = totalLeaveDaysPerYear; }
     public BigDecimal getRemainingLeaveDays() { return remainingLeaveDays; }
     public void setRemainingLeaveDays(BigDecimal remainingLeaveDays) { this.remainingLeaveDays = remainingLeaveDays; }
+    public BigDecimal getCarryOverLeave() { return carryOverLeave; }
+    public void setCarryOverLeave(BigDecimal carryOverLeave) { this.carryOverLeave = carryOverLeave; }
     public Boolean getIsOwner() { return isOwner; } public void setIsOwner(Boolean isOwner) { this.isOwner = isOwner; }
     public BigDecimal getMaxAdvanceLimit() { return maxAdvanceLimit; } public void setMaxAdvanceLimit(BigDecimal maxAdvanceLimit) { this.maxAdvanceLimit = maxAdvanceLimit; }
     public LocalDateTime getCreatedAt() { return createdAt; } public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

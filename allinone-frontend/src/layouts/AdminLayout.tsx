@@ -90,13 +90,13 @@ export default function AdminLayout() {
                 key={link.path}
                 to={link.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   location.pathname === link.path
                     ? 'bg-admin-primary/10 text-admin-primary'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <span>{link.icon}</span>
+                <span className="text-sm">{link.icon}</span>
                 {link.label}
               </Link>
             ))}
@@ -128,17 +128,24 @@ export default function AdminLayout() {
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
         <div className="flex justify-around max-w-lg mx-auto">
-          {sidebarLinks.slice(0, 6).map((link) => (
+          {[{ path: '/admin', label: 'Dashboard', icon: '📊' },
+            { path: '/admin/employees', label: 'Employees', icon: '👥' },
+            { path: '/admin/daily-logs', label: 'Logs', icon: '📋' },
+            { path: '/admin/leave-requests', label: 'Leave', icon: '📝' },
+            { path: '/admin/cash-collections', label: 'Cash', icon: '💵' },
+            { path: '/admin/tasks', label: 'Tasks', icon: '✅' },
+            { path: '/admin/payroll', label: 'Payroll', icon: '💰' },
+            { path: '/admin/profile', label: 'Profile', icon: '👤' }].map((link) => (
             <Link
               key={link.path}
               to={link.path}
               onClick={() => setSidebarOpen(false)}
-              className={`flex flex-col items-center py-1.5 px-1.5 text-[10px] leading-tight transition-colors ${
+              className={`flex flex-col items-center py-1 px-1 text-[9px] leading-tight transition-colors flex-1 ${
                 location.pathname === link.path ? 'text-admin-primary' : 'text-gray-400'
               }`}
             >
-              <span className="text-base">{link.icon}</span>
-              <span className="mt-0.5">{link.label}</span>
+              <span className="text-sm">{link.icon}</span>
+              <span className="mt-0.5 truncate max-w-full">{link.label}</span>
             </Link>
           ))}
         </div>

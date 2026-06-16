@@ -74,7 +74,7 @@ export default function EmployeeLayout() {
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <span className="text-lg">{link.icon}</span>
+                  <span className="text-sm">{link.icon}</span>
                   {link.label}
                 </Link>
               )
@@ -104,14 +104,17 @@ export default function EmployeeLayout() {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center py-1.5 px-1.5 text-[10px] leading-tight transition-colors ${
+              className={`flex flex-col items-center py-1 px-1 text-[9px] leading-tight transition-colors flex-1 ${
                 location.pathname === item.path
                   ? 'text-emp-primary'
                   : 'text-gray-400'
-              }`}
+              } ${item.path === '/employee/cash-collection' ? 'relative' : ''}`}
             >
-              <span className="text-base">{item.icon}</span>
-              <span className="mt-0.5">{item.label}</span>
+              <span className={`text-sm ${item.path === '/employee/cash-collection' ? 'drop-shadow-sm' : ''}`}>{item.icon}</span>
+              <span className="mt-0.5 truncate max-w-full">{item.label}</span>
+              {item.path === '/employee/cash-collection' && (
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+              )}
             </Link>
           ))}
         </div>

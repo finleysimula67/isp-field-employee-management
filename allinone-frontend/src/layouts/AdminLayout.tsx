@@ -57,7 +57,10 @@ export default function AdminLayout() {
           </div>
           <span className="font-display font-bold text-gray-900 text-sm">All in One</span>
         </div>
-        <NotificationBell />
+        <div className="flex items-center gap-2">
+          <Link to="/admin/profile" className="text-lg hover:opacity-70" title="Profile">👤</Link>
+          <NotificationBell />
+        </div>
       </div>
 
       <div className="flex flex-1">
@@ -96,7 +99,7 @@ export default function AdminLayout() {
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <span className="text-sm">{link.icon}</span>
+                <span className="text-lg">{link.icon}</span>
                 {link.label}
               </Link>
             ))}
@@ -118,7 +121,10 @@ export default function AdminLayout() {
           <div className="p-6">
             <div className="hidden lg:flex items-center justify-between mb-2">
               <div></div>
-              <NotificationBell />
+              <div className="flex items-center gap-2">
+                <Link to="/admin/profile" className="text-lg hover:opacity-70" title="Profile">👤</Link>
+                <NotificationBell />
+              </div>
             </div>
             <Outlet />
           </div>
@@ -127,24 +133,23 @@ export default function AdminLayout() {
 
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-        <div className="flex w-full">
+        <div className="flex w-full max-w-lg mx-auto">
           {[{ path: '/admin', label: 'Dashboard', icon: '📊' },
             { path: '/admin/employees', label: 'Employees', icon: '👥' },
             { path: '/admin/daily-logs', label: 'Logs', icon: '📋' },
             { path: '/admin/leave-requests', label: 'Leave', icon: '📝' },
             { path: '/admin/cash-collections', label: 'Cash', icon: '💵' },
             { path: '/admin/tasks', label: 'Tasks', icon: '✅' },
-            { path: '/admin/payroll', label: 'Payroll', icon: '💰' },
-            { path: '/admin/profile', label: 'Profile', icon: '👤' }].map((link) => (
+            { path: '/admin/payroll', label: 'Payroll', icon: '💰' }].map((link) => (
             <Link
               key={link.path}
               to={link.path}
               onClick={() => setSidebarOpen(false)}
-              className={`flex flex-col items-center justify-center py-1 px-0 text-[9px] leading-tight flex-1 min-w-0 ${
+              className={`flex flex-col items-center justify-center py-1.5 px-1 text-[10px] leading-tight flex-1 min-w-0 ${
                 location.pathname === link.path ? 'text-admin-primary' : 'text-gray-400'
               }`}
             >
-              <span className="text-sm leading-none">{link.icon}</span>
+              <span className="text-lg leading-none">{link.icon}</span>
               <span className="mt-0.5 truncate max-w-full px-0.5 leading-none">{link.label}</span>
             </Link>
           ))}

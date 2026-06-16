@@ -25,7 +25,6 @@ const bottomNav = [
   { path: '/employee/leave', label: 'Leave', icon: '📝' },
   { path: '/employee/tasks', label: 'Tasks', icon: '✅' },
   { path: '/employee/wages', label: 'Wages', icon: '💰' },
-  { path: '/employee/profile', label: 'Profile', icon: '👤' },
 ]
 
 export default function EmployeeLayout() {
@@ -48,7 +47,8 @@ export default function EmployeeLayout() {
             </div>
             <span className="font-display font-bold text-gray-900 text-sm">All in One &amp; Network Solutions</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Link to="/employee/profile" className="text-base hover:opacity-70" title="Profile">👤</Link>
             <NotificationBell />
             <span className="text-xs text-gray-500 hidden sm:inline">{user?.name}</span>
             <button onClick={logout} className="text-xs text-gray-400 hover:text-red-500">
@@ -74,7 +74,7 @@ export default function EmployeeLayout() {
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <span className="text-sm">{link.icon}</span>
+                  <span className="text-lg">{link.icon}</span>
                   {link.label}
                 </Link>
               )
@@ -98,19 +98,19 @@ export default function EmployeeLayout() {
           </div>
         </main>
       </div>
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 ">
-        <div className="flex w-full">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div className="flex w-full max-w-lg mx-auto">
           {bottomNav.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center justify-center py-1 px-0 text-[9px] leading-tight flex-1 min-w-0 ${
+              className={`flex flex-col items-center justify-center py-1.5 px-1 text-[10px] leading-tight flex-1 min-w-0 ${
                 location.pathname === item.path
                   ? 'text-emp-primary'
                   : 'text-gray-400'
               } ${item.path === '/employee/cash-collection' ? 'relative' : ''}`}
             >
-              <span className={`text-sm leading-none ${item.path === '/employee/cash-collection' ? 'drop-shadow-sm' : ''}`}>{item.icon}</span>
+              <span className={`text-lg leading-none ${item.path === '/employee/cash-collection' ? 'drop-shadow-sm' : ''}`}>{item.icon}</span>
               <span className="mt-0.5 truncate max-w-full px-0.5 leading-none">{item.label}</span>
               {item.path === '/employee/cash-collection' && (
                 <span className="absolute -top-0.5 right-1 w-1.5 h-1.5 bg-emerald-400 rounded-full" />

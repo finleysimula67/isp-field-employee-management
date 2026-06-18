@@ -83,7 +83,7 @@ app:
 
   jwt:
     secret: ${APP_JWT_SECRET}
-    expiration-ms: 86400000
+    expiration-ms: 2592000000
 
   auth:
     allowed-emails: ${ALLOWED_EMAILS}

@@ -19,6 +19,8 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        jdbc:
+          time_zone: Asia/Kathmandu
 
   flyway:
     enabled: false
@@ -44,6 +46,7 @@ spring:
   jackson:
     deserialization:
       fail-on-unknown-properties: false
+    time-zone: Asia/Kathmandu
 
   security:
     oauth2:

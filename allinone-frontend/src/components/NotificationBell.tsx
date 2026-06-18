@@ -1,10 +1,26 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getUnreadCount, getNotifications, markAsRead } from '../api/notifications'
 import { useWebSocket } from '../hooks/useWebSocket'
 
+const NOTIF_ROUTES: Record<string, { admin: string; employee: string }> = {
+  DAILY_LOG: { admin: '/admin/daily-logs', employee: '/employee/daily-log' },
+  TASK: { admin: '/admin/tasks', employee: '/employee/tasks' },
+  LEAVE: { admin: '/admin/leave-requests', employee: '/employee/leave' },
+  ADVANCE: { admin: '/admin/salary-advances', employee: '/employee/wages' },
+  CASH_COLLECTION: { admin: '/admin/cash-collections', employee: '/employee/cash-collection' },
+}
+
+function getRoute(type: string, isEmployee: boolean): string | null {
+  const prefix = Object.keys(NOTIF_ROUTES).find(k => type.startsWith(k))
+  if (!prefix) return null
+  const routes = NOTIF_ROUTES[prefix]
+  return isEmployee ? routes.employee : routes.admin
+}
+
 export default function NotificationBell() {
   const location = useLocation()
+  const navigate = useNavigate()
   const isEmployee = location.pathname.startsWith('/employee')
   const [count, setCount] = useState(0)
   const [notifications, setNotifications] = useState<any[]>([])
@@ -46,12 +62,13 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const handleMarkRead = async (id: number) => {
-    try {
-      await markAsRead(id)
-      setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n))
-      setCount(Math.max(0, count - 1))
-    } catch {}
+  const handleClick = async (n: any) => {
+    setOpen(false)
+    if (!n.isRead) {
+      try { await markAsRead(n.id) } catch {}
+    }
+    const route = getRoute(n.type, isEmployee)
+    if (route) navigate(route)
   }
 
   const timeAgo = (dateStr: string) => {
@@ -88,7 +105,7 @@ export default function NotificationBell() {
             ) : notifications.map((n: any) => (
               <div
                 key={n.id}
-                onClick={() => { if (!n.isRead) handleMarkRead(n.id) }}
+                onClick={() => handleClick(n)}
                 className={`px-3 py-2.5 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${n.isRead ? '' : 'bg-blue-50/50'}`}
               >
                 <div className="flex items-start gap-2">

@@ -1,13 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { Employee } from '../types'
-
-function isTokenExpired(token: string): boolean {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    if (payload.exp) return Date.now() >= payload.exp * 1000
-  } catch {}
-  return false
-}
+import client from '../api/client'
 
 interface AuthContextType {
   user: Employee | null
@@ -28,19 +21,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch { return null }
   })
   const [token, setToken] = useState<string | null>(() => {
-    const t = localStorage.getItem('token')
-    if (t && isTokenExpired(t)) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      return null
-    }
-    return t
+    return localStorage.getItem('token')
   })
 
   useEffect(() => {
+    const t = localStorage.getItem('token')
+    if (!t) return
+
+    client.get('/auth/verify', {
+      headers: { Authorization: `Bearer ${t}` }
+    }).then(res => {
+      if (!res.data?.data?.valid) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        setToken(null)
+        setUser(null)
+      }
+    }).catch(() => {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      setToken(null)
+      setUser(null)
+    })
+  }, [])
+
+  useEffect(() => {
     if (!token) return
-    const interval = setInterval(() => {
-      if (isTokenExpired(token)) {
+    const interval = setInterval(async () => {
+      try {
+        const res = await client.get('/auth/verify', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (!res.data?.data?.valid) logout()
+      } catch {
         logout()
       }
     }, 60_000)

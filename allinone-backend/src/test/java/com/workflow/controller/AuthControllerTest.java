@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.config.TestSecurityBeans;
 import com.workflow.dto.*;
 import com.workflow.security.JwtAuthenticationFilter;
+import com.workflow.security.JwtTokenProvider;
 import com.workflow.security.OAuth2SuccessHandler;
 import com.workflow.service.AuthService;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ class AuthControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @MockitoBean private AuthService authService;
+    @MockitoBean private JwtTokenProvider jwtTokenProvider;
 
     @Test
     void login_shouldReturnToken() throws Exception {

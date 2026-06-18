@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import NotificationBell from '../components/NotificationBell'
 import OfflineIndicator from '../components/OfflineIndicator'
+import KeepAlive from '../components/KeepAlive'
 import { processQueue } from '../services/syncService'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
 
@@ -38,6 +39,7 @@ export default function EmployeeLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <KeepAlive />
       <OfflineIndicator />
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="px-4 h-14 flex items-center justify-between">

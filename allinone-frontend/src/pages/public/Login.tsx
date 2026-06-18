@@ -21,17 +21,17 @@ export default function LoginPage() {
   useEffect(() => {
     let cancelled = false
     let retries = 0
-    const warm = async () => {
-      while (!cancelled) {
-        try {
-          await client.get('/auth/check-email?email=ping', { timeout: 10000 })
-          if (!cancelled) { setWarming(false); return }
-        } catch { retries++; if (!cancelled) setWarmFailures(retries) }
-        if (!cancelled) await new Promise(r => setTimeout(r, 3000))
-      }
+    let timer: ReturnType<typeof setTimeout>
+    const ping = async () => {
+      if (cancelled) return
+      try {
+        await client.get('/auth/check-email?email=ping', { timeout: 8000 })
+        if (!cancelled) { setWarming(false); return }
+      } catch { if (!cancelled) { retries++; setWarmFailures(retries) } }
+      if (!cancelled) timer = setTimeout(ping, 2000)
     }
-    warm()
-    return () => { cancelled = true }
+    ping()
+    return () => { cancelled = true; clearTimeout(timer) }
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {

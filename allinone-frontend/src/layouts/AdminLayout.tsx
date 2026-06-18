@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import NotificationBell from '../components/NotificationBell'
 import OfflineIndicator from '../components/OfflineIndicator'
+import KeepAlive from '../components/KeepAlive'
 
 const sidebarLinks = [
   { path: '/admin', label: 'Dashboard', icon: '📊' },
@@ -42,6 +43,7 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      <KeepAlive />
       <OfflineIndicator />
 
       {/* Mobile header */}

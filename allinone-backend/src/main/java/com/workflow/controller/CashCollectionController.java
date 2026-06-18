@@ -22,8 +22,10 @@ public class CashCollectionController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<ApiResponse<List<CashCollectionResponse>>> getAll(
             @RequestParam(required = false) Long employeeId,
-            @RequestParam(required = false) String status) {
-        List<CashCollectionResponse> list = cashCollectionService.getCashCollections(employeeId, status).stream()
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        List<CashCollectionResponse> list = cashCollectionService.getCashCollections(employeeId, status, page, size).stream()
                 .map(this::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.ok(list));
     }

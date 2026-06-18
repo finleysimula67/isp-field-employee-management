@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { getCashCollections, reviewCashCollection, batchReviewCashCollections } from '../../api/cashCollections'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
@@ -40,7 +40,7 @@ export default function CashCollectionsPage() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  const empMap = new Map(employees.map((e: any) => [e.id, e]))
+  const empMap = useMemo(() => new Map(employees.map((e: any) => [e.id, e])), [employees])
 
   const handleReview = async (id: number) => {
     try {

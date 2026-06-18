@@ -4,6 +4,9 @@ import com.workflow.dto.CashCollectionRequest;
 import com.workflow.dto.CashCollectionReviewRequest;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,13 +32,20 @@ public class CashCollectionService {
         this.emailService = emailService; this.notificationService = notificationService;
     }
 
-    public List<CashCollection> getCashCollections(Long employeeId, String status) {
-        List<CashCollection> collections = cashCollectionRepository.findAll(Sort.by(Sort.Direction.DESC, "submittedAt"));
-        if (employeeId != null)
-            collections = collections.stream().filter(c -> c.getEmployee().getId().equals(employeeId)).collect(Collectors.toList());
-        if (status != null)
-            collections = collections.stream().filter(c -> c.getStatus().name().equals(status)).collect(Collectors.toList());
-        return collections;
+    public List<CashCollection> getCashCollections(Long employeeId, String status, int page, int size) {
+        if (employeeId != null && status != null) {
+            return cashCollectionRepository.findByEmployeeIdWithEager(employeeId).stream()
+                    .filter(c -> c.getStatus().name().equals(status)).collect(Collectors.toList());
+        }
+        if (employeeId != null) {
+            return cashCollectionRepository.findByEmployeeIdWithEager(employeeId);
+        }
+        if (status != null) {
+            return cashCollectionRepository.findAllWithEager().stream()
+                    .filter(c -> c.getStatus().name().equals(status)).collect(Collectors.toList());
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "submittedAt");
+        return cashCollectionRepository.findAllWithEager(pageable).getContent();
     }
 
     public CashCollection getCashCollection(Long id) {
@@ -135,15 +145,44 @@ public class CashCollectionService {
     }
 
     public List<CashCollection> batchReviewCashCollections(List<Long> ids, CashCollectionReviewRequest request, Long reviewerId) {
-        List<CashCollection> collections = cashCollectionRepository.findByIdIn(ids);
+        List<CashCollection> collections = cashCollectionRepository.findByIdInWithEager(ids);
+        Employee reviewer = employeeRepository.findById(reviewerId)
+                .orElseThrow(() -> new RuntimeException("Reviewer not found"));
+        CollectionStatus newStatus = CollectionStatus.valueOf(request.getStatus());
+
         for (CashCollection c : collections) {
-            reviewCashCollection(c.getId(), request, reviewerId);
+            if (c.getStatus() != CollectionStatus.PENDING) continue;
+            c.setStatus(newStatus);
+            c.setReviewComment(request.getReviewComment());
+            c.setReviewedBy(reviewer);
+            c.setReviewedAt(LocalDateTime.now());
+            cashCollectionRepository.save(c);
+            auditLogService.log("CashCollection", c.getId(), "REVIEWED", "PENDING", newStatus.name(), reviewer.getEmail());
+
+            Notification notification = new Notification();
+            notification.setRecipient(c.getEmployee());
+            notification.setType("CASH_COLLECTION_REVIEW");
+            notification.setTitle("Cash Collection " + newStatus.name());
+            notification.setBody(request.getReviewComment());
+            notification.setRelatedEntityType("CashCollection");
+            notification.setRelatedEntityId(c.getId());
+            notificationRepository.save(notification);
+            notificationService.broadcastNotificationToRecipient(notification);
+
+            try {
+                emailService.sendEmail(c.getEmployee().getEmail(), "Cash Collection " + newStatus.name(),
+                        "Your cash collection for " + c.getCustomerName()
+                        + " (" + c.getAmount() + ") has been " + newStatus.name()
+                        + ".\n\nComment: " + (request.getReviewComment() != null ? request.getReviewComment() : "N/A"));
+            } catch (Exception e) {
+                System.err.println("Cash collection review email skipped: " + e.getMessage());
+            }
         }
-        return cashCollectionRepository.findByIdIn(ids);
+        return cashCollectionRepository.findByIdInWithEager(ids);
     }
 
     public List<CashCollection> getMyCashCollections(Long employeeId, String status) {
-        List<CashCollection> collections = cashCollectionRepository.findByEmployeeIdOrderBySubmittedAtDesc(employeeId);
+        List<CashCollection> collections = cashCollectionRepository.findByEmployeeIdWithEager(employeeId);
         if (status != null)
             collections = collections.stream().filter(c -> c.getStatus().name().equals(status)).collect(Collectors.toList());
         return collections;

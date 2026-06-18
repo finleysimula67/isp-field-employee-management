@@ -4,6 +4,7 @@ import com.workflow.dto.*;
 import com.workflow.entity.CashCollection;
 import com.workflow.entity.Employee;
 import com.workflow.service.CashCollectionService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -71,6 +72,31 @@ public class CashCollectionController {
         List<CashCollectionResponse> list = cashCollectionService.batchReviewCashCollections(request.getIds(), reviewReq, employee.getId())
                 .stream().map(this::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.ok(list));
+    }
+
+    @PostMapping("/admin-create")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<CashCollectionResponse>> adminCreate(
+            @Valid @RequestBody AdminCashCollectionRequest request,
+            @AuthenticationPrincipal Employee employee) {
+        return ResponseEntity.ok(ApiResponse.ok("Cash collection recorded for employee",
+                toResponse(cashCollectionService.createCashCollectionByAdmin(request, employee.getId()))));
+    }
+
+    @GetMapping("/summary")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<List<CashCollectionSummaryResponse>>> getSummary(
+            @RequestParam int month,
+            @RequestParam int year) {
+        return ResponseEntity.ok(ApiResponse.ok(cashCollectionService.getMonthlySummary(month, year)));
+    }
+
+    @GetMapping("/my/summary")
+    public ResponseEntity<ApiResponse<CashCollectionSummaryResponse>> getMySummary(
+            @AuthenticationPrincipal Employee employee,
+            @RequestParam int month,
+            @RequestParam int year) {
+        return ResponseEntity.ok(ApiResponse.ok(cashCollectionService.getMyMonthlySummary(employee.getId(), month, year)));
     }
 
     private CashCollectionResponse toResponse(CashCollection c) {

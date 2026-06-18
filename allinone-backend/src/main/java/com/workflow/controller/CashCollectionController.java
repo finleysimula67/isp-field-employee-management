@@ -99,6 +99,14 @@ public class CashCollectionController {
         return ResponseEntity.ok(ApiResponse.ok(cashCollectionService.getMyMonthlySummary(employee.getId(), month, year)));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+                                                     @AuthenticationPrincipal Employee employee) {
+        cashCollectionService.deleteCashCollection(id, employee.getId());
+        return ResponseEntity.ok(ApiResponse.ok("Cash collection deleted", null));
+    }
+
     private CashCollectionResponse toResponse(CashCollection c) {
         CashCollectionResponse r = new CashCollectionResponse();
         r.setId(c.getId());

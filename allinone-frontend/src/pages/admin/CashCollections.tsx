@@ -1,15 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
-import { getCashCollections, getCashCollectionSummary, reviewCashCollection, batchReviewCashCollections, createCashCollectionAdmin } from '../../api/cashCollections'
+import { getCashCollections, getCashCollectionSummary, reviewCashCollection, batchReviewCashCollections, createCashCollectionAdmin, deleteCashCollection } from '../../api/cashCollections'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
-
-const STATUS_COLORS: Record<string, string> = {
-  APPROVED: 'bg-green-100 text-green-700',
-  PENDING: 'bg-yellow-100 text-yellow-700',
-  REJECTED: 'bg-red-100 text-red-700',
-  NEEDS_REVISION: 'bg-orange-100 text-orange-700',
-}
 
 const statusColors: Record<string, string> = {
   PENDING: 'badge-pending',
@@ -23,7 +16,7 @@ const serviceTypes = ['NEW_CONNECTION', 'INSTALLATION', 'MAINTENANCE', 'REPAIR',
 
 export default function CashCollectionsPage() {
   const now = new Date()
-  const [tab, setTab] = useState<'grid' | 'list'>('grid')
+  const [tab, setTab] = useState<'grid' | 'list'>('list')
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
   const [summary, setSummary] = useState<any[]>([])
@@ -33,7 +26,7 @@ export default function CashCollectionsPage() {
   const [filterStatus, setFilterStatus] = useState('')
   const [filterEmployee, setFilterEmployee] = useState('')
   const [reviewingId, setReviewingId] = useState<number | null>(null)
-  const [reviewForm, setReviewForm] = useState({ status: 'APPROVED', reviewComment: '' })
+  const [reviewForm, setReviewForm] = useState({ status: 'APPROVED', reviewComment: '', amount: '', customerName: '', customerPhone: '', customerAddress: '', description: '', paymentMethod: '', serviceType: '' })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [batchAction, setBatchAction] = useState('APPROVED')
@@ -41,6 +34,7 @@ export default function CashCollectionsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [addForm, setAddForm] = useState({ employeeId: '', customerName: '', customerPhone: '', customerAddress: '', amount: '', paymentMethod: '', serviceType: '', description: '' })
   const [addSubmitting, setAddSubmitting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
 
   const daysInMonth = new Date(year, month, 0).getDate()
   const dayHeaders = Array.from({ length: daysInMonth }, (_, i) => i + 1)
@@ -77,13 +71,52 @@ export default function CashCollectionsPage() {
 
   const handleReview = async (id: number) => {
     try {
-      await reviewCashCollection(id, { status: reviewForm.status, reviewComment: reviewForm.reviewComment })
+      const payload: any = { status: reviewForm.status, reviewComment: reviewForm.reviewComment }
+      if (reviewForm.amount) payload.amount = Number(reviewForm.amount)
+      if (reviewForm.customerName) payload.customerName = reviewForm.customerName
+      if (reviewForm.customerPhone) payload.customerPhone = reviewForm.customerPhone
+      if (reviewForm.customerAddress) payload.customerAddress = reviewForm.customerAddress
+      if (reviewForm.description) payload.description = reviewForm.description
+      if (reviewForm.paymentMethod) payload.paymentMethod = reviewForm.paymentMethod
+      if (reviewForm.serviceType) payload.serviceType = reviewForm.serviceType
+      await reviewCashCollection(id, payload)
       setReviewingId(null)
-      setReviewForm({ status: 'APPROVED', reviewComment: '' })
+      setReviewForm({ status: 'APPROVED', reviewComment: '', amount: '', customerName: '', customerPhone: '', customerAddress: '', description: '', paymentMethod: '', serviceType: '' })
       setToast({ message: 'Review submitted', type: 'success' })
       fetchList()
     } catch {
       setToast({ message: 'Failed to submit review', type: 'error' })
+    }
+  }
+
+  const startReview = (c: any) => {
+    setReviewingId(c.id)
+    setReviewForm({
+      status: 'APPROVED',
+      reviewComment: '',
+      amount: String(c.amount || ''),
+      customerName: c.customerName || '',
+      customerPhone: c.customerPhone || '',
+      customerAddress: c.customerAddress || '',
+      description: c.description || '',
+      paymentMethod: c.paymentMethod || '',
+      serviceType: c.serviceType || '',
+    })
+  }
+
+  const cancelReview = () => {
+    setReviewingId(null)
+    setReviewForm({ status: 'APPROVED', reviewComment: '', amount: '', customerName: '', customerPhone: '', customerAddress: '', description: '', paymentMethod: '', serviceType: '' })
+  }
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteCashCollection(id)
+      setConfirmDelete(null)
+      setToast({ message: 'Cash collection deleted', type: 'success' })
+      fetchList()
+    } catch {
+      setToast({ message: 'Failed to delete', type: 'error' })
     }
   }
 
@@ -333,22 +366,14 @@ export default function CashCollectionsPage() {
                     <td className="py-3 px-4 text-gray-500">{c.serviceType?.replace(/_/g, ' ')}</td>
                     <td className="py-3 px-4"><span className={statusColors[c.status] || 'badge-pending'}>{c.status?.replace(/_/g, ' ')}</span></td>
                     <td className="py-3 px-4">
-                      {reviewingId === c.id ? (
-                        <div className="flex flex-col gap-2">
-                          <select value={reviewForm.status} onChange={e => setReviewForm(f => ({ ...f, status: e.target.value }))} className="input-field text-xs">
-                            <option value="APPROVED">Approve</option>
-                            <option value="REJECTED">Reject</option>
-                            <option value="NEEDS_REVISION">Needs Revision</option>
-                          </select>
-                          <textarea value={reviewForm.reviewComment} onChange={e => setReviewForm(f => ({ ...f, reviewComment: e.target.value }))} placeholder="Comment" className="input-field text-xs" rows={2} />
-                          <div className="flex gap-2">
-                            <button onClick={() => handleReview(c.id)} className="btn-admin text-xs">Submit</button>
-                            <button onClick={() => { setReviewingId(null); setReviewForm({ status: 'APPROVED', reviewComment: '' }) }} className="btn-ghost text-xs">Cancel</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button onClick={() => setReviewingId(c.id)} className="btn-ghost text-xs">Review</button>
-                      )}
+                      <div className="flex gap-2 items-center">
+                        {c.status === 'PENDING' && (
+                          <button onClick={() => startReview(c)} className="btn-ghost text-xs">Review</button>
+                        )}
+                        {c.status === 'PENDING' && (
+                          <button onClick={() => setConfirmDelete(c.id)} className="text-xs text-red-500 hover:text-red-700">Delete</button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -358,6 +383,81 @@ export default function CashCollectionsPage() {
         </>
       )}
 
+      {/* Review modal */}
+      {reviewingId != null && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={cancelReview}>
+          <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="font-display text-lg font-bold text-gray-900 mb-4">Review Cash Collection</h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Customer Name</label>
+                  <input value={reviewForm.customerName} onChange={e => setReviewForm(f => ({ ...f, customerName: e.target.value }))} className="input-field w-full text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Customer Phone</label>
+                  <input value={reviewForm.customerPhone} onChange={e => setReviewForm(f => ({ ...f, customerPhone: e.target.value }))} className="input-field w-full text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Customer Address</label>
+                  <input value={reviewForm.customerAddress} onChange={e => setReviewForm(f => ({ ...f, customerAddress: e.target.value }))} className="input-field w-full text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Amount (Rs.)</label>
+                  <input type="number" step="0.01" min="0" value={reviewForm.amount} onChange={e => setReviewForm(f => ({ ...f, amount: e.target.value }))} className="input-field w-full text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Payment Method</label>
+                  <select value={reviewForm.paymentMethod} onChange={e => setReviewForm(f => ({ ...f, paymentMethod: e.target.value }))} className="input-field w-full text-sm">
+                    <option value="">No change</option>
+                    {paymentMethods.map(m => (<option key={m} value={m}>{m.replace(/_/g, ' ')}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Service Type</label>
+                  <select value={reviewForm.serviceType} onChange={e => setReviewForm(f => ({ ...f, serviceType: e.target.value }))} className="input-field w-full text-sm">
+                    <option value="">No change</option>
+                    {serviceTypes.map(t => (<option key={t} value={t}>{t.replace(/_/g, ' ')}</option>))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 block mb-1">Description</label>
+                <textarea value={reviewForm.description} onChange={e => setReviewForm(f => ({ ...f, description: e.target.value }))} className="input-field w-full text-sm" rows={2} />
+              </div>
+              <div className="border-t border-gray-100 pt-4">
+                <label className="text-xs font-medium text-gray-500 block mb-1">Review Action *</label>
+                <select value={reviewForm.status} onChange={e => setReviewForm(f => ({ ...f, status: e.target.value }))} className="input-field w-full text-sm mb-2">
+                  <option value="APPROVED">Approve</option>
+                  <option value="REJECTED">Reject</option>
+                  <option value="NEEDS_REVISION">Needs Revision</option>
+                </select>
+                <label className="text-xs font-medium text-gray-500 block mb-1">Review Comment</label>
+                <textarea value={reviewForm.reviewComment} onChange={e => setReviewForm(f => ({ ...f, reviewComment: e.target.value }))} placeholder="Optional comment" className="input-field w-full text-sm" rows={2} />
+              </div>
+              <div className="flex gap-3 justify-end pt-2">
+                <button onClick={cancelReview} className="btn-ghost">Cancel</button>
+                <button onClick={() => handleReview(reviewingId)} className="btn-primary">Submit Review</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm delete */}
+      {confirmDelete != null && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setConfirmDelete(null)}>
+          <div className="bg-white rounded-xl max-w-sm w-full p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="font-display text-lg font-bold text-gray-900 mb-2">Delete Cash Collection?</h2>
+            <p className="text-sm text-gray-500 mb-6">This action cannot be undone. The collection will be permanently removed.</p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setConfirmDelete(null)} className="btn-ghost">Cancel</button>
+              <button onClick={() => handleDelete(confirmDelete)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
           <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
@@ -365,12 +465,7 @@ export default function CashCollectionsPage() {
             <form onSubmit={handleManualAdd} className="space-y-4">
               <div>
                 <label className="text-xs font-medium text-gray-500 block mb-1">Employee *</label>
-                <select value={addForm.employeeId} onChange={e => {
-                  if (addForm.employeeId !== e.target.value) {
-                    fetchList()
-                  }
-                  setAddForm(f => ({ ...f, employeeId: e.target.value }))
-                }} className="input-field w-full" required>
+                <select value={addForm.employeeId} onChange={e => setAddForm(f => ({ ...f, employeeId: e.target.value }))} className="input-field w-full" required>
                   <option value="">Select employee</option>
                   {employees.map((e: any) => (
                     <option key={e.id} value={e.id}>{e.name}</option>

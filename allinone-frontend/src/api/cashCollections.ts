@@ -39,3 +39,8 @@ export async function getMyCashCollectionSummary(month: number, year: number) {
   const res = await client.get('/cash-collections/my/summary', { params: { month, year } })
   return res.data
 }
+
+export async function deleteCashCollection(id: number) {
+  const res = await client.delete(`/cash-collections/${id}`)
+  return res.data
+}

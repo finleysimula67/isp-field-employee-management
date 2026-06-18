@@ -113,6 +113,15 @@ public class CashCollectionService {
             throw new RuntimeException("Cash collection is not in PENDING status");
         Employee reviewer = employeeRepository.findById(reviewerId)
                 .orElseThrow(() -> new RuntimeException("Reviewer not found"));
+
+        if (request.getAmount() != null) collection.setAmount(BigDecimal.valueOf(request.getAmount()));
+        if (request.getCustomerName() != null) collection.setCustomerName(request.getCustomerName());
+        if (request.getCustomerPhone() != null) collection.setCustomerPhone(request.getCustomerPhone());
+        if (request.getCustomerAddress() != null) collection.setCustomerAddress(request.getCustomerAddress());
+        if (request.getDescription() != null) collection.setDescription(request.getDescription());
+        if (request.getPaymentMethod() != null) collection.setPaymentMethod(PaymentMethod.valueOf(request.getPaymentMethod()));
+        if (request.getServiceType() != null) collection.setServiceType(ServiceType.valueOf(request.getServiceType()));
+
         CollectionStatus newStatus = CollectionStatus.valueOf(request.getStatus());
         collection.setStatus(newStatus);
         collection.setReviewComment(request.getReviewComment());
@@ -142,6 +151,18 @@ public class CashCollectionService {
         }
 
         return saved;
+    }
+
+    @Transactional
+    public void deleteCashCollection(Long id, Long adminId) {
+        CashCollection collection = cashCollectionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cash collection not found"));
+        if (collection.getStatus() != CollectionStatus.PENDING)
+            throw new RuntimeException("Only pending cash collections can be deleted");
+        Employee admin = employeeRepository.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+        cashCollectionRepository.delete(collection);
+        auditLogService.log("CashCollection", id, "DELETED", collection.getStatus().name(), null, admin.getEmail());
     }
 
     public List<CashCollection> batchReviewCashCollections(List<Long> ids, CashCollectionReviewRequest request, Long reviewerId) {

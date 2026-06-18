@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -99,7 +100,9 @@ public class DailyLogController {
         r.setLocationLat(log.getLocationLat() != null ? log.getLocationLat().doubleValue() : null);
         r.setLocationLng(log.getLocationLng() != null ? log.getLocationLng().doubleValue() : null);
         r.setWorkDescription(log.getWorkDescription());
-        r.setPhotoUrls(log.getPhotoUrls());
+        if (log.getPhotoUrls() != null && !log.getPhotoUrls().isEmpty()) {
+            r.setPhotoUrls(Arrays.asList(log.getPhotoUrls().split(",")));
+        }
         r.setAssignedTaskId(log.getAssignedTaskId());
         r.setStatus(log.getStatus() != null ? log.getStatus().name() : null);
         r.setReviewedBy(log.getReviewedBy() != null ? log.getReviewedBy().getId() : null);

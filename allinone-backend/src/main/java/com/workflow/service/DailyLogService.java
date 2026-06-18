@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -76,13 +77,20 @@ public class DailyLogService {
         if (request.getEndTime() != null) log.setEndTime(LocalTime.parse(request.getEndTime()));
         if (log.getStartTime() != null && log.getEndTime() != null && log.getEndTime().isBefore(log.getStartTime()))
             throw new RuntimeException("End time must be after start time");
-        if (request.getHoursWorked() != null) log.setHoursWorked(BigDecimal.valueOf(request.getHoursWorked()));
+        if (request.getHoursWorked() != null) {
+            log.setHoursWorked(BigDecimal.valueOf(request.getHoursWorked()));
+        } else if (log.getStartTime() != null && log.getEndTime() != null) {
+            long mins = ChronoUnit.MINUTES.between(log.getStartTime(), log.getEndTime());
+            log.setHoursWorked(BigDecimal.valueOf(mins / 60.0).setScale(2, java.math.RoundingMode.HALF_UP));
+        }
         if (request.getCategory() != null) log.setCategory(LogCategory.valueOf(request.getCategory()));
         if (request.getLocationDescription() != null) log.setLocationDescription(request.getLocationDescription());
         if (request.getLocationLat() != null) log.setLocationLat(BigDecimal.valueOf(request.getLocationLat()));
         if (request.getLocationLng() != null) log.setLocationLng(BigDecimal.valueOf(request.getLocationLng()));
         log.setWorkDescription(request.getWorkDescription());
-        log.setPhotoUrls(request.getPhotoUrls());
+        if (request.getPhotoUrls() != null && !request.getPhotoUrls().isEmpty()) {
+            log.setPhotoUrls(String.join(",", request.getPhotoUrls()));
+        }
         if (request.getAssignedTaskId() != null) log.setAssignedTaskId(request.getAssignedTaskId());
 
         logDate = log.getLogDate();

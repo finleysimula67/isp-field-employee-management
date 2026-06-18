@@ -1,13 +1,14 @@
 package com.workflow.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import java.util.List;
 
 public class DailyLogRequest {
     private Long employeeId; private Long branchId; private String logDate;
     private String startTime; private String endTime; private Double hoursWorked;
     private String category; private String locationDescription;
     private Double locationLat; private Double locationLng;
-    @NotBlank private String workDescription; private String photoUrls; private Long assignedTaskId;
+    @NotBlank private String workDescription; private List<String> photoUrls; private Long assignedTaskId;
 
     public DailyLogRequest() {}
 
@@ -23,6 +24,6 @@ public class DailyLogRequest {
     public Double getLocationLat() { return locationLat; } public void setLocationLat(Double locationLat) { this.locationLat = locationLat; }
     public Double getLocationLng() { return locationLng; } public void setLocationLng(Double locationLng) { this.locationLng = locationLng; }
     public String getWorkDescription() { return workDescription; } public void setWorkDescription(String workDescription) { this.workDescription = workDescription; }
-    public String getPhotoUrls() { return photoUrls; } public void setPhotoUrls(String photoUrls) { this.photoUrls = photoUrls; }
+    public List<String> getPhotoUrls() { return photoUrls; } public void setPhotoUrls(List<String> photoUrls) { this.photoUrls = photoUrls; }
     public Long getAssignedTaskId() { return assignedTaskId; } public void setAssignedTaskId(Long assignedTaskId) { this.assignedTaskId = assignedTaskId; }
 }

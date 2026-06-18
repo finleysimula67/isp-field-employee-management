@@ -1,12 +1,14 @@
 package com.workflow.dto;
 
+import java.util.List;
+
 public class DailyLogResponse {
     private Long id; private Long employeeId; private String employeeName;
     private Long branchId; private String branchName; private String logDate;
     private String startTime; private String endTime; private Double hoursWorked;
     private String category; private String locationDescription;
     private Double locationLat; private Double locationLng;
-    private String workDescription; private String photoUrls;
+    private String workDescription; private List<String> photoUrls;
     private Long assignedTaskId; private String status;
     private Long reviewedBy; private String reviewComment;
     private String submittedAt; private String reviewedAt;
@@ -29,7 +31,7 @@ public class DailyLogResponse {
     public Double getLocationLat() { return locationLat; } public void setLocationLat(Double locationLat) { this.locationLat = locationLat; }
     public Double getLocationLng() { return locationLng; } public void setLocationLng(Double locationLng) { this.locationLng = locationLng; }
     public String getWorkDescription() { return workDescription; } public void setWorkDescription(String workDescription) { this.workDescription = workDescription; }
-    public String getPhotoUrls() { return photoUrls; } public void setPhotoUrls(String photoUrls) { this.photoUrls = photoUrls; }
+    public List<String> getPhotoUrls() { return photoUrls; } public void setPhotoUrls(List<String> photoUrls) { this.photoUrls = photoUrls; }
     public Long getAssignedTaskId() { return assignedTaskId; } public void setAssignedTaskId(Long assignedTaskId) { this.assignedTaskId = assignedTaskId; }
     public String getStatus() { return status; } public void setStatus(String status) { this.status = status; }
     public Long getReviewedBy() { return reviewedBy; } public void setReviewedBy(Long reviewedBy) { this.reviewedBy = reviewedBy; }

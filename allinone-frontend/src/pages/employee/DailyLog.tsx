@@ -24,8 +24,13 @@ const statusColors: Record<string, string> = {
   NEEDS_REVISION: 'badge-revision',
 }
 
+const localDate = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 const initialForm = {
-  date: new Date().toISOString().slice(0, 10),
+  date: localDate(),
   startTime: '',
   endTime: '',
   category: '',
@@ -120,6 +125,7 @@ export default function DailyLogPage() {
         setForm(initialForm)
         setPhotoFile(null)
         setPhotoPreview('')
+        setToast({ message: 'Log submitted — pending admin approval', type: 'success' })
         fetchLogs()
       }
     } catch (err: any) {

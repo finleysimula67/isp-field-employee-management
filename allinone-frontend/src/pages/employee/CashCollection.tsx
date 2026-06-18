@@ -142,90 +142,87 @@ export default function CashCollectionPage() {
       <h1 className="font-display text-xl font-bold text-gray-900 mb-6">Cash Collection</h1>
       <Toast message={toast?.message || ''} type={toast?.type || 'info'} visible={!!toast} onClose={() => setToast(null)} />
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 card p-4">
-          <h2 className="font-display text-base font-bold text-gray-900 mb-4">Record Collection</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2">
+        <div className="lg:col-span-3 space-y-4 order-2 lg:order-1">
+          <div className="card p-4">
+            <h2 className="font-display text-base font-bold text-gray-900 mb-4">Record Collection</h2>
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
                 <label className="text-xs font-medium text-gray-500 block mb-1">Customer Name *</label>
                 <input value={form.customerName} onChange={e => setForm(f => ({ ...f, customerName: e.target.value }))} className="input-field w-full" required />
               </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">Customer Phone</label>
-                <input value={form.customerPhone} onChange={e => setForm(f => ({ ...f, customerPhone: e.target.value }))} className="input-field w-full" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">Customer Address</label>
-                <input value={form.customerAddress} onChange={e => setForm(f => ({ ...f, customerAddress: e.target.value }))} className="input-field w-full" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">Amount (Rs.) *</label>
-                <input type="number" step="0.01" min="0" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} className="input-field w-full" required />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">Payment Method *</label>
-                <select value={form.paymentMethod} onChange={e => setForm(f => ({ ...f, paymentMethod: e.target.value }))} className="input-field w-full" required>
-                  <option value="">Select payment method</option>
-                  {paymentMethods.map(m => (<option key={m} value={m}>{m.replace(/_/g, ' ')}</option>))}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-500 block mb-1">Service Type *</label>
-                <select value={form.serviceType} onChange={e => setForm(f => ({ ...f, serviceType: e.target.value }))} className="input-field w-full" required>
-                  <option value="">Select service type</option>
-                  {serviceTypes.map(t => (<option key={t} value={t}>{t.replace(/_/g, ' ')}</option>))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Description / Notes</label>
-              <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="input-field w-full" rows={3} placeholder="Add any details about the collection..." />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Location</label>
-              <div className="flex gap-2">
-                <input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} className="input-field flex-1" placeholder="Type location or use GPS" />
-                <button type="button" onClick={getCurrentLocation} disabled={gettingLocation} className="btn-secondary text-xs whitespace-nowrap">
-                  {gettingLocation ? 'Locating...' : '📍 GPS'}
-                </button>
-              </div>
-              {form.locationLat != null && form.locationLng != null && (
-                <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
-                  <span>{form.locationLat.toFixed(6)}, {form.locationLng.toFixed(6)}</span>
-                  <a href={`https://www.google.com/maps?q=${form.locationLat},${form.locationLng}`} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:text-brand-700 underline">View on Map</a>
-                  <button type="button" onClick={() => setForm(f => ({ ...f, locationLat: null, locationLng: null }))} className="text-red-500 hover:text-red-700 underline">Clear</button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Customer Phone</label>
+                  <input type="tel" value={form.customerPhone} onChange={e => setForm(f => ({ ...f, customerPhone: e.target.value }))} className="input-field w-full" />
                 </div>
-              )}
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Payment Screenshot / Photo</label>
-              <input type="file" accept="image/*" capture="environment" onChange={e => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  if (file.size > 10_485_760) {
-                    setToast({ message: 'Photo too large — max 10MB', type: 'error' })
-                    e.target.value = ''
-                    return
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Customer Address</label>
+                  <input value={form.customerAddress} onChange={e => setForm(f => ({ ...f, customerAddress: e.target.value }))} className="input-field w-full" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Amount (Rs.) *</label>
+                  <input type="number" step="0.01" min="0" inputMode="decimal" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} className="input-field w-full" required />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Payment Method *</label>
+                  <select value={form.paymentMethod} onChange={e => setForm(f => ({ ...f, paymentMethod: e.target.value }))} className="input-field w-full" required>
+                    <option value="">Select</option>
+                    {paymentMethods.map(m => (<option key={m} value={m}>{m.replace(/_/g, ' ')}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 block mb-1">Service Type *</label>
+                  <select value={form.serviceType} onChange={e => setForm(f => ({ ...f, serviceType: e.target.value }))} className="input-field w-full" required>
+                    <option value="">Select</option>
+                    {serviceTypes.map(t => (<option key={t} value={t}>{t.replace(/_/g, ' ')}</option>))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 block mb-1">Description / Notes</label>
+                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="input-field w-full" rows={2} placeholder="Add any details..." />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 block mb-1">Location</label>
+                <div className="flex gap-2">
+                  <input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} className="input-field flex-1 min-w-0" placeholder="Type or use GPS" />
+                  <button type="button" onClick={getCurrentLocation} disabled={gettingLocation} className="btn-secondary text-xs whitespace-nowrap shrink-0">
+                    {gettingLocation ? '...' : '📍'}
+                  </button>
+                </div>
+                {form.locationLat != null && form.locationLng != null && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                    <span>{form.locationLat.toFixed(6)}, {form.locationLng.toFixed(6)}</span>
+                    <a href={`https://www.google.com/maps?q=${form.locationLat},${form.locationLng}`} target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">Map</a>
+                    <button type="button" onClick={() => setForm(f => ({ ...f, locationLat: null, locationLng: null }))} className="text-red-500 underline">Clear</button>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 block mb-1">Photo</label>
+                <input type="file" accept="image/*" capture="environment" onChange={e => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    if (file.size > 10_485_760) { setToast({ message: 'Photo too large — max 10MB', type: 'error' }); e.target.value = ''; return }
+                    setPhotoFile(file); setPhotoPreview(URL.createObjectURL(file))
                   }
-                  setPhotoFile(file)
-                  setPhotoPreview(URL.createObjectURL(file))
-                }
-              }} className="text-sm text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100" />
-              {photoPreview && <img src={photoPreview} className="mt-2 h-20 w-20 object-cover rounded" />}
-            </div>
-            <button type="submit" disabled={submitting} className="btn-primary w-full">{submitting ? 'Submitting...' : 'Submit Collection'}</button>
-          </form>
+                }} className="text-sm text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100" />
+                {photoPreview && <img src={photoPreview} className="mt-2 h-16 w-16 object-cover rounded" />}
+              </div>
+              <button type="submit" disabled={submitting} className="btn-primary w-full py-3 text-base">{submitting ? 'Submitting...' : 'Submit Collection'}</button>
+            </form>
+          </div>
         </div>
 
-        <div className="lg:col-span-2 space-y-4">
-          <div className="card p-4">
-            <div className="flex items-center justify-between mb-4">
+        <div className="lg:col-span-2 space-y-4 order-1 lg:order-2">
+          <div className="card p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-3">
               <h2 className="font-display text-base font-bold text-gray-900">My Collections</h2>
               <div className="flex gap-1 items-center">
-                <select value={month} onChange={e => setMonth(Number(e.target.value))} className="input-field text-xs w-auto">
+                <select value={month} onChange={e => setMonth(Number(e.target.value))} className="input-field text-xs w-auto py-1">
                   {monthNames.slice(1).map((name, i) => (<option key={i + 1} value={i + 1}>{name}</option>))}
                 </select>
-                <select value={year} onChange={e => setYear(Number(e.target.value))} className="input-field text-xs w-auto">
+                <select value={year} onChange={e => setYear(Number(e.target.value))} className="input-field text-xs w-auto py-1">
                   {[2025, 2026, 2027].map(y => (<option key={y} value={y}>{y}</option>))}
                 </select>
               </div>
@@ -235,16 +232,16 @@ export default function CashCollectionPage() {
               <Skeleton variant="card" count={1} />
             ) : summary ? (
               <>
-                <div className="flex flex-wrap gap-2 mb-4 text-xs">
-                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-100 border border-green-300" /> Collected</span>
-                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-yellow-100 border border-yellow-300" /> Pending</span>
-                  <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-100 border border-red-300" /> Rejected</span>
+                <div className="flex flex-wrap gap-2 mb-3 text-xs">
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-green-100 border border-green-300" /> Collected</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-yellow-100 border border-yellow-300" /> Pending</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-red-100 border border-red-300" /> Rejected</span>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <div className="grid grid-cols-7 gap-1 min-w-[280px]">
-                    {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-                      <div key={d} className="text-center text-[10px] font-medium text-gray-400 py-1">{d}</div>
+                <div className="-mx-3 sm:mx-0 overflow-x-auto">
+                  <div className="grid grid-cols-7 gap-0.5 min-w-[260px] px-3 sm:px-0">
+                    {['S','M','T','W','T','F','S'].map(d => (
+                      <div key={d} className="text-center text-[9px] font-medium text-gray-400 py-0.5">{d}</div>
                     ))}
                     {Array.from({ length: new Date(year, month - 1, 1).getDay() }, (_, i) => (
                       <div key={`empty-${i}`} />
@@ -254,7 +251,6 @@ export default function CashCollectionPage() {
                       const hasApproved = entries?.some((e: any) => e.status === 'APPROVED')
                       const hasPending = entries?.some((e: any) => e.status === 'PENDING')
                       const hasRejected = entries?.some((e: any) => e.status === 'REJECTED')
-                      const total = entries?.reduce((s: number, e: any) => s + (e.amount || 0), 0) || 0
                       let cellClass = 'bg-gray-50 text-gray-300'
                       let label = '—'
                       if (hasApproved) { cellClass = 'bg-green-100 text-green-700'; label = '✓' }
@@ -262,8 +258,8 @@ export default function CashCollectionPage() {
                       else if (hasRejected) { cellClass = 'bg-red-100 text-red-700'; label = '✗' }
                       return (
                         <div key={d} className="text-center">
-                          <div className="text-[10px] text-gray-400 mb-0.5">{d}</div>
-                          <div className={`inline-flex items-center justify-center w-7 h-7 rounded text-[10px] font-medium ${cellClass}`}
+                          <div className="text-[8px] text-gray-400 leading-tight">{d}</div>
+                          <div className={`inline-flex items-center justify-center w-5 h-5 sm:w-7 sm:h-7 rounded text-[8px] sm:text-[10px] font-medium ${cellClass}`}
                             title={entries?.map((e: any) => `${e.customerName}: Rs. ${e.amount} (${e.status})`).join(', ')}>
                             {label}
                           </div>
@@ -273,27 +269,27 @@ export default function CashCollectionPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 text-sm space-y-2">
+                <div className="mt-3 text-xs space-y-1.5">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Approved (Collected)</span>
+                    <span className="text-gray-500">Collected</span>
                     <span className="font-medium text-green-700">Rs. {Number(summary.totalCollected || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Pending</span>
                     <span className="font-medium text-yellow-700">Rs. {Number(summary.totalPending || 0).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between border-t border-gray-100 pt-2">
-                    <span className="text-gray-700 font-medium">Total Submitted</span>
+                  <div className="flex justify-between border-t border-gray-100 pt-1.5">
+                    <span className="text-gray-700 font-medium">Total</span>
                     <span className="font-bold">Rs. {Number(summary.totalSubmitted || 0).toLocaleString()}</span>
                   </div>
                 </div>
               </>
             ) : (
-              <p className="text-gray-400 text-sm text-center py-4">No data</p>
+              <p className="text-gray-400 text-xs text-center py-4">No data</p>
             )}
           </div>
 
-          <div className="card p-4">
+          <div className="card p-3 sm:p-4">
             <h3 className="font-display text-sm font-bold text-gray-900 mb-3">Recent Submissions</h3>
             <div className="mb-3">
               <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="input-field w-full text-xs">
@@ -305,22 +301,20 @@ export default function CashCollectionPage() {
               </select>
             </div>
             {loading ? (
-              <Skeleton variant="table-row" count={4} />
+              <Skeleton variant="table-row" count={3} />
             ) : collections.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-4">No collections yet</p>
+              <p className="text-gray-400 text-xs text-center py-4">No collections yet</p>
             ) : (
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {collections.map((c: any) => (
-                  <div key={c.id} className="py-2 border-b border-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{c.customerName}</p>
-                        <p className="text-xs text-gray-500">{c.paymentMethod?.replace(/_/g, ' ')} • Rs. {Number(c.amount).toLocaleString()}</p>
-                        <p className="text-xs text-gray-400">{c.serviceType?.replace(/_/g, ' ')}</p>
+                  <div key={c.id} className="py-2 border-b border-gray-50 last:border-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">{c.customerName}</p>
+                        <p className="text-xs text-gray-500 truncate">{c.paymentMethod?.replace(/_/g, ' ')} • Rs. {Number(c.amount).toLocaleString()}</p>
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[c.status] || 'bg-gray-100 text-gray-500'}`}>{c.status?.replace(/_/g, ' ')}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLORS[c.status] || 'bg-gray-100 text-gray-500'}`}>{c.status === 'PENDING' ? 'Pending' : c.status === 'APPROVED' ? 'Done' : c.status === 'REJECTED' ? 'No' : c.status?.replace(/_/g, ' ')}</span>
                     </div>
-                    {c.description && <p className="text-xs text-gray-400 mt-1">{c.description}</p>}
                   </div>
                 ))}
               </div>

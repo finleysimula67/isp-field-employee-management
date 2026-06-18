@@ -52,21 +52,24 @@ export default function CashCollectionPage() {
   const dayHeaders = Array.from({ length: daysInMonth }, (_, i) => i + 1)
   const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-  const fetchSummary = useCallback(() => {
+  const fetchData = useCallback(() => {
     setLoading(true)
-    Promise.all([
-      getMyCashCollectionSummary(month, year),
-      getMyCashCollections({}),
-    ])
-      .then(([sumRes, colRes]) => {
-        setSummary(sumRes.data)
-        setCollections(colRes.data)
+    const errs: string[] = []
+    getMyCashCollectionSummary(month, year)
+      .then(res => setSummary(res.data))
+      .catch((e: any) => {
+        errs.push('summary: ' + (e?.response?.data?.message || e?.message || 'unknown'))
+        setToast({ message: 'Failed to load summary', type: 'error' })
       })
-      .catch(() => setToast({ message: 'Failed to load data', type: 'error' }))
+    getMyCashCollections({})
+      .then(res => setCollections(res.data))
+      .catch((e: any) => {
+        errs.push('list: ' + (e?.response?.data?.message || e?.message || 'unknown'))
+      })
       .finally(() => setLoading(false))
   }, [month, year])
 
-  useEffect(() => { fetchSummary() }, [fetchSummary])
+  useEffect(() => { fetchData() }, [fetchData])
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) { setToast({ message: 'Geolocation not supported', type: 'error' }); return }
@@ -126,7 +129,7 @@ export default function CashCollectionPage() {
         setForm(initialForm)
         setPhotoFile(null)
         setPhotoPreview('')
-        fetchSummary()
+        fetchData()
       }
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to submit cash collection'

@@ -65,7 +65,7 @@ class DailyLogControllerTest {
     @Test
     void getAll_shouldReturnLogs() throws Exception {
         DailyLog log = createLog(1L, 1L, "PENDING");
-        when(dailyLogService.getDailyLogs(any(), any(), any()))
+        when(dailyLogService.getDailyLogs(any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(List.of(log));
 
         mockMvc.perform(get("/api/daily-logs").with(TestAuthUtil.withAuth(EMP_ADMIN)))

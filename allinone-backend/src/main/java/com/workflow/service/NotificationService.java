@@ -6,6 +6,7 @@ import com.workflow.entity.Notification;
 import com.workflow.repository.EmployeeRepository;
 import com.workflow.repository.NotificationRepository;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -51,6 +52,7 @@ public class NotificationService {
         broadcastUnreadCount(recipientId);
     }
 
+    @Async
     public void broadcastNotification(Long recipientId, Notification notification) {
         try {
             messagingTemplate.convertAndSend("/topic/notifications/" + recipientId, toResponse(notification));
@@ -59,6 +61,7 @@ public class NotificationService {
         }
     }
 
+    @Async
     public void broadcastUnreadCount(Long recipientId) {
         try {
             long count = getUnreadCount(recipientId);
@@ -68,6 +71,7 @@ public class NotificationService {
         }
     }
 
+    @Async
     public void broadcastNotificationToRecipient(Notification notification) {
         try {
             Long recipientId = notification.getRecipient().getId();

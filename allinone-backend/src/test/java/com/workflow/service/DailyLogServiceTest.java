@@ -120,16 +120,16 @@ class DailyLogServiceTest {
     @Test
     void getDailyLogs_shouldFilterByEmployeeId() {
         dailyLogService.createDailyLog(createRequest(employee.getId()), employee.getId());
-        List<DailyLog> logs = dailyLogService.getDailyLogs(employee.getId(), null, null);
+        List<DailyLog> logs = dailyLogService.getDailyLogs(employee.getId(), null, null, 0, 100);
         assertEquals(1, logs.size());
     }
 
     @Test
     void getDailyLogs_shouldFilterByStatus() {
         dailyLogService.createDailyLog(createRequest(employee.getId()), employee.getId());
-        List<DailyLog> pending = dailyLogService.getDailyLogs(null, "PENDING", null);
+        List<DailyLog> pending = dailyLogService.getDailyLogs(null, "PENDING", null, 0, 100);
         assertEquals(1, pending.size());
-        List<DailyLog> approved = dailyLogService.getDailyLogs(null, "APPROVED", null);
+        List<DailyLog> approved = dailyLogService.getDailyLogs(null, "APPROVED", null, 0, 100);
         assertTrue(approved.isEmpty());
     }
 

@@ -26,8 +26,10 @@ public class DailyLogController {
     public ResponseEntity<ApiResponse<List<DailyLogResponse>>> getAll(
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<DailyLogResponse> logs = dailyLogService.getDailyLogs(employeeId, status, date).stream()
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        List<DailyLogResponse> logs = dailyLogService.getDailyLogs(employeeId, status, date, page, size).stream()
                 .map(this::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(ApiResponse.ok(logs));
     }

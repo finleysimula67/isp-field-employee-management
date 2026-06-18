@@ -117,8 +117,9 @@ export default function CashCollectionPage() {
         setPhotoPreview('')
         fetchCollections()
       }
-    } catch {
-      setToast({ message: 'Failed to submit cash collection', type: 'error' })
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to submit cash collection'
+      setToast({ message: msg, type: 'error' })
     } finally {
       setSubmitting(false)
     }
@@ -193,6 +194,11 @@ export default function CashCollectionPage() {
               <input type="file" accept="image/*" capture="environment" onChange={e => {
                 const file = e.target.files?.[0]
                 if (file) {
+                  if (file.size > 10_485_760) {
+                    setToast({ message: 'Photo too large — max 10MB', type: 'error' })
+                    e.target.value = ''
+                    return
+                  }
                   setPhotoFile(file)
                   setPhotoPreview(URL.createObjectURL(file))
                 }

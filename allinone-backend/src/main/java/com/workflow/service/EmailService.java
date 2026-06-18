@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,6 +15,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
+    @Async
     public void sendPasswordResetEmail(String to, String resetLink) {
         sendHtmlEmail(to, "Reset your All in One & Network Solutions password",
                 "<p>You requested a password reset.</p>"
@@ -22,6 +24,7 @@ public class EmailService {
                 + "<p>If you didn't request this, ignore this email.</p>");
     }
 
+    @Async
     public void sendEmail(String to, String subject, String body) {
         sendHtmlEmail(to, subject, "<p>" + body.replace("\n", "<br>") + "</p>");
     }

@@ -4,6 +4,8 @@ import com.workflow.dto.DailyLogRequest;
 import com.workflow.dto.DailyLogReviewRequest;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,15 +38,21 @@ public class DailyLogService {
         this.emailService = emailService; this.notificationService = notificationService;
     }
 
-    public List<DailyLog> getDailyLogs(Long employeeId, String status, LocalDate date) {
-        List<DailyLog> logs = dailyLogRepository.findAll(Sort.by(Sort.Direction.DESC, "submittedAt"));
-        if (employeeId != null)
-            logs = logs.stream().filter(l -> l.getEmployee().getId().equals(employeeId)).collect(Collectors.toList());
-        if (status != null)
-            logs = logs.stream().filter(l -> l.getStatus().name().equals(status)).collect(Collectors.toList());
-        if (date != null)
-            logs = logs.stream().filter(l -> l.getLogDate().equals(date)).collect(Collectors.toList());
-        return logs;
+    public List<DailyLog> getDailyLogs(Long employeeId, String status, LocalDate date, int page, int size) {
+        if (employeeId != null) {
+            List<DailyLog> logs = dailyLogRepository.findByEmployeeIdWithEager(employeeId);
+            if (status != null) logs = logs.stream().filter(l -> l.getStatus().name().equals(status)).collect(Collectors.toList());
+            if (date != null) logs = logs.stream().filter(l -> l.getLogDate().equals(date)).collect(Collectors.toList());
+            return logs;
+        }
+        if (status != null || date != null) {
+            List<DailyLog> logs = dailyLogRepository.findAllWithEager();
+            if (status != null) logs = logs.stream().filter(l -> l.getStatus().name().equals(status)).collect(Collectors.toList());
+            if (date != null) logs = logs.stream().filter(l -> l.getLogDate().equals(date)).collect(Collectors.toList());
+            return logs;
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "submittedAt");
+        return dailyLogRepository.findAllWithEager(pageable).getContent();
     }
 
     public DailyLog getDailyLog(Long id) {
@@ -231,7 +239,7 @@ public class DailyLogService {
     }
 
     public List<DailyLog> getMyLogs(Long employeeId, String category, LocalDate date) {
-        List<DailyLog> logs = dailyLogRepository.findByEmployeeIdOrderByLogDateDesc(employeeId);
+        List<DailyLog> logs = dailyLogRepository.findByEmployeeIdWithEager(employeeId);
         if (category != null)
             logs = logs.stream().filter(l -> l.getCategory().name().equals(category)).collect(Collectors.toList());
         if (date != null)

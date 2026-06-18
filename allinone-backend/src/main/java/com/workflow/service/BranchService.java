@@ -38,7 +38,7 @@ public class BranchService {
     }
 
     public List<BranchResponse> getAllBranches() {
-        return branchRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
+        return branchRepository.findAllWithManager().stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     public BranchResponse getBranch(Long id) {

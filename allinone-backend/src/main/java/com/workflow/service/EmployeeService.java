@@ -71,7 +71,7 @@ public class EmployeeService {
     }
 
     public List<EmployeeResponse> getAllEmployees() {
-        return employeeRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
+        return employeeRepository.findAllWithBranch().stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     public EmployeeResponse getEmployee(Long id) {

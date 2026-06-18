@@ -149,8 +149,12 @@ class LeaveRequestServiceTest {
 
     @Test
     void batchReviewLeaveRequests_shouldReviewMultiple() {
-        LeaveRequest lr1 = leaveRequestService.createLeaveRequest(createRequest(), employee.getId());
-        LeaveRequest lr2 = leaveRequestService.createLeaveRequest(createRequest(), employee.getId());
+        LeaveRequestRequest req1 = createRequest();
+        LeaveRequestRequest req2 = createRequest();
+        req2.setStartDate(LocalDate.now().plusDays(10).toString());
+        req2.setEndDate(LocalDate.now().plusDays(12).toString());
+        LeaveRequest lr1 = leaveRequestService.createLeaveRequest(req1, employee.getId());
+        LeaveRequest lr2 = leaveRequestService.createLeaveRequest(req2, employee.getId());
         LeaveReviewRequest reviewReq = new LeaveReviewRequest();
         reviewReq.setStatus("APPROVED");
         reviewReq.setReviewComment("Batch");

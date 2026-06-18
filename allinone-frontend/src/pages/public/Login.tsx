@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { login } from '../../api/auth'
 import client from '../../api/client'
@@ -13,8 +13,22 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [warming, setWarming] = useState(true)
   const navigate = useNavigate()
   const { login: authLogin } = useAuth()
+
+  useEffect(() => {
+    let cancelled = false
+    const controller = new AbortController()
+    const warm = async () => {
+      try {
+        await client.get('/auth/check-email?email=ping', { signal: controller.signal })
+      } catch { /* ignore — connection established is what matters */ }
+      if (!cancelled) setWarming(false)
+    }
+    warm()
+    return () => { cancelled = true; controller.abort() }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,6 +79,12 @@ export default function LoginPage() {
           </div>
           <h1 className="font-display text-xl font-bold text-gray-900">Welcome Back</h1>
           <p className="text-gray-500 text-xs mt-1">Sign in to your account</p>
+          {warming && (
+            <p className="text-amber-600 text-xs mt-2 flex items-center justify-center gap-1">
+              <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+              Waking up server...
+            </p>
+          )}
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-xl p-5 md:p-6 border border-slate-100 shadow-sm space-y-4">
           {error && (

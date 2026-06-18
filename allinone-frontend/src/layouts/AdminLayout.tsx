@@ -119,13 +119,14 @@ export default function AdminLayout() {
 
         <main className="flex-1 overflow-auto pb-20 lg:pb-0">
           <div className="p-6">
-            <div className="hidden lg:flex items-center justify-between mb-2">
-              <div></div>
-              <div className="flex items-center gap-2">
-                <Link to="/admin/profile" className="text-lg hover:opacity-70" title="Profile">👤</Link>
-                <NotificationBell />
+              <div className="hidden lg:flex items-center justify-between mb-2">
+                <div></div>
+                <div className="flex items-center gap-3">
+                  <Link to="/admin/profile" className="text-lg hover:opacity-70" title="Profile">👤</Link>
+                  <NotificationBell />
+                  <button onClick={logout} className="text-sm text-gray-500 hover:text-red-600 ml-1">Logout</button>
+                </div>
               </div>
-            </div>
             <Outlet />
           </div>
         </main>

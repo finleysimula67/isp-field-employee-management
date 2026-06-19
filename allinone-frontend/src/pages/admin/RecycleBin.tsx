@@ -69,6 +69,7 @@ export default function RecycleBinPage() {
         onConfirm={confirmModal?.type === 'restore' ? handleRestore : handlePermanentDelete}
         onCancel={() => setConfirmModal(null)}
         loading={actionLoading}
+        confirmLabel={confirmModal?.type === 'restore' ? 'Restore' : undefined}
       />
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl font-bold text-gray-900">Recycle Bin</h1>

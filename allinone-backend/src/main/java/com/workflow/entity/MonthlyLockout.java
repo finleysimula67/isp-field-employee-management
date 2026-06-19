@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.*;
 
 @Entity @Table(name = "monthly_lockouts")
-public class MonthlyLockout {
+public class MonthlyLockout implements SoftDeletable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @Column(name = "year_month", unique = true, nullable = false) private String yearMonth;
     @Column(name = "lock_day") private Integer lockDay;
@@ -14,6 +14,8 @@ public class MonthlyLockout {
     @Column(name = "unlocked_at") private LocalDateTime unlockedAt;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "unlocked_by") private Employee unlockedBy;
     @Column(name = "unlock_reason", columnDefinition = "TEXT") private String unlockReason;
+    @Column(name = "deleted_at") private LocalDateTime deletedAt;
+    @Column(name = "deleted_by") private Long deletedBy;
 
     public MonthlyLockout() {}
 
@@ -26,6 +28,8 @@ public class MonthlyLockout {
     public LocalDateTime getUnlockedAt() { return unlockedAt; } public void setUnlockedAt(LocalDateTime unlockedAt) { this.unlockedAt = unlockedAt; }
     public Employee getUnlockedBy() { return unlockedBy; } public void setUnlockedBy(Employee unlockedBy) { this.unlockedBy = unlockedBy; }
     public String getUnlockReason() { return unlockReason; } public void setUnlockReason(String unlockReason) { this.unlockReason = unlockReason; }
+    public LocalDateTime getDeletedAt() { return deletedAt; } public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    public Long getDeletedBy() { return deletedBy; } public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
 
     @PrePersist protected void onCreate() {
         if (lockDay == null) lockDay = 5;

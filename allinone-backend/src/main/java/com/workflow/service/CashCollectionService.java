@@ -23,13 +23,16 @@ public class CashCollectionService {
     private final AuditLogService auditLogService;
     private final EmailService emailService;
     private final NotificationService notificationService;
+    private final RecycleBinService recycleBinService;
 
     public CashCollectionService(CashCollectionRepository ccr, EmployeeRepository er,
                                   NotificationRepository nr, AuditLogService als,
-                                  EmailService emailService, NotificationService notificationService) {
+                                  EmailService emailService, NotificationService notificationService,
+                                  RecycleBinService rbs) {
         this.cashCollectionRepository = ccr; this.employeeRepository = er;
         this.notificationRepository = nr; this.auditLogService = als;
         this.emailService = emailService; this.notificationService = notificationService;
+        this.recycleBinService = rbs;
     }
 
     public List<CashCollection> getCashCollections(Long employeeId, String status, int page, int size) {
@@ -154,15 +157,26 @@ public class CashCollectionService {
     }
 
     @Transactional
-    public void deleteCashCollection(Long id, Long adminId) {
+    public void softDeleteCashCollection(Long id, Employee actor) {
         CashCollection collection = cashCollectionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cash collection not found"));
-        if (collection.getStatus() != CollectionStatus.PENDING)
-            throw new RuntimeException("Only pending cash collections can be deleted");
-        Employee admin = employeeRepository.findById(adminId)
-                .orElseThrow(() -> new RuntimeException("Admin not found"));
-        cashCollectionRepository.delete(collection);
-        auditLogService.log("CashCollection", id, "DELETED", collection.getStatus().name(), null, admin.getEmail());
+        boolean isOwner = collection.getEmployee().getId().equals(actor.getId());
+        boolean isAdmin = actor.getRole() == Role.SUPER_ADMIN || actor.getRole() == Role.BRANCH_MANAGER;
+        if (!isAdmin && (!isOwner || collection.getStatus() != CollectionStatus.PENDING))
+            throw new org.springframework.security.access.AccessDeniedException("Not authorized to delete this collection");
+        collection.setDeletedAt(java.time.LocalDateTime.now());
+        collection.setDeletedBy(actor.getId());
+        cashCollectionRepository.save(collection);
+        recycleBinService.softDelete(collection, id, "CashCollection", actor, collection.getEmployee().getId(), collection.getSubmittedAt());
+        auditLogService.log("CashCollection", id, "SOFT_DELETED", collection.getStatus().name(), "DELETED", actor.getEmail());
+    }
+
+    @Transactional
+    public void batchDeleteCashCollections(List<Long> ids, Employee actor) {
+        for (Long id : ids) {
+            try { softDeleteCashCollection(id, actor); } catch (Exception e) { /* skip */ }
+        }
+        recycleBinService.bulkDeleteLogged("CashCollection", ids.size(), actor);
     }
 
     public List<CashCollection> batchReviewCashCollections(List<Long> ids, CashCollectionReviewRequest request, Long reviewerId) {

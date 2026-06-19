@@ -46,9 +46,13 @@ class LeaveRequestServiceTest {
             @Override public void broadcastNotification(Long recipientId, Notification notification) {}
             @Override public void broadcastUnreadCount(Long recipientId) {}
         };
+        RecycleBinService recycleBinService = new RecycleBinService(null, null) {
+            @Override public void softDelete(Object entity, Long entityId, String entityType, Employee actor, Long originalOwnerId, java.time.LocalDateTime originalCreatedAt) {}
+            @Override public void bulkDeleteLogged(String entityType, int count, Employee actor) {}
+        };
 
         leaveRequestService = new LeaveRequestService(leaveRequestRepository, employeeRepository,
-                notificationRepository, auditLogService, emailService, notificationService);
+                notificationRepository, auditLogService, emailService, notificationService, recycleBinService);
 
         employee = new Employee();
         employee.setName("Field Employee");

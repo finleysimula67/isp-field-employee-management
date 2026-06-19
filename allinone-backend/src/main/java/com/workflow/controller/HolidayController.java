@@ -42,9 +42,18 @@ public class HolidayController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        holidayService.deleteHoliday(id);
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+                                                     @AuthenticationPrincipal Employee employee) {
+        holidayService.softDeleteHoliday(id, employee);
         return ResponseEntity.ok(ApiResponse.ok("Holiday deleted", null));
+    }
+
+    @PostMapping("/batch-delete")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> batchDelete(@RequestBody BatchDeleteRequest request,
+                                                          @AuthenticationPrincipal Employee employee) {
+        holidayService.batchDeleteHolidays(request.getIds(), employee);
+        return ResponseEntity.ok(ApiResponse.ok("Batch delete completed", null));
     }
 
     private HolidayResponse toResponse(Holiday h) {

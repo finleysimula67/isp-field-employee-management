@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.*;
 
 @Entity @Table(name = "salary_advances")
-public class SalaryAdvance {
+public class SalaryAdvance implements SoftDeletable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "employee_id", nullable = false) private Employee employee;
     @Column(nullable = false) private BigDecimal amount;
@@ -18,6 +18,8 @@ public class SalaryAdvance {
     @Column(name = "is_settled") private Boolean isSettled;
     @Column(name = "settled_in_payroll_id") private Long settledInPayrollId;
     @Column(columnDefinition = "TEXT") private String notes;
+    @Column(name = "deleted_at") private LocalDateTime deletedAt;
+    @Column(name = "deleted_by") private Long deletedBy;
 
     public SalaryAdvance() {}
 
@@ -34,6 +36,8 @@ public class SalaryAdvance {
     public Long getSettledInPayrollId() { return settledInPayrollId; }
     public void setSettledInPayrollId(Long settledInPayrollId) { this.settledInPayrollId = settledInPayrollId; }
     public String getNotes() { return notes; } public void setNotes(String notes) { this.notes = notes; }
+    public LocalDateTime getDeletedAt() { return deletedAt; } public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    public Long getDeletedBy() { return deletedBy; } public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
 
     @PrePersist protected void onCreate() {
         if (status == null) status = AdvanceStatus.PENDING;

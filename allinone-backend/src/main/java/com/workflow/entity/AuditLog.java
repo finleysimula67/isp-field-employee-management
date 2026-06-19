@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.*;
 
 @Entity @Table(name = "audit_logs")
-public class AuditLog {
+public class AuditLog implements SoftDeletable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @Column(name = "entity_type", nullable = false) private String entityType;
     @Column(name = "entity_id", nullable = false) private Long entityId;
@@ -15,6 +15,8 @@ public class AuditLog {
     @Column(columnDefinition = "TEXT") private String metadata;
     @Column(name = "ip_address") private String ipAddress;
     @Column(name = "created_at", updatable = false) private LocalDateTime createdAt;
+    @Column(name = "deleted_at") private LocalDateTime deletedAt;
+    @Column(name = "deleted_by") private Long deletedBy;
 
     public AuditLog() {}
 
@@ -29,6 +31,10 @@ public class AuditLog {
     public String getMetadata() { return metadata; } public void setMetadata(String metadata) { this.metadata = metadata; }
     public String getIpAddress() { return ipAddress; } public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    public Long getDeletedBy() { return deletedBy; }
+    public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
 
     @PrePersist protected void onCreate() { createdAt = LocalDateTime.now(); }
 }

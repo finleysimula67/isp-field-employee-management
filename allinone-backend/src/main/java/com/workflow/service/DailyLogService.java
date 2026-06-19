@@ -29,14 +29,16 @@ public class DailyLogService {
     private final PayrollRecordRepository payrollRecordRepository;
     private final EmailService emailService;
     private final NotificationService notificationService;
+    private final RecycleBinService recycleBinService;
 
     public DailyLogService(DailyLogRepository dlr, EmployeeRepository er, BranchRepository br,
                            NotificationRepository nr, AuditLogService als,
                            PayrollRecordRepository prr, EmailService emailService,
-                           NotificationService notificationService) {
+                           NotificationService notificationService, RecycleBinService rbs) {
         this.dailyLogRepository = dlr; this.employeeRepository = er; this.branchRepository = br;
         this.notificationRepository = nr; this.auditLogService = als; this.payrollRecordRepository = prr;
         this.emailService = emailService; this.notificationService = notificationService;
+        this.recycleBinService = rbs;
     }
 
     public List<DailyLog> getDailyLogs(Long employeeId, String status, LocalDate date, int page, int size) {
@@ -253,6 +255,29 @@ public class DailyLogService {
         if (date != null)
             logs = logs.stream().filter(l -> l.getLogDate().equals(date)).collect(Collectors.toList());
         return logs;
+    }
+
+    @Transactional
+    public void softDeleteDailyLog(Long id, Employee actor) {
+        DailyLog log = dailyLogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Daily log not found"));
+        boolean isOwner = log.getEmployee().getId().equals(actor.getId());
+        boolean isAdmin = actor.getRole() == Role.SUPER_ADMIN || actor.getRole() == Role.BRANCH_MANAGER;
+        if (!isAdmin && (!isOwner || log.getStatus() != LogStatus.PENDING))
+            throw new org.springframework.security.access.AccessDeniedException("Not authorized to delete this log");
+        log.setDeletedAt(java.time.LocalDateTime.now());
+        log.setDeletedBy(actor.getId());
+        dailyLogRepository.save(log);
+        recycleBinService.softDelete(log, id, "DailyLog", actor, log.getEmployee().getId(), log.getSubmittedAt());
+        auditLogService.log("DailyLog", id, "SOFT_DELETED", log.getStatus().name(), "DELETED", actor.getEmail());
+    }
+
+    @Transactional
+    public void batchDeleteDailyLogs(List<Long> ids, Employee actor) {
+        for (Long id : ids) {
+            try { softDeleteDailyLog(id, actor); } catch (Exception e) { /* skip failed */ }
+        }
+        recycleBinService.bulkDeleteLogged("DailyLog", ids.size(), actor);
     }
 
     public Map<String, Object> getEarningsSummary(Long employeeId) {

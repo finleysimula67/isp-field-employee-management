@@ -13,22 +13,30 @@ import java.util.List;
 
 public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
 
-    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy ORDER BY d.submittedAt DESC")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.deletedAt IS NULL ORDER BY d.submittedAt DESC")
     List<DailyLog> findAllWithEager();
 
-    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy ORDER BY d.submittedAt DESC")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.deletedAt IS NULL ORDER BY d.submittedAt DESC")
     Page<DailyLog> findAllWithEager(Pageable pageable);
 
-    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.employee.id = :employeeId ORDER BY d.logDate DESC")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.employee.id = :employeeId AND d.deletedAt IS NULL ORDER BY d.logDate DESC")
     List<DailyLog> findByEmployeeIdWithEager(@Param("employeeId") Long employeeId);
 
-    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.id IN :ids")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.id IN :ids AND d.deletedAt IS NULL")
     List<DailyLog> findByIdInWithEager(@Param("ids") List<Long> ids);
 
-    List<DailyLog> findByEmployeeIdOrderByLogDateDesc(Long employeeId);
-    List<DailyLog> findByIdIn(List<Long> ids);
-    List<DailyLog> findByStatusOrderBySubmittedAtAsc(LogStatus status);
-    List<DailyLog> findByEmployeeAndLogDateBetween(Employee employee, LocalDate start, LocalDate end);
+    @Query("SELECT d FROM DailyLog d WHERE d.employee.id = :employeeId AND d.deletedAt IS NULL ORDER BY d.logDate DESC")
+    List<DailyLog> findByEmployeeIdOrderByLogDateDesc(@Param("employeeId") Long employeeId);
+
+    @Query("SELECT d FROM DailyLog d WHERE d.id IN :ids AND d.deletedAt IS NULL")
+    List<DailyLog> findByIdIn(@Param("ids") List<Long> ids);
+
+    @Query("SELECT d FROM DailyLog d WHERE d.status = :status AND d.deletedAt IS NULL ORDER BY d.submittedAt ASC")
+    List<DailyLog> findByStatusOrderBySubmittedAtAsc(@Param("status") LogStatus status);
+
+    @Query("SELECT d FROM DailyLog d WHERE d.employee = :employee AND d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
+    List<DailyLog> findByEmployeeAndLogDateBetween(@Param("employee") Employee employee, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
     List<DailyLog> findByLogDateBetween(LocalDate start, LocalDate end);
     List<DailyLog> findByLogDateBetweenAndStatus(LocalDate start, LocalDate end, LogStatus status);
     long countByEmployeeAndLogDateBetweenAndStatus(Employee employee, LocalDate start, LocalDate end, LogStatus status);
@@ -36,5 +44,7 @@ public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
     long countByLogDate(LocalDate logDate);
     long countByEmployeeIdAndLogDate(Long employeeId, LocalDate logDate);
     long countByEmployeeIdAndStatus(Long employeeId, LogStatus status);
-    List<DailyLog> findByEmployeeIdAndLogDateBetween(Long employeeId, LocalDate start, LocalDate end);
+
+    @Query("SELECT d FROM DailyLog d WHERE d.employee.id = :employeeId AND d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
+    List<DailyLog> findByEmployeeIdAndLogDateBetween(@Param("employeeId") Long employeeId, @Param("start") LocalDate start, @Param("end") LocalDate end);
 }

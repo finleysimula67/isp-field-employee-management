@@ -19,11 +19,12 @@ public class TaskService {
     private final NotificationRepository notificationRepository;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
+    private final RecycleBinService recycleBinService;
 
     public TaskService(TaskRepository tr, EmployeeRepository er, NotificationRepository nr, AuditLogService als,
-                       NotificationService notificationService) {
+                       NotificationService notificationService, RecycleBinService rbs) {
         this.taskRepository = tr; this.employeeRepository = er; this.notificationRepository = nr; this.auditLogService = als;
-        this.notificationService = notificationService;
+        this.notificationService = notificationService; this.recycleBinService = rbs;
     }
 
     public List<Task> getTasks(Long assignedTo, String status) {
@@ -149,5 +150,26 @@ public class TaskService {
         task.setStatus(TaskStatus.CANCELLED);
         taskRepository.save(task);
         auditLogService.log("Task", id, "CANCELLED", null, "CANCELLED", null);
+    }
+
+    @Transactional
+    public void softDeleteTask(Long id, Employee actor) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        boolean isAdmin = actor.getRole() == Role.SUPER_ADMIN || actor.getRole() == Role.BRANCH_MANAGER;
+        boolean isOwner = task.getAssignedBy().getId().equals(actor.getId());
+        if (!isAdmin && !isOwner)
+            throw new org.springframework.security.access.AccessDeniedException("Not authorized to delete this task");
+        task.setDeletedAt(java.time.LocalDateTime.now());
+        task.setDeletedBy(actor.getId());
+        taskRepository.save(task);
+        recycleBinService.softDelete(task, id, "Task", actor, task.getAssignedTo().getId(), task.getCreatedAt());
+        auditLogService.log("Task", id, "SOFT_DELETED", task.getStatus().name(), "DELETED", actor.getEmail());
+    }
+
+    @Transactional
+    public void batchDeleteTasks(List<Long> ids, Employee actor) {
+        for (Long id : ids) { try { softDeleteTask(id, actor); } catch (Exception e) { /* skip */ } }
+        recycleBinService.bulkDeleteLogged("Task", ids.size(), actor);
     }
 }

@@ -20,13 +20,14 @@ public class LeaveRequestService {
     private final AuditLogService auditLogService;
     private final EmailService emailService;
     private final NotificationService notificationService;
+    private final RecycleBinService recycleBinService;
 
     public LeaveRequestService(LeaveRequestRepository lrr, EmployeeRepository er,
                                NotificationRepository nr, AuditLogService als, EmailService emailService,
-                               NotificationService notificationService) {
+                               NotificationService notificationService, RecycleBinService rbs) {
         this.leaveRequestRepository = lrr; this.employeeRepository = er;
         this.notificationRepository = nr; this.auditLogService = als; this.emailService = emailService;
-        this.notificationService = notificationService;
+        this.notificationService = notificationService; this.recycleBinService = rbs;
     }
 
     public List<LeaveRequest> getLeaveRequests(Long employeeId, String status) {
@@ -141,6 +142,27 @@ public class LeaveRequestService {
         LeaveRequest saved = leaveRequestRepository.save(leaveRequest);
         auditLogService.log("LeaveRequest", id, "REVIEWED", "PENDING", newStatus.name(), reviewer.getEmail());
         return saved;
+    }
+
+    @Transactional
+    public void softDeleteLeaveRequest(Long id, Employee actor) {
+        LeaveRequest lr = leaveRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Leave request not found"));
+        boolean isOwner = lr.getEmployee().getId().equals(actor.getId());
+        boolean isAdmin = actor.getRole() == Role.SUPER_ADMIN || actor.getRole() == Role.BRANCH_MANAGER;
+        if (!isAdmin && (!isOwner || lr.getStatus() != LeaveStatus.PENDING))
+            throw new org.springframework.security.access.AccessDeniedException("Not authorized to delete this leave request");
+        lr.setDeletedAt(java.time.LocalDateTime.now());
+        lr.setDeletedBy(actor.getId());
+        leaveRequestRepository.save(lr);
+        recycleBinService.softDelete(lr, id, "LeaveRequest", actor, lr.getEmployee().getId(), lr.getSubmittedAt());
+        auditLogService.log("LeaveRequest", id, "SOFT_DELETED", lr.getStatus().name(), "DELETED", actor.getEmail());
+    }
+
+    @Transactional
+    public void batchDeleteLeaveRequests(List<Long> ids, Employee actor) {
+        for (Long id : ids) { try { softDeleteLeaveRequest(id, actor); } catch (Exception e) { /* skip */ } }
+        recycleBinService.bulkDeleteLogged("LeaveRequest", ids.size(), actor);
     }
 
     @Transactional

@@ -59,6 +59,21 @@ public class LeaveRequestController {
         return ResponseEntity.ok(ApiResponse.ok(toResponse(leaveRequestService.reviewLeaveRequest(id, request, employee.getId()))));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+                                                     @AuthenticationPrincipal Employee employee) {
+        leaveRequestService.softDeleteLeaveRequest(id, employee);
+        return ResponseEntity.ok(ApiResponse.ok("Leave request deleted", null));
+    }
+
+    @PostMapping("/batch-delete")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> batchDelete(@RequestBody BatchDeleteRequest request,
+                                                          @AuthenticationPrincipal Employee employee) {
+        leaveRequestService.batchDeleteLeaveRequests(request.getIds(), employee);
+        return ResponseEntity.ok(ApiResponse.ok("Batch delete completed", null));
+    }
+
     @PostMapping("/batch-review")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<ApiResponse<List<LeaveRequestResponse>>> batchReview(

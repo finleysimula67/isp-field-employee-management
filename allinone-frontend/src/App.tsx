@@ -32,6 +32,7 @@ import MonthlyLockoutsPage from './pages/admin/MonthlyLockouts'
 import EmailAllowListPage from './pages/admin/EmailAllowList'
 import ManualLogsPage from './pages/admin/ManualLogs'
 import CashCollectionsPage from './pages/admin/CashCollections'
+import RecycleBinPage from './pages/admin/RecycleBin'
 import ProfilePage from './pages/admin/Profile'
 
 import EmpDashboard from './pages/employee/Dashboard'
@@ -83,6 +84,7 @@ export default function App() {
           <Route path="email-allow-list" element={<EmailAllowListPage />} />
           <Route path="manual-logs" element={<ManualLogsPage />} />
           <Route path="cash-collections" element={<CashCollectionsPage />} />
+          <Route path="recycle-bin" element={<RecycleBinPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 

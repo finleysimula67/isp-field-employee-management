@@ -25,15 +25,18 @@ public class SalaryAdvanceService {
     private final AuditLogService auditLogService;
     private final EmailService emailService;
     private final NotificationService notificationService;
+    private final RecycleBinService recycleBinService;
 
     public SalaryAdvanceService(SalaryAdvanceRepository sar, EmployeeRepository er,
                                 DailyLogRepository dlr, PayrollRecordRepository prr,
                                 NotificationRepository nr, AuditLogService als,
-                                EmailService emailService, NotificationService notificationService) {
+                                EmailService emailService, NotificationService notificationService,
+                                RecycleBinService rbs) {
         this.salaryAdvanceRepository = sar; this.employeeRepository = er;
         this.dailyLogRepository = dlr; this.payrollRecordRepository = prr;
         this.notificationRepository = nr; this.auditLogService = als;
         this.emailService = emailService; this.notificationService = notificationService;
+        this.recycleBinService = rbs;
     }
 
     public List<SalaryAdvance> getAdvances(Long employeeId, String status) {
@@ -183,6 +186,26 @@ public class SalaryAdvanceService {
         }
         auditLogService.log("SalaryAdvance", saved.getId(), "MANUAL_CREATED", null, "DISBURSED", employee.getEmail());
         return saved;
+    }
+
+    @Transactional
+    public void softDeleteSalaryAdvance(Long id, Employee actor) {
+        SalaryAdvance adv = salaryAdvanceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Salary advance not found"));
+        boolean isAdmin = actor.getRole() == Role.SUPER_ADMIN || actor.getRole() == Role.BRANCH_MANAGER;
+        if (!isAdmin)
+            throw new org.springframework.security.access.AccessDeniedException("Not authorized to delete this advance");
+        adv.setDeletedAt(java.time.LocalDateTime.now());
+        adv.setDeletedBy(actor.getId());
+        salaryAdvanceRepository.save(adv);
+        recycleBinService.softDelete(adv, id, "SalaryAdvance", actor, adv.getEmployee().getId(), adv.getRequestDate().atStartOfDay());
+        auditLogService.log("SalaryAdvance", id, "SOFT_DELETED", adv.getStatus().name(), "DELETED", actor.getEmail());
+    }
+
+    @Transactional
+    public void batchDeleteSalaryAdvances(List<Long> ids, Employee actor) {
+        for (Long id : ids) { try { softDeleteSalaryAdvance(id, actor); } catch (Exception e) { /* skip */ } }
+        recycleBinService.bulkDeleteLogged("SalaryAdvance", ids.size(), actor);
     }
 
     public Map<String, BigDecimal> getEmployeeBalance(Long employeeId) {

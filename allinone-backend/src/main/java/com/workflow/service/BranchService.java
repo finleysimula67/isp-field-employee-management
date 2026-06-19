@@ -5,7 +5,11 @@ import com.workflow.entity.Branch;
 import com.workflow.entity.Employee;
 import com.workflow.repository.BranchRepository;
 import com.workflow.repository.EmployeeRepository;
+import com.workflow.service.AuditLogService;
+import com.workflow.service.RecycleBinService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,9 +17,13 @@ import java.util.stream.Collectors;
 public class BranchService {
     private final BranchRepository branchRepository;
     private final EmployeeRepository employeeRepository;
+    private final AuditLogService auditLogService;
+    private final RecycleBinService recycleBinService;
 
-    public BranchService(BranchRepository br, EmployeeRepository er) {
+    public BranchService(BranchRepository br, EmployeeRepository er,
+                         AuditLogService als, RecycleBinService rbs) {
         this.branchRepository = br; this.employeeRepository = er;
+        this.auditLogService = als; this.recycleBinService = rbs;
     }
 
     public BranchResponse createBranch(String name, String code, String address) {
@@ -44,6 +52,17 @@ public class BranchService {
     public BranchResponse getBranch(Long id) {
         return toResponse(branchRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Branch not found")));
+    }
+
+    @Transactional
+    public void softDeleteBranch(Long id, Employee actor) {
+        Branch branch = branchRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Branch not found"));
+        branch.setDeletedAt(LocalDateTime.now());
+        branch.setDeletedBy(actor.getId());
+        branchRepository.save(branch);
+        recycleBinService.softDelete(branch, id, "Branch", actor, null, branch.getCreatedAt());
+        auditLogService.log("Branch", id, "SOFT_DELETED", branch.getIsActive() != null ? branch.getIsActive().toString() : null, "DELETED", actor.getEmail());
     }
 
     private BranchResponse toResponse(Branch b) {

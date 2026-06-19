@@ -72,6 +72,21 @@ public class DailyLogController {
         return ResponseEntity.ok(ApiResponse.ok(toResponse(dailyLogService.reviewDailyLog(id, request, employee.getId()))));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+                                                     @AuthenticationPrincipal Employee employee) {
+        dailyLogService.softDeleteDailyLog(id, employee);
+        return ResponseEntity.ok(ApiResponse.ok("Daily log deleted", null));
+    }
+
+    @PostMapping("/batch-delete")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> batchDelete(@RequestBody BatchDeleteRequest request,
+                                                          @AuthenticationPrincipal Employee employee) {
+        dailyLogService.batchDeleteDailyLogs(request.getIds(), employee);
+        return ResponseEntity.ok(ApiResponse.ok("Batch delete completed", null));
+    }
+
     @PostMapping("/batch-review")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<ApiResponse<List<DailyLogResponse>>> batchReview(

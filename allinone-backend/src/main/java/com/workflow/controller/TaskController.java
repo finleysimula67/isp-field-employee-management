@@ -66,10 +66,18 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        taskService.deleteTask(id);
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+                                                     @AuthenticationPrincipal Employee employee) {
+        taskService.softDeleteTask(id, employee);
         return ResponseEntity.ok(ApiResponse.ok("Task deleted", null));
+    }
+
+    @PostMapping("/batch-delete")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> batchDelete(@RequestBody BatchDeleteRequest request,
+                                                          @AuthenticationPrincipal Employee employee) {
+        taskService.batchDeleteTasks(request.getIds(), employee);
+        return ResponseEntity.ok(ApiResponse.ok("Batch delete completed", null));
     }
 
     private TaskResponse toResponse(Task task) {

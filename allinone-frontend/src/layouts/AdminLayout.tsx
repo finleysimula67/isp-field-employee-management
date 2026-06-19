@@ -22,6 +22,7 @@ const sidebarLinks = [
   { path: '/admin/email-allow-list', label: 'Allow List', icon: '📧' },
   { path: '/admin/manual-logs', label: 'Manual Logs', icon: '📝' },
   { path: '/admin/cash-collections', label: 'Cash Collections', icon: '💵' },
+  { path: '/admin/recycle-bin', label: 'Recycle Bin', icon: '🗑️' },
   { path: '/admin/profile', label: 'Profile', icon: '👤' },
 ]
 

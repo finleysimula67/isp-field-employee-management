@@ -43,10 +43,14 @@ class SalaryAdvanceServiceTest {
         };
         StubEmailService emailService = new StubEmailService();
         StubNotificationService notificationService = new StubNotificationService(notificationRepository, employeeRepository);
+        RecycleBinService recycleBinService = new RecycleBinService(null, null) {
+            @Override public void softDelete(Object entity, Long entityId, String entityType, Employee actor, Long originalOwnerId, java.time.LocalDateTime originalCreatedAt) {}
+            @Override public void bulkDeleteLogged(String entityType, int count, Employee actor) {}
+        };
 
         salaryAdvanceService = new SalaryAdvanceService(salaryAdvanceRepository, employeeRepository,
                 dailyLogRepository, payrollRecordRepository, notificationRepository,
-                auditLogService, emailService, notificationService);
+                auditLogService, emailService, notificationService, recycleBinService);
 
         employee = new Employee();
         employee.setName("Test Employee");

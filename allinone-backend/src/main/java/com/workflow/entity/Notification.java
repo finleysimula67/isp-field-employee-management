@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.*;
 
 @Entity @Table(name = "notifications")
-public class Notification {
+public class Notification implements SoftDeletable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "recipient_id", nullable = false) private Employee recipient;
     @Column(nullable = false) private String type;
@@ -14,6 +14,8 @@ public class Notification {
     @Column(name = "related_entity_type") private String relatedEntityType;
     @Column(name = "related_entity_id") private Long relatedEntityId;
     @Column(name = "created_at", updatable = false) private LocalDateTime createdAt;
+    @Column(name = "deleted_at") private LocalDateTime deletedAt;
+    @Column(name = "deleted_by") private Long deletedBy;
 
     public Notification() {}
 
@@ -28,6 +30,10 @@ public class Notification {
     public Long getRelatedEntityId() { return relatedEntityId; }
     public void setRelatedEntityId(Long relatedEntityId) { this.relatedEntityId = relatedEntityId; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    public Long getDeletedBy() { return deletedBy; }
+    public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
 
     @PrePersist protected void onCreate() {
         createdAt = LocalDateTime.now();

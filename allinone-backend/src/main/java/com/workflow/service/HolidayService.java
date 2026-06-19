@@ -16,12 +16,13 @@ public class HolidayService {
     private final HolidayRepository holidayRepository;
     private final EmployeeRepository employeeRepository;
     private final AuditLogService auditLogService;
+    private final RecycleBinService recycleBinService;
 
     public HolidayService(HolidayRepository holidayRepository, EmployeeRepository employeeRepository,
-                          AuditLogService auditLogService) {
+                          AuditLogService auditLogService, RecycleBinService rbs) {
         this.holidayRepository = holidayRepository;
         this.employeeRepository = employeeRepository;
-        this.auditLogService = auditLogService;
+        this.auditLogService = auditLogService; this.recycleBinService = rbs;
     }
 
     public List<Holiday> getHolidays() {
@@ -49,10 +50,19 @@ public class HolidayService {
     }
 
     @Transactional
-    public void deleteHoliday(Long id) {
+    public void softDeleteHoliday(Long id, Employee actor) {
         Holiday holiday = holidayRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Holiday not found"));
-        holidayRepository.delete(holiday);
-        auditLogService.log("Holiday", id, "DELETED", "ACTIVE", "DELETED", null);
+        holiday.setDeletedAt(java.time.LocalDateTime.now());
+        holiday.setDeletedBy(actor.getId());
+        holidayRepository.save(holiday);
+        recycleBinService.softDelete(holiday, id, "Holiday", actor, null, null);
+        auditLogService.log("Holiday", id, "SOFT_DELETED", "ACTIVE", "DELETED", actor.getEmail());
+    }
+
+    @Transactional
+    public void batchDeleteHolidays(List<Long> ids, Employee actor) {
+        for (Long id : ids) { try { softDeleteHoliday(id, actor); } catch (Exception e) { /* skip */ } }
+        recycleBinService.bulkDeleteLogged("Holiday", ids.size(), actor);
     }
 }

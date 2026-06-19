@@ -6,7 +6,7 @@ import java.time.*;
 
 @Entity
 @Table(name = "daily_logs")
-public class DailyLog {
+public class DailyLog implements SoftDeletable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
@@ -30,6 +30,8 @@ public class DailyLog {
     @Column(name = "reviewed_at") private LocalDateTime reviewedAt;
     @Column(name = "month_locked") private Boolean monthLocked;
     @Column(name = "is_holiday_overtime") private Boolean isHolidayOvertime;
+    @Column(name = "deleted_at") private LocalDateTime deletedAt;
+    @Column(name = "deleted_by") private Long deletedBy;
 
     public DailyLog() {}
 
@@ -76,6 +78,10 @@ public class DailyLog {
     public void setMonthLocked(Boolean monthLocked) { this.monthLocked = monthLocked; }
     public Boolean getIsHolidayOvertime() { return isHolidayOvertime; }
     public void setIsHolidayOvertime(Boolean isHolidayOvertime) { this.isHolidayOvertime = isHolidayOvertime; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    public Long getDeletedBy() { return deletedBy; }
+    public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
 
     @PrePersist
     protected void onCreate() {

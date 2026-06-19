@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.*;
 
 @Entity @Table(name = "payroll_records")
-public class PayrollRecord {
+public class PayrollRecord implements SoftDeletable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "employee_id", nullable = false) private Employee employee;
     @Column(name = "period_label", nullable = false) private String periodLabel;
@@ -22,6 +22,8 @@ public class PayrollRecord {
     @Enumerated(EnumType.STRING) private PayrollStatus status;
     @Column(name = "paid_at") private LocalDateTime paidAt;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "paid_by") private Employee paidBy;
+    @Column(name = "deleted_at") private LocalDateTime deletedAt;
+    @Column(name = "deleted_by") private Long deletedBy;
 
     public PayrollRecord() {}
 
@@ -41,6 +43,8 @@ public class PayrollRecord {
     public PayrollStatus getStatus() { return status; } public void setStatus(PayrollStatus status) { this.status = status; }
     public LocalDateTime getPaidAt() { return paidAt; } public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
     public Employee getPaidBy() { return paidBy; } public void setPaidBy(Employee paidBy) { this.paidBy = paidBy; }
+    public LocalDateTime getDeletedAt() { return deletedAt; } public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    public Long getDeletedBy() { return deletedBy; } public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
 
     @PrePersist protected void onCreate() {
         if (status == null) status = PayrollStatus.DRAFT;

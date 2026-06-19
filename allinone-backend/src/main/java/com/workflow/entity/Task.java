@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.*;
 
 @Entity @Table(name = "tasks")
-public class Task {
+public class Task implements SoftDeletable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "assigned_by", nullable = false) private Employee assignedBy;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "assigned_to", nullable = false) private Employee assignedTo;
@@ -18,6 +18,8 @@ public class Task {
     @Column(name = "customer_address") private String customerAddress;
     @Column(name = "created_at", updatable = false) private LocalDateTime createdAt;
     @Column(name = "completed_at") private LocalDateTime completedAt;
+    @Column(name = "deleted_at") private LocalDateTime deletedAt;
+    @Column(name = "deleted_by") private Long deletedBy;
 
     public Task() {}
 
@@ -34,6 +36,8 @@ public class Task {
     public String getCustomerAddress() { return customerAddress; } public void setCustomerAddress(String customerAddress) { this.customerAddress = customerAddress; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getCompletedAt() { return completedAt; } public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
+    public LocalDateTime getDeletedAt() { return deletedAt; } public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    public Long getDeletedBy() { return deletedBy; } public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
 
     @PrePersist protected void onCreate() {
         createdAt = LocalDateTime.now();

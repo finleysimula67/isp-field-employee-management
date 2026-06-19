@@ -72,6 +72,22 @@ public class SalaryAdvanceController {
         return ResponseEntity.ok(ApiResponse.ok(toResponse(salaryAdvanceService.reviewAdvance(id, request, employee.getId()))));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+                                                     @AuthenticationPrincipal Employee employee) {
+        salaryAdvanceService.softDeleteSalaryAdvance(id, employee);
+        return ResponseEntity.ok(ApiResponse.ok("Salary advance deleted", null));
+    }
+
+    @PostMapping("/batch-delete")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> batchDelete(@RequestBody BatchDeleteRequest request,
+                                                          @AuthenticationPrincipal Employee employee) {
+        salaryAdvanceService.batchDeleteSalaryAdvances(request.getIds(), employee);
+        return ResponseEntity.ok(ApiResponse.ok("Batch delete completed", null));
+    }
+
     @PostMapping("/manual")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<ApiResponse<SalaryAdvanceResponse>> manualCreate(

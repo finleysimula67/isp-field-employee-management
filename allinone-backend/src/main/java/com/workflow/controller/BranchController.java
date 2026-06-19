@@ -2,9 +2,11 @@ package com.workflow.controller;
 
 import com.workflow.dto.ApiResponse;
 import com.workflow.dto.BranchResponse;
+import com.workflow.entity.Employee;
 import com.workflow.service.BranchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -33,6 +35,14 @@ public class BranchController {
             @RequestParam String name, @RequestParam(required = false) String code,
             @RequestParam(required = false) String address) {
         return ResponseEntity.ok(ApiResponse.ok("Branch created", branchService.createBranch(name, code, address)));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+                                                     @AuthenticationPrincipal Employee employee) {
+        branchService.softDeleteBranch(id, employee);
+        return ResponseEntity.ok(ApiResponse.ok("Branch deleted", null));
     }
 
     @PutMapping("/{id}")

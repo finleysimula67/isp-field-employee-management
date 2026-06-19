@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "branches")
-public class Branch {
+public class Branch implements SoftDeletable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(nullable = false) private String name;
@@ -15,6 +15,8 @@ public class Branch {
     private Employee manager;
     @Column(name = "is_active") private Boolean isActive;
     @Column(name = "created_at", updatable = false) private LocalDateTime createdAt;
+    @Column(name = "deleted_at") private LocalDateTime deletedAt;
+    @Column(name = "deleted_by") private Long deletedBy;
 
     public Branch() {}
     public Branch(String name, String code, String address) {
@@ -34,6 +36,10 @@ public class Branch {
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    public Long getDeletedBy() { return deletedBy; }
+    public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
 
     @PrePersist
     protected void onCreate() {

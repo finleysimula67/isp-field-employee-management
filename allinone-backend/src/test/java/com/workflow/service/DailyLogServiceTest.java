@@ -51,9 +51,13 @@ class DailyLogServiceTest {
             @Override public void broadcastNotification(Long recipientId, Notification notification) {}
             @Override public void broadcastUnreadCount(Long recipientId) {}
         };
+        RecycleBinService recycleBinService = new RecycleBinService(null, null) {
+            @Override public void softDelete(Object entity, Long entityId, String entityType, Employee actor, Long originalOwnerId, java.time.LocalDateTime originalCreatedAt) {}
+            @Override public void bulkDeleteLogged(String entityType, int count, Employee actor) {}
+        };
 
         dailyLogService = new DailyLogService(dailyLogRepository, employeeRepository, branchRepository,
-                notificationRepository, auditLogService, payrollRecordRepository, emailService, notificationService);
+                notificationRepository, auditLogService, payrollRecordRepository, emailService, notificationService, recycleBinService);
 
         employee = new Employee();
         employee.setName("Field Employee");

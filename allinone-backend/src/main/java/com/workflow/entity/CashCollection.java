@@ -6,7 +6,7 @@ import java.time.*;
 
 @Entity
 @Table(name = "cash_collections")
-public class CashCollection {
+public class CashCollection implements SoftDeletable {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
@@ -25,6 +25,8 @@ public class CashCollection {
     @Column(name = "review_comment", columnDefinition = "TEXT") private String reviewComment;
     @Column(name = "submitted_at", updatable = false) private LocalDateTime submittedAt;
     @Column(name = "reviewed_at") private LocalDateTime reviewedAt;
+    @Column(name = "deleted_at") private LocalDateTime deletedAt;
+    @Column(name = "deleted_by") private Long deletedBy;
 
     public CashCollection() {}
 
@@ -61,6 +63,10 @@ public class CashCollection {
     public LocalDateTime getSubmittedAt() { return submittedAt; }
     public LocalDateTime getReviewedAt() { return reviewedAt; }
     public void setReviewedAt(LocalDateTime reviewedAt) { this.reviewedAt = reviewedAt; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    public Long getDeletedBy() { return deletedBy; }
+    public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
 
     @PrePersist
     protected void onCreate() {

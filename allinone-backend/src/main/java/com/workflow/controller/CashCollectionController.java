@@ -100,11 +100,18 @@ public class CashCollectionController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
                                                      @AuthenticationPrincipal Employee employee) {
-        cashCollectionService.deleteCashCollection(id, employee.getId());
+        cashCollectionService.softDeleteCashCollection(id, employee);
         return ResponseEntity.ok(ApiResponse.ok("Cash collection deleted", null));
+    }
+
+    @PostMapping("/batch-delete")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> batchDelete(@RequestBody BatchDeleteRequest request,
+                                                          @AuthenticationPrincipal Employee employee) {
+        cashCollectionService.batchDeleteCashCollections(request.getIds(), employee);
+        return ResponseEntity.ok(ApiResponse.ok("Batch delete completed", null));
     }
 
     private CashCollectionResponse toResponse(CashCollection c) {

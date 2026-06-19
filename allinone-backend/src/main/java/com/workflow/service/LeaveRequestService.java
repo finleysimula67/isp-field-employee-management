@@ -35,8 +35,9 @@ public class LeaveRequestService {
         if (employeeId != null) {
             requests = leaveRequestRepository.findByEmployeeIdOrderBySubmittedAtDesc(employeeId);
         } else {
-            requests = leaveRequestRepository.findAll(org.springframework.data.domain.Sort.by(
-                    org.springframework.data.domain.Sort.Direction.DESC, "submittedAt"));
+            requests = leaveRequestRepository.findAllWithEager(
+                    org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE,
+                    org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "submittedAt"))).getContent();
         }
         if (status != null)
             requests = requests.stream().filter(r -> r.getStatus().name().equals(status)).collect(Collectors.toList());

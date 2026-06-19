@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { getBranches, createBranch, updateBranch } from '../../api/branches'
+import { getBranches, createBranch, updateBranch, deleteBranch } from '../../api/branches'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
+import DeleteConfirmModal from '../../components/DeleteConfirmModal'
 
 export default function BranchesPage() {
   const [branches, setBranches] = useState<any[]>([])
@@ -13,6 +14,8 @@ export default function BranchesPage() {
   const [form, setForm] = useState({ name: '', code: '', address: '', managerId: '' })
   const [editingId, setEditingId] = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchData = () => {
     setLoading(true)
@@ -38,6 +41,17 @@ export default function BranchesPage() {
     setForm({ name: b.name, code: b.code || '', address: b.address || '', managerId: b.managerId ? String(b.managerId) : '' })
     setEditingId(b.id)
     setShowForm(true)
+  }
+
+  const handleDelete = async () => {
+    if (confirmDeleteId === null) return
+    setDeleting(true)
+    try {
+      await deleteBranch(confirmDeleteId)
+      setConfirmDeleteId(null)
+      fetchData()
+    } catch { setToast({ message: 'Failed to delete branch', type: 'error' }) }
+    finally { setDeleting(false) }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,14 +152,18 @@ export default function BranchesPage() {
                     <span className={`badge ${b.isActive ? 'badge-success' : 'badge-danger'}`}>{b.isActive ? 'Active' : 'Inactive'}</span>
                   </td>
                   <td className="py-3 px-4">
+                  <div className="flex gap-2">
                     <button onClick={() => handleEdit(b)} className="text-xs text-blue-600 hover:text-blue-800">Edit</button>
-                  </td>
+                    <button onClick={() => setConfirmDeleteId(b.id)} className="text-xs text-red-500 hover:text-red-700">Delete</button>
+                  </div>
+                </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+      <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Branch?" message="This branch will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
     </div>
   )
 }

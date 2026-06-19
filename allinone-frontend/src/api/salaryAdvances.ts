@@ -34,3 +34,13 @@ export async function getBalanceForEmployee(employeeId: number) {
   const res = await client.get(`/salary-advances/balance/${employeeId}`)
   return res.data
 }
+
+export async function deleteSalaryAdvance(id: number) {
+  const res = await client.delete(`/salary-advances/${id}`)
+  return res.data
+}
+
+export async function batchDeleteSalaryAdvances(data: { ids: number[] }) {
+  const res = await client.post('/salary-advances/batch-delete', data)
+  return res.data
+}

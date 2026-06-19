@@ -44,8 +44,9 @@ public class SalaryAdvanceService {
         if (employeeId != null) {
             advances = salaryAdvanceRepository.findByEmployeeIdOrderByRequestDateDesc(employeeId);
         } else {
-            advances = salaryAdvanceRepository.findAll(org.springframework.data.domain.Sort.by(
-                    org.springframework.data.domain.Sort.Direction.DESC, "requestDate"));
+            advances = salaryAdvanceRepository.findAllWithEager(
+                    org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE,
+                    org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "requestDate"))).getContent();
         }
         if (status != null)
             advances = advances.stream().filter(a -> a.getStatus().name().equals(status)).collect(Collectors.toList());

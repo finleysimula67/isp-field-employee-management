@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getAdvances, reviewAdvance, manualAdvance, getBalanceForEmployee } from '../../api/salaryAdvances'
+import { getAdvances, reviewAdvance, manualAdvance, getBalanceForEmployee, deleteSalaryAdvance } from '../../api/salaryAdvances'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
+import DeleteConfirmModal from '../../components/DeleteConfirmModal'
 
 const statusColors: Record<string, string> = {
   PENDING: 'badge-pending',
@@ -24,6 +25,8 @@ export default function SalaryAdvancesPage() {
   const [manualForm, setManualForm] = useState({ employeeId: '', amount: '', reason: '' })
   const [manualSubmitting, setManualSubmitting] = useState(false)
   const [employeeBalance, setEmployeeBalance] = useState<any>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -50,6 +53,21 @@ export default function SalaryAdvancesPage() {
       fetchData()
     } catch {
       setToast({ message: 'Failed to submit review', type: 'error' })
+    }
+  }
+
+  const handleDelete = async () => {
+    if (confirmDeleteId === null) return
+    setDeleting(true)
+    try {
+      await deleteSalaryAdvance(confirmDeleteId)
+      setConfirmDeleteId(null)
+      setToast({ message: 'Salary advance deleted', type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Failed to delete', type: 'error' })
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -196,7 +214,10 @@ export default function SalaryAdvancesPage() {
                     </div>
                   ) : (
                     adv.status === 'PENDING' ? (
-                      <button onClick={() => setReviewingId(adv.id)} className="btn-ghost text-xs">Review</button>
+                      <div className="flex gap-2">
+                        <button onClick={() => setReviewingId(adv.id)} className="btn-ghost text-xs">Review</button>
+                        <button onClick={() => setConfirmDeleteId(adv.id)} className="text-xs text-red-500 hover:text-red-700">Delete</button>
+                      </div>
                     ) : (
                       <span className="text-gray-400 text-xs">—</span>
                     )
@@ -207,6 +228,7 @@ export default function SalaryAdvancesPage() {
           </tbody>
         </table>
       </div>
+      <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Salary Advance?" message="This advance will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
     </div>
   )
 }

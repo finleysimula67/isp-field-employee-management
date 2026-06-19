@@ -3,6 +3,7 @@ import { getTasks, createTask, updateTask, deleteTask } from '../../api/tasks'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
+import DeleteConfirmModal from '../../components/DeleteConfirmModal'
 
 const priorityColors: Record<string, string> = {
   LOW: 'bg-gray-100 text-gray-700',
@@ -39,6 +40,8 @@ export default function TasksPage() {
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchData = () => {
     setLoading(true)
@@ -114,17 +117,20 @@ export default function TasksPage() {
     }
   }
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Cancel this task?')) return
-    setDeletingId(id)
+  const handleDelete = async () => {
+    if (confirmDeleteId === null) return
+    setDeleting(true)
+    setDeletingId(confirmDeleteId)
     try {
-      await deleteTask(id)
-      setToast({ message: 'Task cancelled', type: 'success' })
+      await deleteTask(confirmDeleteId)
+      setConfirmDeleteId(null)
+      setToast({ message: 'Task deleted', type: 'success' })
       fetchData()
     } catch {
-      setToast({ message: 'Failed to cancel task', type: 'error' })
+      setToast({ message: 'Failed to delete task', type: 'error' })
     } finally {
       setDeletingId(null)
+      setDeleting(false)
     }
   }
 
@@ -237,9 +243,7 @@ export default function TasksPage() {
                   <td className="py-3 px-4">
                     <div className="flex gap-2">
                       <button onClick={() => handleEdit(task)} className="text-xs text-blue-600 hover:text-blue-800">Edit</button>
-                      <button onClick={() => handleDelete(task.id)} disabled={deletingId === task.id} className="text-xs text-red-600 hover:text-red-800 disabled:opacity-50">
-                        {deletingId === task.id ? '...' : 'Cancel'}
-                      </button>
+                      <button onClick={() => setConfirmDeleteId(task.id)} className="text-xs text-red-600 hover:text-red-800">Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -248,6 +252,7 @@ export default function TasksPage() {
           </tbody>
         </table>
       </div>
+      <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Task?" message="This task will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
     </div>
   )
 }

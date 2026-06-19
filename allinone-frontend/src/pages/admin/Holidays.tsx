@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getHolidays, createHoliday, deleteHoliday } from '../../api/holidays'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
+import DeleteConfirmModal from '../../components/DeleteConfirmModal'
 
 export default function HolidaysPage() {
   const [holidays, setHolidays] = useState<any[]>([])
@@ -9,6 +10,8 @@ export default function HolidaysPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const [form, setForm] = useState({ date: '', name: '', isRecurring: false, isOvertime: false })
   const [submitting, setSubmitting] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchData = () => {
     setLoading(true)
@@ -33,12 +36,15 @@ export default function HolidaysPage() {
     finally { setSubmitting(false) }
   }
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this holiday?')) return
+  const handleDelete = async () => {
+    if (confirmDeleteId === null) return
+    setDeleting(true)
     try {
-      await deleteHoliday(id)
+      await deleteHoliday(confirmDeleteId)
+      setConfirmDeleteId(null)
       fetchData()
     } catch { setToast({ message: 'Failed to delete holiday', type: 'error' }) }
+    finally { setDeleting(false) }
   }
 
   return (
@@ -96,13 +102,14 @@ export default function HolidaysPage() {
                 <td className="py-3 px-4">{h.isRecurring ? 'Yes' : 'No'}</td>
                 <td className="py-3 px-4">{h.isOvertime ? 'Yes' : 'No'}</td>
                 <td className="py-3 px-4">
-                  <button onClick={() => handleDelete(h.id)} className="text-xs text-red-500 hover:text-red-700">Delete</button>
+                  <button onClick={() => setConfirmDeleteId(h.id)} className="text-xs text-red-500 hover:text-red-700">Delete</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Holiday?" message="This holiday will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
     </div>
   )
 }

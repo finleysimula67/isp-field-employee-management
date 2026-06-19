@@ -14,3 +14,8 @@ export async function updateBranch(id: number, data: { name?: string; code?: str
   const res = await client.put(`/branches/${id}`, data)
   return res.data
 }
+
+export async function deleteBranch(id: number) {
+  const res = await client.delete(`/branches/${id}`)
+  return res.data
+}

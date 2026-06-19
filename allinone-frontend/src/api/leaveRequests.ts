@@ -24,3 +24,13 @@ export async function batchReviewLeaveRequests(data: { ids: number[]; status: st
   const res = await client.post('/leave-requests/batch-review', data)
   return res.data
 }
+
+export async function deleteLeaveRequest(id: number) {
+  const res = await client.delete(`/leave-requests/${id}`)
+  return res.data
+}
+
+export async function batchDeleteLeaveRequests(data: { ids: number[] }) {
+  const res = await client.post('/leave-requests/batch-delete', data)
+  return res.data
+}

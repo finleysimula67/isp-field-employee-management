@@ -5,7 +5,6 @@ import com.workflow.entity.Employee;
 import com.workflow.entity.Holiday;
 import com.workflow.repository.EmployeeRepository;
 import com.workflow.repository.HolidayRepository;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -26,7 +25,7 @@ public class HolidayService {
     }
 
     public List<Holiday> getHolidays() {
-        return holidayRepository.findAll(Sort.by(Sort.Direction.ASC, "date"));
+        return holidayRepository.findAllWithEager();
     }
 
     public Holiday getHoliday(Long id) {

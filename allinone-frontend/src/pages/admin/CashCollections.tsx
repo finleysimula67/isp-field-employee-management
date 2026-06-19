@@ -3,6 +3,7 @@ import { getCashCollections, getCashCollectionSummary, reviewCashCollection, bat
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
+import DeleteConfirmModal from '../../components/DeleteConfirmModal'
 
 const statusColors: Record<string, string> = {
   PENDING: 'badge-pending',
@@ -444,19 +445,7 @@ export default function CashCollectionsPage() {
         </div>
       )}
 
-      {/* Confirm delete */}
-      {confirmDelete != null && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setConfirmDelete(null)}>
-          <div className="bg-white rounded-xl max-w-sm w-full p-6" onClick={e => e.stopPropagation()}>
-            <h2 className="font-display text-lg font-bold text-gray-900 mb-2">Delete Cash Collection?</h2>
-            <p className="text-sm text-gray-500 mb-6">This action cannot be undone. The collection will be permanently removed.</p>
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => setConfirmDelete(null)} className="btn-ghost">Cancel</button>
-              <button onClick={() => handleDelete(confirmDelete)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700">Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal open={confirmDelete !== null} title="Delete Cash Collection?" message="This collection will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={() => { if (confirmDelete !== null) handleDelete(confirmDelete) }} onCancel={() => setConfirmDelete(null)} />
 
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>

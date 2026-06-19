@@ -29,3 +29,13 @@ export async function batchReviewDailyLogs(data: { ids: number[]; status: string
   const res = await client.post('/daily-logs/batch-review', data)
   return res.data
 }
+
+export async function deleteDailyLog(id: number) {
+  const res = await client.delete(`/daily-logs/${id}`)
+  return res.data
+}
+
+export async function batchDeleteDailyLogs(data: { ids: number[] }) {
+  const res = await client.post('/daily-logs/batch-delete', data)
+  return res.data
+}

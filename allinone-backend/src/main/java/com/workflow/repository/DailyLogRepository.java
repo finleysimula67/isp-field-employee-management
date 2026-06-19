@@ -25,25 +25,32 @@ public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
     @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.id IN :ids AND d.deletedAt IS NULL")
     List<DailyLog> findByIdInWithEager(@Param("ids") List<Long> ids);
 
-    @Query("SELECT d FROM DailyLog d WHERE d.employee.id = :employeeId AND d.deletedAt IS NULL ORDER BY d.logDate DESC")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.employee.id = :employeeId AND d.deletedAt IS NULL ORDER BY d.logDate DESC")
     List<DailyLog> findByEmployeeIdOrderByLogDateDesc(@Param("employeeId") Long employeeId);
 
-    @Query("SELECT d FROM DailyLog d WHERE d.id IN :ids AND d.deletedAt IS NULL")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.id IN :ids AND d.deletedAt IS NULL")
     List<DailyLog> findByIdIn(@Param("ids") List<Long> ids);
 
-    @Query("SELECT d FROM DailyLog d WHERE d.status = :status AND d.deletedAt IS NULL ORDER BY d.submittedAt ASC")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.status = :status AND d.deletedAt IS NULL ORDER BY d.submittedAt ASC")
     List<DailyLog> findByStatusOrderBySubmittedAtAsc(@Param("status") LogStatus status);
 
-    @Query("SELECT d FROM DailyLog d WHERE d.employee = :employee AND d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.employee = :employee AND d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
     List<DailyLog> findByEmployeeAndLogDateBetween(@Param("employee") Employee employee, @Param("start") LocalDate start, @Param("end") LocalDate end);
 
-    List<DailyLog> findByLogDateBetween(LocalDate start, LocalDate end);
-    List<DailyLog> findByLogDateBetweenAndStatus(LocalDate start, LocalDate end, LogStatus status);
-    long countByEmployeeAndLogDateBetweenAndStatus(Employee employee, LocalDate start, LocalDate end, LogStatus status);
-    long countByStatus(LogStatus status);
-    long countByLogDate(LocalDate logDate);
-    long countByEmployeeIdAndLogDate(Long employeeId, LocalDate logDate);
-    long countByEmployeeIdAndStatus(Long employeeId, LogStatus status);
+    @Query("SELECT d FROM DailyLog d WHERE d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
+    List<DailyLog> findByLogDateBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
+    @Query("SELECT d FROM DailyLog d WHERE d.logDate BETWEEN :start AND :end AND d.status = :status AND d.deletedAt IS NULL")
+    List<DailyLog> findByLogDateBetweenAndStatus(@Param("start") LocalDate start, @Param("end") LocalDate end, @Param("status") LogStatus status);
+    @Query("SELECT COUNT(d) FROM DailyLog d WHERE d.employee = :employee AND d.logDate BETWEEN :start AND :end AND d.status = :status AND d.deletedAt IS NULL")
+    long countByEmployeeAndLogDateBetweenAndStatus(@Param("employee") Employee employee, @Param("start") LocalDate start, @Param("end") LocalDate end, @Param("status") LogStatus status);
+    @Query("SELECT COUNT(d) FROM DailyLog d WHERE d.status = :status AND d.deletedAt IS NULL")
+    long countByStatus(@Param("status") LogStatus status);
+    @Query("SELECT COUNT(d) FROM DailyLog d WHERE d.logDate = :logDate AND d.deletedAt IS NULL")
+    long countByLogDate(@Param("logDate") LocalDate logDate);
+    @Query("SELECT COUNT(d) FROM DailyLog d WHERE d.employee.id = :employeeId AND d.logDate = :logDate AND d.deletedAt IS NULL")
+    long countByEmployeeIdAndLogDate(@Param("employeeId") Long employeeId, @Param("logDate") LocalDate logDate);
+    @Query("SELECT COUNT(d) FROM DailyLog d WHERE d.employee.id = :employeeId AND d.status = :status AND d.deletedAt IS NULL")
+    long countByEmployeeIdAndStatus(@Param("employeeId") Long employeeId, @Param("status") LogStatus status);
 
     @Query("SELECT d FROM DailyLog d WHERE d.employee.id = :employeeId AND d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
     List<DailyLog> findByEmployeeIdAndLogDateBetween(@Param("employeeId") Long employeeId, @Param("start") LocalDate start, @Param("end") LocalDate end);

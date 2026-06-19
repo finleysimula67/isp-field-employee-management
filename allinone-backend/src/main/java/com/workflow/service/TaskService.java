@@ -32,8 +32,9 @@ public class TaskService {
         if (assignedTo != null) {
             tasks = taskRepository.findByAssignedToIdOrderByScheduledDateAsc(assignedTo);
         } else {
-            tasks = taskRepository.findAll(org.springframework.data.domain.Sort.by(
-                    org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+            tasks = taskRepository.findAllWithEager(
+                    org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE,
+                    org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))).getContent();
         }
         if (status != null)
             tasks = tasks.stream().filter(t -> t.getStatus().name().equals(status)).collect(Collectors.toList());

@@ -9,9 +9,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface HolidayRepository extends JpaRepository<Holiday, Long> {
+    @Query("SELECT h FROM Holiday h LEFT JOIN FETCH h.createdBy WHERE h.deletedAt IS NULL ORDER BY h.date ASC")
+    List<Holiday> findAllWithEager();
+
     @Query("SELECT h FROM Holiday h WHERE h.date = :date AND h.deletedAt IS NULL")
     Optional<Holiday> findByDate(@Param("date") LocalDate date);
 
-    @Query("SELECT h FROM Holiday h WHERE h.date BETWEEN :start AND :end AND h.deletedAt IS NULL ORDER BY h.date ASC")
+    @Query("SELECT h FROM Holiday h LEFT JOIN FETCH h.createdBy WHERE h.date BETWEEN :start AND :end AND h.deletedAt IS NULL ORDER BY h.date ASC")
     List<Holiday> findByDateBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
 }

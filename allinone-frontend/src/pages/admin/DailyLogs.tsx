@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getDailyLogs, reviewDailyLog, batchReviewDailyLogs } from '../../api/dailyLogs'
+import { getDailyLogs, reviewDailyLog, batchReviewDailyLogs, deleteDailyLog, batchDeleteDailyLogs } from '../../api/dailyLogs'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
+import DeleteConfirmModal from '../../components/DeleteConfirmModal'
 
 const statusColors: Record<string, string> = {
   PENDING: 'badge-pending',
@@ -24,6 +25,9 @@ export default function DailyLogsPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [batchAction, setBatchAction] = useState('APPROVED')
   const [batchProcessing, setBatchProcessing] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -68,6 +72,37 @@ export default function DailyLogsPage() {
       setSelectedIds([])
     } else {
       setSelectedIds(logs.map(l => l.id))
+    }
+  }
+
+  const handleDelete = async () => {
+    if (confirmDeleteId === null) return
+    setDeleting(true)
+    try {
+      await deleteDailyLog(confirmDeleteId)
+      setConfirmDeleteId(null)
+      setToast({ message: 'Daily log deleted', type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Failed to delete log', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    setDeleting(true)
+    try {
+      await batchDeleteDailyLogs({ ids: selectedIds })
+      setConfirmBatchDelete(false)
+      setSelectedIds([])
+      setToast({ message: `${selectedIds.length} log(s) deleted`, type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Batch delete failed', type: 'error' })
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -132,6 +167,7 @@ export default function DailyLogsPage() {
             {batchProcessing ? 'Processing...' : `Apply ${batchAction}`}
           </button>
           <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
+          <button onClick={() => setConfirmBatchDelete(true)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 font-medium">Delete Selected</button>
         </div>
       )}
       <div className="card overflow-x-auto">
@@ -195,7 +231,12 @@ export default function DailyLogsPage() {
                       </div>
                     </div>
                   ) : (
-                    <button onClick={() => setReviewingId(log.id)} className="btn-ghost text-xs">Review</button>
+                    <div className="flex gap-2 items-center">
+                      <button onClick={() => setReviewingId(log.id)} className="btn-ghost text-xs">Review</button>
+                      {log.status === 'PENDING' && (
+                        <button onClick={() => setConfirmDeleteId(log.id)} className="text-xs text-red-500 hover:text-red-700">Delete</button>
+                      )}
+                    </div>
                   )}
                 </td>
               </tr>
@@ -203,6 +244,8 @@ export default function DailyLogsPage() {
           </tbody>
         </table>
       </div>
+      <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Daily Log?" message="This log will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
+      <DeleteConfirmModal open={confirmBatchDelete} title={`Delete ${selectedIds.length} Logs?`} message="These logs will be soft-deleted and moved to the Recycle Bin." count={selectedIds.length} onConfirm={handleBatchDelete} onCancel={() => setConfirmBatchDelete(false)} loading={deleting} />
     </div>
   )
 }

@@ -5,8 +5,6 @@ import client from '../../api/client'
 import { useAuth } from '../../contexts/AuthContext'
 import type { Employee } from '../../types'
 
-// ✅ use VITE_BACKEND_URL for OAuth (no /api suffix)
-// fallback strips only a trailing /api, not /api mid-URL
 const backendBase =
   import.meta.env.VITE_BACKEND_URL ||
   (import.meta.env.VITE_API_URL || 'https://allinone-backend-xoh0.onrender.com/api')
@@ -32,8 +30,6 @@ export default function LoginPage() {
     const ping = async () => {
       if (cancelled) return
       try {
-        // ✅ validateStatus: treat anything below 500 as "server is alive"
-        // this prevents axios from throwing on 302/400 during cold start
         await client.get('/auth/check-email', {
           params: { email: 'ping' },
           timeout: 15000,
@@ -170,7 +166,6 @@ export default function LoginPage() {
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
             <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">or</span></div>
           </div>
-          {/* ✅ backendBase instead of baseURL — clean OAuth root URL */}
           
             href={`${backendBase}/oauth2/authorization/google`}
             className={`flex items-center justify-center gap-2 w-full border border-gray-200 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors ${warming ? 'pointer-events-none opacity-40' : ''}`}

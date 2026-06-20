@@ -9,7 +9,6 @@ import com.workflow.entity.PayrollRecord;
 import com.workflow.entity.PayrollStatus;
 import com.workflow.entity.Role;
 import com.workflow.security.JwtAuthenticationFilter;
-import com.workflow.security.OAuth2SuccessHandler;
 import com.workflow.service.PayrollService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @WebMvcTest(controllers = PayrollController.class,
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-        classes = {JwtAuthenticationFilter.class, OAuth2SuccessHandler.class}),
+        classes = {JwtAuthenticationFilter.class}),
     excludeAutoConfiguration = OAuth2ClientAutoConfiguration.class)
 @Import(TestSecurityBeans.class)
 class PayrollControllerTest {

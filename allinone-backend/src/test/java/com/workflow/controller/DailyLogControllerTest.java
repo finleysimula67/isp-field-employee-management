@@ -6,7 +6,6 @@ import com.workflow.config.TestSecurityBeans;
 import com.workflow.dto.*;
 import com.workflow.entity.*;
 import com.workflow.security.JwtAuthenticationFilter;
-import com.workflow.security.OAuth2SuccessHandler;
 import com.workflow.service.DailyLogService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @WebMvcTest(controllers = DailyLogController.class,
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-        classes = {JwtAuthenticationFilter.class, OAuth2SuccessHandler.class}),
+        classes = {JwtAuthenticationFilter.class}),
     excludeAutoConfiguration = OAuth2ClientAutoConfiguration.class)
 @Import(TestSecurityBeans.class)
 class DailyLogControllerTest {

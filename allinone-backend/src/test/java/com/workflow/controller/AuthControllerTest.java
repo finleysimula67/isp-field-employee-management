@@ -6,7 +6,6 @@ import com.workflow.dto.*;
 import com.workflow.security.GoogleTokenVerifier;
 import com.workflow.security.JwtAuthenticationFilter;
 import com.workflow.security.JwtTokenProvider;
-import com.workflow.security.OAuth2SuccessHandler;
 import com.workflow.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @WebMvcTest(controllers = AuthController.class,
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-        classes = {JwtAuthenticationFilter.class, OAuth2SuccessHandler.class}),
+        classes = {JwtAuthenticationFilter.class}),
     excludeAutoConfiguration = OAuth2ClientAutoConfiguration.class)
 @Import(TestSecurityBeans.class)
 class AuthControllerTest {

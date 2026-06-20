@@ -1,6 +1,7 @@
 package com.workflow.controller;
 
 import com.workflow.dto.*;
+import com.workflow.security.GoogleTokenVerifier;
 import com.workflow.security.JwtTokenProvider;
 import com.workflow.service.AuthService;
 import jakarta.validation.Valid;
@@ -14,15 +15,29 @@ import java.util.Map;
 public class AuthController {
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
-    public AuthController(AuthService authService, JwtTokenProvider jwtTokenProvider) {
+    public AuthController(AuthService authService, JwtTokenProvider jwtTokenProvider,
+                          GoogleTokenVerifier googleTokenVerifier) {
         this.authService = authService;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.googleTokenVerifier = googleTokenVerifier;
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(authService.loginWithEmail(request)));
+    }
+
+    @PostMapping("/google-login")
+    public ResponseEntity<ApiResponse<LoginResponse>> googleLogin(@RequestBody Map<String, String> body) {
+        String idToken = body.get("idToken");
+        if (idToken == null || idToken.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("idToken is required"));
+        }
+        GoogleTokenVerifier.GoogleUser googleUser = googleTokenVerifier.verify(idToken);
+        LoginResponse response = authService.loginWithGoogle(googleUser.email(), googleUser.name(), googleUser.googleId());
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PostMapping("/register")

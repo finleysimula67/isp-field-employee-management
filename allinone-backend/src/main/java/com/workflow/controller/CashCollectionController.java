@@ -122,7 +122,7 @@ public class CashCollectionController {
         r.setCustomerName(c.getCustomerName());
         r.setCustomerPhone(c.getCustomerPhone());
         r.setCustomerAddress(c.getCustomerAddress());
-        r.setAmount(c.getAmount() != null ? c.getAmount().doubleValue() : null);
+        r.setAmount(c.getAmount());
         r.setPaymentMethod(c.getPaymentMethod() != null ? c.getPaymentMethod().name() : null);
         r.setServiceType(c.getServiceType() != null ? c.getServiceType().name() : null);
         r.setDescription(c.getDescription());

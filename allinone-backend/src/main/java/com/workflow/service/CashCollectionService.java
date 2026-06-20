@@ -291,31 +291,33 @@ public class CashCollectionService {
         summary.setEmployeeName(emp.getName());
 
         Map<Integer, List<DayCollectionEntry>> daysMap = new HashMap<>();
-        double totalCollected = 0, totalPending = 0, totalRejected = 0, totalSubmitted = 0;
+        BigDecimal totalCollected = BigDecimal.ZERO, totalPending = BigDecimal.ZERO,
+                   totalRejected = BigDecimal.ZERO, totalSubmitted = BigDecimal.ZERO;
         int approvedCount = 0, pendingCount = 0;
 
         for (CashCollection c : collections) {
             int day = c.getSubmittedAt().getDayOfMonth();
             DayCollectionEntry entry = new DayCollectionEntry();
             entry.setId(c.getId());
-            entry.setAmount(c.getAmount().doubleValue());
+            entry.setAmount(c.getAmount());
             entry.setStatus(c.getStatus().name());
             entry.setCustomerName(c.getCustomerName());
 
             daysMap.computeIfAbsent(day, k -> new ArrayList<>()).add(entry);
 
-            totalSubmitted += c.getAmount().doubleValue();
+            BigDecimal amt = c.getAmount() != null ? c.getAmount() : BigDecimal.ZERO;
+            totalSubmitted = totalSubmitted.add(amt);
             switch (c.getStatus()) {
                 case APPROVED:
-                    totalCollected += c.getAmount().doubleValue();
+                    totalCollected = totalCollected.add(amt);
                     approvedCount++;
                     break;
                 case PENDING:
-                    totalPending += c.getAmount().doubleValue();
+                    totalPending = totalPending.add(amt);
                     pendingCount++;
                     break;
                 case REJECTED:
-                    totalRejected += c.getAmount().doubleValue();
+                    totalRejected = totalRejected.add(amt);
                     break;
                 default:
                     break;

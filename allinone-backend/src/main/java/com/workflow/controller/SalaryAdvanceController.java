@@ -102,7 +102,7 @@ public class SalaryAdvanceController {
         r.setId(sa.getId());
         r.setEmployeeId(sa.getEmployee().getId());
         r.setEmployeeName(sa.getEmployee().getName());
-        r.setAmount(sa.getAmount() != null ? sa.getAmount().doubleValue() : 0);
+        r.setAmount(sa.getAmount());
         r.setRequestDate(sa.getRequestDate() != null ? sa.getRequestDate().toString() : null);
         r.setReason(sa.getReason());
         r.setStatus(sa.getStatus() != null ? sa.getStatus().name() : null);

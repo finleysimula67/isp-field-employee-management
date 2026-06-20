@@ -109,7 +109,7 @@ public class DailyLogController {
         r.setLogDate(log.getLogDate() != null ? log.getLogDate().toString() : null);
         r.setStartTime(log.getStartTime() != null ? log.getStartTime().toString() : null);
         r.setEndTime(log.getEndTime() != null ? log.getEndTime().toString() : null);
-        r.setHoursWorked(log.getHoursWorked() != null ? log.getHoursWorked().doubleValue() : null);
+        r.setHoursWorked(log.getHoursWorked());
         r.setCategory(log.getCategory() != null ? log.getCategory().name() : null);
         r.setLocationDescription(log.getLocationDescription());
         r.setLocationLat(log.getLocationLat() != null ? log.getLocationLat().doubleValue() : null);

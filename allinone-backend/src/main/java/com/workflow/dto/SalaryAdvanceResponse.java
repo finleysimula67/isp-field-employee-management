@@ -2,7 +2,7 @@ package com.workflow.dto;
 
 public class SalaryAdvanceResponse {
     private Long id; private Long employeeId; private String employeeName;
-    private Double amount; private String requestDate; private String reason;
+    private java.math.BigDecimal amount; private String requestDate; private String reason;
     private String status; private Long approvedBy; private String approvedByName;
     private String approvedAt; private String disbursedAt; private boolean isSettled;
     private Long settledInPayrollId; private String notes;
@@ -12,7 +12,7 @@ public class SalaryAdvanceResponse {
     public Long getId() { return id; } public void setId(Long id) { this.id = id; }
     public Long getEmployeeId() { return employeeId; } public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
     public String getEmployeeName() { return employeeName; } public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
-    public Double getAmount() { return amount; } public void setAmount(Double amount) { this.amount = amount; }
+    public java.math.BigDecimal getAmount() { return amount; } public void setAmount(java.math.BigDecimal amount) { this.amount = amount; }
     public String getRequestDate() { return requestDate; } public void setRequestDate(String requestDate) { this.requestDate = requestDate; }
     public String getReason() { return reason; } public void setReason(String reason) { this.reason = reason; }
     public String getStatus() { return status; } public void setStatus(String status) { this.status = status; }

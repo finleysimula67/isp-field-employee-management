@@ -3,7 +3,7 @@ package com.workflow.dto;
 public class CashCollectionResponse {
     private Long id; private Long employeeId; private String employeeName;
     private String customerName; private String customerPhone; private String customerAddress;
-    private Double amount; private String paymentMethod; private String serviceType;
+    private java.math.BigDecimal amount; private String paymentMethod; private String serviceType;
     private String description;
     private Double locationLat; private Double locationLng;
     private String photoUrls; private String status;
@@ -18,7 +18,7 @@ public class CashCollectionResponse {
     public String getCustomerName() { return customerName; } public void setCustomerName(String customerName) { this.customerName = customerName; }
     public String getCustomerPhone() { return customerPhone; } public void setCustomerPhone(String customerPhone) { this.customerPhone = customerPhone; }
     public String getCustomerAddress() { return customerAddress; } public void setCustomerAddress(String customerAddress) { this.customerAddress = customerAddress; }
-    public Double getAmount() { return amount; } public void setAmount(Double amount) { this.amount = amount; }
+    public java.math.BigDecimal getAmount() { return amount; } public void setAmount(java.math.BigDecimal amount) { this.amount = amount; }
     public String getPaymentMethod() { return paymentMethod; } public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
     public String getServiceType() { return serviceType; } public void setServiceType(String serviceType) { this.serviceType = serviceType; }
     public String getDescription() { return description; } public void setDescription(String description) { this.description = description; }

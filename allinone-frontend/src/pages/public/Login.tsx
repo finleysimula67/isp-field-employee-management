@@ -16,7 +16,7 @@ export default function LoginPage() {
   const [warming, setWarming] = useState(true)
   const [warmFailures, setWarmFailures] = useState(0)
   const [warmExhausted, setWarmExhausted] = useState(false)
-  const MAX_WARM_RETRIES = 10
+  const MAX_WARM_RETRIES = 30
   const navigate = useNavigate()
   const { login: authLogin } = useAuth()
 
@@ -27,7 +27,7 @@ export default function LoginPage() {
     const ping = async () => {
       if (cancelled) return
       try {
-        await client.get('/auth/check-email?email=ping', { timeout: 8000 })
+        await client.get('/auth/check-email?email=ping', { timeout: 15000 })
         if (!cancelled) { setWarming(false); return }
       } catch {
         if (!cancelled) {

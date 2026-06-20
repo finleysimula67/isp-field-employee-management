@@ -8,6 +8,8 @@ import com.workflow.repository.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class SalaryAdvanceService {
+    private static final Logger log = LoggerFactory.getLogger(SalaryAdvanceService.class);
     private final SalaryAdvanceRepository salaryAdvanceRepository;
     private final EmployeeRepository employeeRepository;
     private final DailyLogRepository dailyLogRepository;
@@ -59,7 +62,7 @@ public class SalaryAdvanceService {
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         Map<String, BigDecimal> balance = getEmployeeBalance(employeeId);
         BigDecimal available = balance.get("availableForAdvance");
-        if (BigDecimal.valueOf(request.getAmount()).compareTo(available) > 0) {
+        if (request.getAmount().compareTo(available) > 0) {
             throw new RuntimeException("Advance request of Rs. " + String.format("%.0f", request.getAmount())
                     + " exceeds available limit of Rs. " + String.format("%.0f", available)
                     + " (earned Rs. " + String.format("%.0f", balance.get("totalEarned"))
@@ -67,7 +70,7 @@ public class SalaryAdvanceService {
         }
         SalaryAdvance advance = new SalaryAdvance();
         advance.setEmployee(employee);
-        advance.setAmount(BigDecimal.valueOf(request.getAmount()));
+        advance.setAmount(request.getAmount());
         advance.setRequestDate(LocalDate.now());
         advance.setReason(request.getReason());
         advance.setStatus(AdvanceStatus.PENDING);
@@ -147,14 +150,14 @@ public class SalaryAdvanceService {
                 .orElseThrow(() -> new RuntimeException("Creator not found"));
         Map<String, BigDecimal> balance = getEmployeeBalance(employee.getId());
         BigDecimal available = balance.get("availableForAdvance");
-        if (BigDecimal.valueOf(request.getAmount()).compareTo(available) > 0) {
+        if (request.getAmount().compareTo(available) > 0) {
             throw new RuntimeException("Manual advance of Rs. " + String.format("%.0f", request.getAmount())
                     + " exceeds available limit of Rs. " + String.format("%.0f", available)
                     + " for " + employee.getName());
         }
         SalaryAdvance advance = new SalaryAdvance();
         advance.setEmployee(employee);
-        advance.setAmount(BigDecimal.valueOf(request.getAmount()));
+        advance.setAmount(request.getAmount());
         advance.setRequestDate(LocalDate.now());
         advance.setReason(request.getReason());
         advance.setStatus(AdvanceStatus.DISBURSED);
@@ -200,7 +203,7 @@ public class SalaryAdvanceService {
 
     @Transactional
     public void batchDeleteSalaryAdvances(List<Long> ids, Employee actor) {
-        for (Long id : ids) { try { softDeleteSalaryAdvance(id, actor); } catch (Exception e) { /* skip */ } }
+        for (Long id : ids) { try { softDeleteSalaryAdvance(id, actor); } catch (Exception e) { log.warn("Batch delete failed for SalaryAdvance id {}: {}", id, e.getMessage()); } }
         recycleBinService.bulkDeleteLogged("SalaryAdvance", ids.size(), actor);
     }
 

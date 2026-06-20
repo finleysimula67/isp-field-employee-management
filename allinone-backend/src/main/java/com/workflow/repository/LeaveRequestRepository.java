@@ -5,7 +5,9 @@ import com.workflow.entity.Employee;
 import com.workflow.entity.LeaveStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
@@ -51,4 +53,8 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     List<LeaveRequest> findByEmployeeAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndStatusIn(
             @Param("employee") Employee employee, @Param("endDate") LocalDate endDate,
             @Param("startDate") LocalDate startDate, @Param("statuses") List<LeaveStatus> statuses);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT l FROM LeaveRequest l WHERE l.id = :id")
+    java.util.Optional<LeaveRequest> findByIdWithLock(@Param("id") Long id);
 }

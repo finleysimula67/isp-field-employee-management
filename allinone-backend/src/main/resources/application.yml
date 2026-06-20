@@ -1,7 +1,10 @@
 server:
   port: ${SERVER_PORT:8080}
+  shutdown: graceful
 
 spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   application:
     name: workflow-backend
 
@@ -17,6 +20,7 @@ spring:
       initialization-fail-timeout: -1
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: none
     show-sql: false
@@ -69,7 +73,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
 
   endpoint:
     health:

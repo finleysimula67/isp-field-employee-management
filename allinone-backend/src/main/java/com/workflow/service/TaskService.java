@@ -7,6 +7,8 @@ import com.workflow.repository.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class TaskService {
+    private static final Logger log = LoggerFactory.getLogger(TaskService.class);
     private final TaskRepository taskRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationRepository notificationRepository;
@@ -165,7 +168,7 @@ public class TaskService {
 
     @Transactional
     public void batchDeleteTasks(List<Long> ids, Employee actor) {
-        for (Long id : ids) { try { softDeleteTask(id, actor); } catch (Exception e) { /* skip */ } }
+        for (Long id : ids) { try { softDeleteTask(id, actor); } catch (Exception e) { log.warn("Batch delete failed for Task id {}: {}", id, e.getMessage()); } }
         recycleBinService.bulkDeleteLogged("Task", ids.size(), actor);
     }
 }

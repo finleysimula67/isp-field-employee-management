@@ -161,7 +161,11 @@ public class PayrollService {
                     .filter(Employee::getIsActive).collect(Collectors.toList());
         }
         List<PayrollRecord> results = new ArrayList<>();
+        String periodLabel = periodStart.getMonthValue() + "/" + periodStart.getYear();
         for (Employee employee : employees) {
+            List<PayrollRecord> existing = payrollRecordRepository.findByEmployeeIdOrderByPeriodStartDesc(employee.getId());
+            boolean alreadyExists = existing.stream().anyMatch(r -> r.getPeriodLabel().equals(periodLabel));
+            if (alreadyExists) continue;
             PayrollCalculateRequest calcReq = new PayrollCalculateRequest();
             calcReq.setEmployeeId(employee.getId());
             calcReq.setPeriodStart(request.getPeriodStart());

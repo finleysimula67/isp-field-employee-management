@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class CashCollectionService {
+    private static final Logger log = LoggerFactory.getLogger(CashCollectionService.class);
     private final CashCollectionRepository cashCollectionRepository;
     private final EmployeeRepository employeeRepository;
     private final NotificationRepository notificationRepository;
@@ -55,7 +58,7 @@ public class CashCollectionService {
         collection.setCustomerName(request.getCustomerName());
         collection.setCustomerPhone(request.getCustomerPhone());
         collection.setCustomerAddress(request.getCustomerAddress());
-        collection.setAmount(BigDecimal.valueOf(request.getAmount()));
+        collection.setAmount(request.getAmount());
         collection.setPaymentMethod(PaymentMethod.valueOf(request.getPaymentMethod()));
         collection.setServiceType(ServiceType.valueOf(request.getServiceType()));
         collection.setDescription(request.getDescription());
@@ -107,7 +110,7 @@ public class CashCollectionService {
         Employee reviewer = employeeRepository.findById(reviewerId)
                 .orElseThrow(() -> new RuntimeException("Reviewer not found"));
 
-        if (request.getAmount() != null) collection.setAmount(BigDecimal.valueOf(request.getAmount()));
+        if (request.getAmount() != null) collection.setAmount(request.getAmount());
         if (request.getCustomerName() != null) collection.setCustomerName(request.getCustomerName());
         if (request.getCustomerPhone() != null) collection.setCustomerPhone(request.getCustomerPhone());
         if (request.getCustomerAddress() != null) collection.setCustomerAddress(request.getCustomerAddress());
@@ -164,7 +167,7 @@ public class CashCollectionService {
     @Transactional
     public void batchDeleteCashCollections(List<Long> ids, Employee actor) {
         for (Long id : ids) {
-            try { softDeleteCashCollection(id, actor); } catch (Exception e) { /* skip */ }
+            try { softDeleteCashCollection(id, actor); } catch (Exception e) { log.warn("Batch delete failed for CashCollection id {}: {}", id, e.getMessage()); }
         }
         recycleBinService.bulkDeleteLogged("CashCollection", ids.size(), actor);
     }
@@ -224,7 +227,7 @@ public class CashCollectionService {
         collection.setCustomerName(request.getCustomerName());
         collection.setCustomerPhone(request.getCustomerPhone());
         collection.setCustomerAddress(request.getCustomerAddress());
-        collection.setAmount(BigDecimal.valueOf(request.getAmount()));
+        collection.setAmount(request.getAmount());
         collection.setPaymentMethod(PaymentMethod.valueOf(request.getPaymentMethod()));
         collection.setServiceType(ServiceType.valueOf(request.getServiceType()));
         collection.setDescription(request.getDescription());

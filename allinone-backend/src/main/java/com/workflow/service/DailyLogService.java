@@ -72,7 +72,7 @@ public class DailyLogService {
         if (log.getStartTime() != null && log.getEndTime() != null && log.getEndTime().isBefore(log.getStartTime()))
             throw new RuntimeException("End time must be after start time");
         if (request.getHoursWorked() != null) {
-            log.setHoursWorked(BigDecimal.valueOf(request.getHoursWorked()));
+            log.setHoursWorked(request.getHoursWorked());
         } else if (log.getStartTime() != null && log.getEndTime() != null) {
             long mins = ChronoUnit.MINUTES.between(log.getStartTime(), log.getEndTime());
             log.setHoursWorked(BigDecimal.valueOf(mins / 60.0).setScale(2, java.math.RoundingMode.HALF_UP));

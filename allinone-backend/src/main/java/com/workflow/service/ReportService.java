@@ -98,15 +98,15 @@ public class ReportService {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> details = (List<Map<String, Object>>) reportData.get("details");
         for (Map<String, Object> row : details) {
-            csv.append(row.get("id")).append(",");
-            csv.append(row.get("employeeId")).append(",");
-            csv.append(escapeCsv((String) row.get("employeeName"))).append(",");
-            csv.append(escapeCsv((String) row.get("branch"))).append(",");
-            csv.append(row.get("date")).append(",");
-            csv.append(row.get("hoursWorked")).append(",");
-            csv.append(escapeCsv((String) row.get("category"))).append(",");
-            csv.append(escapeCsv((String) row.get("status"))).append(",");
-            csv.append(escapeCsv((String) row.get("submittedAt"))).append("\n");
+            csv.append(sanitizeCsvCell(str(row.get("id")))).append(",");
+            csv.append(sanitizeCsvCell(str(row.get("employeeId")))).append(",");
+            csv.append(escapeCsv(sanitizeCsvCell(str(row.get("employeeName"))))).append(",");
+            csv.append(escapeCsv(sanitizeCsvCell(str(row.get("branch"))))).append(",");
+            csv.append(sanitizeCsvCell(str(row.get("date")))).append(",");
+            csv.append(sanitizeCsvCell(str(row.get("hoursWorked")))).append(",");
+            csv.append(escapeCsv(sanitizeCsvCell(str(row.get("category"))))).append(",");
+            csv.append(escapeCsv(sanitizeCsvCell(str(row.get("status"))))).append(",");
+            csv.append(escapeCsv(sanitizeCsvCell(str(row.get("submittedAt"))))).append("\n");
         }
         response.getOutputStream().write(csv.toString().getBytes());
         response.getOutputStream().flush();
@@ -256,6 +256,14 @@ public class ReportService {
         if (value == null) return "";
         if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
             return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
+    }
+
+    private String sanitizeCsvCell(String value) {
+        if (value == null) return "";
+        if (value.startsWith("=") || value.startsWith("+") || value.startsWith("-") || value.startsWith("@")) {
+            return "'" + value;
         }
         return value;
     }

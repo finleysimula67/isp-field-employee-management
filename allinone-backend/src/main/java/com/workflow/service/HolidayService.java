@@ -5,6 +5,8 @@ import com.workflow.entity.Employee;
 import com.workflow.entity.Holiday;
 import com.workflow.repository.EmployeeRepository;
 import com.workflow.repository.HolidayRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -12,6 +14,7 @@ import java.util.List;
 
 @Service
 public class HolidayService {
+    private static final Logger log = LoggerFactory.getLogger(HolidayService.class);
     private final HolidayRepository holidayRepository;
     private final EmployeeRepository employeeRepository;
     private final AuditLogService auditLogService;
@@ -61,7 +64,7 @@ public class HolidayService {
 
     @Transactional
     public void batchDeleteHolidays(List<Long> ids, Employee actor) {
-        for (Long id : ids) { try { softDeleteHoliday(id, actor); } catch (Exception e) { /* skip */ } }
+        for (Long id : ids) { try { softDeleteHoliday(id, actor); } catch (Exception e) { log.warn("Batch delete failed for Holiday id {}: {}", id, e.getMessage()); } }
         recycleBinService.bulkDeleteLogged("Holiday", ids.size(), actor);
     }
 }

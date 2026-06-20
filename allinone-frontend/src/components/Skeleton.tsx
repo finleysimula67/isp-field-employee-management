@@ -34,7 +34,7 @@ export default function Skeleton({ variant = 'text', count = 1 }: { variant?: 't
   return (
     <div className="space-y-2">
       {items.map((_, i) => (
-        <div key={i} className="h-3 bg-gray-200 rounded animate-pulse" style={{ width: `${70 + Math.random() * 25}%` }} />
+        <div key={i} className="h-3 bg-gray-200 rounded animate-pulse" style={{ width: `${75 + (i % 5) * 5}%` }} />
       ))}
     </div>
   )

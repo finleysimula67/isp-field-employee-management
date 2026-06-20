@@ -4,6 +4,9 @@ import com.workflow.dto.LeaveRequestRequest;
 import com.workflow.dto.LeaveReviewRequest;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -31,17 +34,9 @@ public class LeaveRequestService {
     }
 
     public List<LeaveRequest> getLeaveRequests(Long employeeId, String status) {
-        List<LeaveRequest> requests;
-        if (employeeId != null) {
-            requests = leaveRequestRepository.findByEmployeeIdOrderBySubmittedAtDesc(employeeId);
-        } else {
-            requests = leaveRequestRepository.findAllWithEager(
-                    org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE,
-                    org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "submittedAt"))).getContent();
-        }
-        if (status != null)
-            requests = requests.stream().filter(r -> r.getStatus().name().equals(status)).collect(Collectors.toList());
-        return requests;
+        LeaveStatus statusEnum = status != null ? LeaveStatus.valueOf(status) : null;
+        Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.Direction.DESC, "submittedAt");
+        return leaveRequestRepository.findFiltered(employeeId, statusEnum, pageable).getContent();
     }
 
     public LeaveRequest getLeaveRequest(Long id) {

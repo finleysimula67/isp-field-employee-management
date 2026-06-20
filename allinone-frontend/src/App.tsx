@@ -1,7 +1,9 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import AuthGuard from './components/AuthGuard'
 import ScrollToTop from './components/ScrollToTop'
+import { setNavigate } from './lib/navigate'
 
 import PublicLayout from './layouts/PublicLayout'
 import AdminLayout from './layouts/AdminLayout'
@@ -44,9 +46,16 @@ import WagesPage from './pages/employee/Wages'
 import EmpProfilePage from './pages/employee/Profile'
 import CashCollectionPage from './pages/employee/CashCollection'
 
+function NavigateProvider() {
+  const navigate = useNavigate()
+  useEffect(() => { setNavigate(navigate) }, [navigate])
+  return null
+}
+
 export default function App() {
   return (
     <AuthProvider>
+      <NavigateProvider />
       <ScrollToTop />
       <Routes>
         <Route element={<PublicLayout />}>

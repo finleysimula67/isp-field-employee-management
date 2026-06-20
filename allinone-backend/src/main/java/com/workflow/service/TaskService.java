@@ -4,6 +4,9 @@ import com.workflow.dto.TaskRequest;
 import com.workflow.dto.TaskStatusUpdateRequest;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,17 +31,9 @@ public class TaskService {
     }
 
     public List<Task> getTasks(Long assignedTo, String status) {
-        List<Task> tasks;
-        if (assignedTo != null) {
-            tasks = taskRepository.findByAssignedToIdOrderByScheduledDateAsc(assignedTo);
-        } else {
-            tasks = taskRepository.findAllWithEager(
-                    org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE,
-                    org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))).getContent();
-        }
-        if (status != null)
-            tasks = tasks.stream().filter(t -> t.getStatus().name().equals(status)).collect(Collectors.toList());
-        return tasks;
+        TaskStatus statusEnum = status != null ? TaskStatus.valueOf(status) : null;
+        Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.Direction.DESC, "createdAt");
+        return taskRepository.findFiltered(assignedTo, statusEnum, pageable).getContent();
     }
 
     public Task getTask(Long id) {

@@ -16,6 +16,6 @@ export async function lockMonth(yearMonth: string) {
 }
 
 export async function unlockMonth(yearMonth: string, reason: string) {
-  const res = await client.post(`/lockouts/unlock?yearMonth=${yearMonth}`, { reason })
+  const res = await client.post('/lockouts/unlock', { reason }, { params: { yearMonth } })
   return res.data
 }

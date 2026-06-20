@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-isp_workflow}
+      POSTGRES_USER: ${POSTGRES_USER:-isp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-isp_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-isp_user} -d ${POSTGRES_DB:-isp_workflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./allinone-backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-isp_workflow}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-isp_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-isp_pass}
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
+      APP_DEFAULT_PASSWORD: ${APP_DEFAULT_PASSWORD:-changeme}
+      ALLOWED_EMAILS: ${ALLOWED_EMAILS:-admin@example.com}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:5173}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      APP_OAUTH2_REDIRECT_URI: ${APP_OAUTH2_REDIRECT_URI:-http://localhost:5173/oauth2/callback}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./allinone-frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  uploads:

@@ -9,6 +9,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -82,16 +84,18 @@ public class AuthService {
     public void forgotPassword(String email) {
         Employee employee = employeeRepository.findByEmail(email).orElse(null);
         if (employee == null) return;
-        String token = UUID.randomUUID().toString();
-        employee.setResetToken(token);
+        String rawToken = UUID.randomUUID().toString();
+        String hashedToken = hashToken(rawToken);
+        employee.setResetToken(hashedToken);
         employee.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
         employeeRepository.save(employee);
-        String resetLink = frontendUrl + "/reset-password?token=" + token;
+        String resetLink = frontendUrl + "/reset-password?token=" + rawToken;
         emailService.sendPasswordResetEmail(email, resetLink);
     }
 
     public void resetPassword(String token, String newPassword) {
-        Employee employee = employeeRepository.findByResetToken(token)
+        String hashedToken = hashToken(token);
+        Employee employee = employeeRepository.findByResetToken(hashedToken)
                 .orElseThrow(() -> new RuntimeException("Invalid or expired reset token"));
         if (employee.getResetTokenExpiry() == null || employee.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Reset token has expired. Please request a new one.");
@@ -100,6 +104,18 @@ public class AuthService {
         employee.setResetToken(null);
         employee.setResetTokenExpiry(null);
         employeeRepository.save(employee);
+    }
+
+    private String hashToken(String token) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(token.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : hash) hex.append(String.format("%02x", b));
+            return hex.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to hash token", e);
+        }
     }
 
     private LoginResponse buildResponse(String token, Employee employee) {

@@ -1,3 +1,13 @@
+.idea/
+.vscode/
+*.iml
+.DS_Store
+*.env
+*.log
+uploads/
+db/
+backend*.log
+
 /allinone-frontend/node_modules
 /allinone-backend/target
 /allinone-frontend/dist

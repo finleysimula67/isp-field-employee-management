@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
             Long userId = jwtTokenProvider.getUserIdFromToken(token);
             Employee employee = employeeRepository.findById(userId).orElse(null);
-            if (employee != null && employee.getIsActive()) {
+            if (employee != null && employee.getIsActive() && employee.getIsAccountApproved()) {
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(employee, null,
                                 List.of(new SimpleGrantedAuthority("ROLE_" + employee.getRole().name())));

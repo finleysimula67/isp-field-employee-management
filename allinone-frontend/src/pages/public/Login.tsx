@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [warming, setWarming] = useState(true)
   const [warmFailures, setWarmFailures] = useState(0)
+  const [warmExhausted, setWarmExhausted] = useState(false)
+  const MAX_WARM_RETRIES = 10
   const navigate = useNavigate()
   const { login: authLogin } = useAuth()
 
@@ -27,7 +29,15 @@ export default function LoginPage() {
       try {
         await client.get('/auth/check-email?email=ping', { timeout: 8000 })
         if (!cancelled) { setWarming(false); return }
-      } catch { if (!cancelled) { retries++; setWarmFailures(retries) } }
+      } catch {
+        if (!cancelled) {
+          retries++; setWarmFailures(retries)
+          if (retries >= MAX_WARM_RETRIES) {
+            if (!cancelled) { setWarming(false); setWarmExhausted(true) }
+            return
+          }
+        }
+      }
       if (!cancelled) timer = setTimeout(ping, 2000)
     }
     ping()
@@ -42,25 +52,25 @@ export default function LoginPage() {
     try {
       const res = await login({ email, password })
       if (res.success) {
-        const minimalEmployee: Employee = {
-          id: res.data.userId,
-          email: res.data.email,
-          name: res.data.name,
-          phone: null,
-          role: res.data.role as Employee['role'],
-          branchId: null, branchName: null, authType: 'LOCAL_ONLY',
-          isActive: true, isAccountApproved: true,
-          wageType: null, dailyRate: null, hourlyWage: null,
-          totalLeaveDaysPerYear: 0, remainingLeaveDays: 0, carryOverLeave: 0, maxAdvanceLimit: 5000, isOwner: false,
-          createdAt: new Date().toISOString(),
-        }
-        authLogin(res.data.token, minimalEmployee)
+        let employeeData: Employee
         try {
           const empRes = await client.get('/employees/me')
-          authLogin(res.data.token, empRes.data.data as Employee)
+          employeeData = empRes.data.data as Employee
         } catch {
-          setError('Logged in but failed to load full profile — some data may be incomplete')
+          employeeData = {
+            id: res.data.userId,
+            email: res.data.email,
+            name: res.data.name,
+            phone: null,
+            role: res.data.role as Employee['role'],
+            branchId: null, branchName: null, authType: 'LOCAL_ONLY',
+            isActive: true, isAccountApproved: true,
+            wageType: null, dailyRate: null, hourlyWage: null,
+            totalLeaveDaysPerYear: 0, remainingLeaveDays: 0, carryOverLeave: 0, maxAdvanceLimit: 5000, isOwner: false,
+            createdAt: new Date().toISOString(),
+          }
         }
+        authLogin(res.data.token, employeeData)
         if (res.data.role === 'SUPER_ADMIN' || res.data.role === 'BRANCH_MANAGER') {
           navigate('/admin')
         } else {
@@ -88,6 +98,9 @@ export default function LoginPage() {
               <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
               Waking up server{warmFailures > 0 ? ` (attempt ${warmFailures + 1})` : '...'}
             </p>
+          )}
+          {warmExhausted && (
+            <p className="text-red-600 text-xs mt-2">Server unreachable — please try again later</p>
           )}
         </div>
         <form onSubmit={handleSubmit} className="bg-white rounded-xl p-5 md:p-6 border border-slate-100 shadow-sm space-y-4">

@@ -3,6 +3,7 @@ package com.workflow.controller;
 import com.workflow.dto.*;
 import com.workflow.security.JwtTokenProvider;
 import com.workflow.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
@@ -19,12 +20,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(authService.loginWithEmail(request)));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<LoginResponse>> register(@RequestBody EmployeeRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> register(@Valid @RequestBody EmployeeRequest request) {
         return ResponseEntity.ok(ApiResponse.ok("Registration successful", authService.register(request)));
     }
 

@@ -36,19 +36,9 @@ public class CashCollectionService {
     }
 
     public List<CashCollection> getCashCollections(Long employeeId, String status, int page, int size) {
-        if (employeeId != null && status != null) {
-            return cashCollectionRepository.findByEmployeeIdWithEager(employeeId).stream()
-                    .filter(c -> c.getStatus().name().equals(status)).collect(Collectors.toList());
-        }
-        if (employeeId != null) {
-            return cashCollectionRepository.findByEmployeeIdWithEager(employeeId);
-        }
-        if (status != null) {
-            return cashCollectionRepository.findAllWithEager().stream()
-                    .filter(c -> c.getStatus().name().equals(status)).collect(Collectors.toList());
-        }
+        CollectionStatus statusEnum = status != null ? CollectionStatus.valueOf(status) : null;
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "submittedAt");
-        return cashCollectionRepository.findAllWithEager(pageable).getContent();
+        return cashCollectionRepository.findFiltered(employeeId, statusEnum, pageable).getContent();
     }
 
     public CashCollection getCashCollection(Long id) {

@@ -28,7 +28,7 @@ export async function processQueue(): Promise<void> {
         await client.request(config)
         await removeItem(item.id!)
       } catch {
-        break
+        continue
       }
     }
   } finally {

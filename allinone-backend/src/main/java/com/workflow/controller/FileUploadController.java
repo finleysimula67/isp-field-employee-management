@@ -26,6 +26,14 @@ public class FileUploadController {
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
         ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv"
     );
+    private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
+        "image/jpeg", "image/png", "image/gif", "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "text/csv"
+    );
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -47,12 +55,19 @@ public class FileUploadController {
         if (originalName == null || originalName.isBlank())
             return ResponseEntity.badRequest().body(ApiResponse.error("Filename is required"));
 
+        String originalNameClean = originalName.replaceAll("[\\.]{2,}|[\\\\/]", "_");
         String ext = "";
-        if (originalName.contains("."))
-            ext = originalName.substring(originalName.lastIndexOf(".")).toLowerCase();
+        if (originalNameClean.contains("."))
+            ext = originalNameClean.substring(originalNameClean.lastIndexOf(".")).toLowerCase();
 
         if (!ALLOWED_EXTENSIONS.contains(ext))
             return ResponseEntity.badRequest().body(ApiResponse.error("File type not allowed: " + ext));
+
+        String contentType = file.getContentType();
+        if (contentType != null && !ALLOWED_MIME_TYPES.contains(contentType)) {
+            log.warn("Rejected upload {} with content-type: {} (extension: {})", originalName, contentType, ext);
+            return ResponseEntity.badRequest().body(ApiResponse.error("File type not allowed"));
+        }
 
         if (file.getSize() > 10_485_760)
             return ResponseEntity.badRequest().body(ApiResponse.error("File too large (max 10MB)"));
@@ -60,15 +75,18 @@ public class FileUploadController {
         File dir = new File(uploadDir);
         if (!dir.exists()) dir.mkdirs();
         String filename = UUID.randomUUID().toString() + ext;
-        Path path = Paths.get(uploadDir, filename);
+        Path path = Paths.get(uploadDir).resolve(filename).normalize();
+        if (!path.startsWith(Paths.get(uploadDir).normalize()))
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid file path"));
+
         try (InputStream in = file.getInputStream()) {
             Files.copy(in, path);
             log.info("Uploaded: {} ({} bytes, {})", filename, file.getSize(), path.toAbsolutePath());
             String url = "/uploads/" + filename;
             return ResponseEntity.ok(ApiResponse.ok("File uploaded", Map.of("url", url, "filename", filename)));
         } catch (Exception e) {
-            log.error("Upload failed: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(ApiResponse.error("Upload failed: " + e.getMessage()));
+            log.error("Upload failed: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(ApiResponse.error("Upload failed"));
         }
     }
 }

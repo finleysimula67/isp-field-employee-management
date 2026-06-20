@@ -2,6 +2,7 @@ package com.workflow.security;
 
 import com.workflow.dto.LoginResponse;
 import com.workflow.service.AuthService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,11 +35,24 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String googleId = oAuth2User.getName();
         try {
             LoginResponse loginRes = authService.loginWithGoogle(email, name, googleId);
-            response.sendRedirect(redirectUri + "?token=" + loginRes.getToken()
-                + "&userId=" + loginRes.getUserId() + "&role=" + loginRes.getRole()
+
+            Cookie tokenCookie = new Cookie("token", loginRes.getToken());
+            tokenCookie.setHttpOnly(true);
+            tokenCookie.setSecure(true);
+            tokenCookie.setPath("/");
+            tokenCookie.setMaxAge(86400);
+            tokenCookie.setAttribute("SameSite", "Lax");
+            response.addCookie(tokenCookie);
+
+            response.setHeader("Referrer-Policy", "no-referrer");
+            String redirectUrl = redirectUri
+                + "?token=" + loginRes.getToken()
+                + "&userId=" + loginRes.getUserId()
+                + "&role=" + loginRes.getRole()
                 + "&name=" + URLEncoder.encode(loginRes.getName(), StandardCharsets.UTF_8)
                 + "&email=" + URLEncoder.encode(loginRes.getEmail(), StandardCharsets.UTF_8)
-                + "&approved=true");
+                + "&approved=true";
+            response.sendRedirect(redirectUrl);
         } catch (Exception e) {
             String errorMsg = e.getMessage() != null ? e.getMessage() : "oauth_failed";
             if (errorMsg.contains("pending admin approval")) {

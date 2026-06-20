@@ -4,6 +4,9 @@ import com.workflow.dto.PayrollBatchRequest;
 import com.workflow.dto.PayrollCalculateRequest;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -70,16 +73,8 @@ public class PayrollService {
     }
 
     public List<PayrollRecord> getPayrollRecords(Long employeeId, String periodLabel) {
-        List<PayrollRecord> records;
-        if (employeeId != null) {
-            records = payrollRecordRepository.findByEmployeeIdOrderByPeriodStartDesc(employeeId);
-        } else {
-            records = payrollRecordRepository.findAll(org.springframework.data.domain.Sort.by(
-                    org.springframework.data.domain.Sort.Direction.DESC, "periodStart"));
-        }
-        if (periodLabel != null)
-            records = records.stream().filter(r -> periodLabel.equals(r.getPeriodLabel())).collect(Collectors.toList());
-        return records;
+        Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.Direction.DESC, "periodStart");
+        return payrollRecordRepository.findFiltered(employeeId, periodLabel, pageable).getContent();
     }
 
     public PayrollRecord getPayrollRecord(Long id) {

@@ -5,6 +5,9 @@ import com.workflow.dto.ManualAdvanceRequest;
 import com.workflow.dto.SalaryAdvanceRequest;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -40,17 +43,9 @@ public class SalaryAdvanceService {
     }
 
     public List<SalaryAdvance> getAdvances(Long employeeId, String status) {
-        List<SalaryAdvance> advances;
-        if (employeeId != null) {
-            advances = salaryAdvanceRepository.findByEmployeeIdOrderByRequestDateDesc(employeeId);
-        } else {
-            advances = salaryAdvanceRepository.findAllWithEager(
-                    org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE,
-                    org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "requestDate"))).getContent();
-        }
-        if (status != null)
-            advances = advances.stream().filter(a -> a.getStatus().name().equals(status)).collect(Collectors.toList());
-        return advances;
+        AdvanceStatus statusEnum = status != null ? AdvanceStatus.valueOf(status) : null;
+        Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.Direction.DESC, "requestDate");
+        return salaryAdvanceRepository.findFiltered(employeeId, statusEnum, pageable).getContent();
     }
 
     public SalaryAdvance getAdvance(Long id) {

@@ -19,6 +19,17 @@ public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
     @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.deletedAt IS NULL ORDER BY d.submittedAt DESC")
     Page<DailyLog> findAllWithEager(Pageable pageable);
 
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy " +
+           "WHERE d.deletedAt IS NULL " +
+           "AND (:employeeId IS NULL OR d.employee.id = :employeeId) " +
+           "AND (:status IS NULL OR d.status = :status) " +
+           "AND (:date IS NULL OR d.logDate = :date) " +
+           "ORDER BY d.submittedAt DESC")
+    Page<DailyLog> findFiltered(@Param("employeeId") Long employeeId,
+                                @Param("status") LogStatus status,
+                                @Param("date") LocalDate date,
+                                Pageable pageable);
+
     @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.employee.id = :employeeId AND d.deletedAt IS NULL ORDER BY d.logDate DESC")
     List<DailyLog> findByEmployeeIdWithEager(@Param("employeeId") Long employeeId);
 

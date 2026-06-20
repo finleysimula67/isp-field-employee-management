@@ -28,6 +28,15 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     @Query("SELECT l FROM LeaveRequest l WHERE l.employee = :employee AND l.deletedAt IS NULL")
     List<LeaveRequest> findByEmployee(@Param("employee") Employee employee);
 
+    @Query("SELECT l FROM LeaveRequest l LEFT JOIN FETCH l.employee LEFT JOIN FETCH l.reviewedBy " +
+           "WHERE l.deletedAt IS NULL " +
+           "AND (:employeeId IS NULL OR l.employee.id = :employeeId) " +
+           "AND (:status IS NULL OR l.status = :status) " +
+           "ORDER BY l.submittedAt DESC")
+    Page<LeaveRequest> findFiltered(@Param("employeeId") Long employeeId,
+                                    @Param("status") LeaveStatus status,
+                                    Pageable pageable);
+
     @Query("SELECT COUNT(l) FROM LeaveRequest l WHERE l.status = :status AND l.deletedAt IS NULL")
     long countByStatus(@Param("status") LeaveStatus status);
 

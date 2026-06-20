@@ -23,6 +23,15 @@ public interface SalaryAdvanceRepository extends JpaRepository<SalaryAdvance, Lo
     @Query("SELECT s FROM SalaryAdvance s LEFT JOIN FETCH s.employee LEFT JOIN FETCH s.approvedBy WHERE s.employee.id = :employeeId AND s.isSettled = false AND s.status IN :statuses AND s.deletedAt IS NULL")
     List<SalaryAdvance> findByEmployeeIdAndIsSettledFalseAndStatusIn(@Param("employeeId") Long employeeId, @Param("statuses") List<AdvanceStatus> statuses);
 
+    @Query("SELECT s FROM SalaryAdvance s LEFT JOIN FETCH s.employee LEFT JOIN FETCH s.approvedBy " +
+           "WHERE s.deletedAt IS NULL " +
+           "AND (:employeeId IS NULL OR s.employee.id = :employeeId) " +
+           "AND (:status IS NULL OR s.status = :status) " +
+           "ORDER BY s.requestDate DESC")
+    Page<SalaryAdvance> findFiltered(@Param("employeeId") Long employeeId,
+                                     @Param("status") AdvanceStatus status,
+                                     Pageable pageable);
+
     @Query("SELECT s FROM SalaryAdvance s JOIN FETCH s.employee WHERE s.id = :id AND s.deletedAt IS NULL")
     java.util.Optional<SalaryAdvance> findByIdWithEmployee(@Param("id") Long id);
 }

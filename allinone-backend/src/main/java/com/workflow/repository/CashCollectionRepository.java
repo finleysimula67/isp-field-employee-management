@@ -27,6 +27,15 @@ public interface CashCollectionRepository extends JpaRepository<CashCollection, 
     @Query("SELECT c FROM CashCollection c LEFT JOIN FETCH c.employee LEFT JOIN FETCH c.reviewedBy WHERE c.submittedAt BETWEEN :start AND :end AND c.deletedAt IS NULL ORDER BY c.submittedAt DESC")
     List<CashCollection> findBySubmittedAtBetweenWithEager(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
+    @Query("SELECT c FROM CashCollection c LEFT JOIN FETCH c.employee LEFT JOIN FETCH c.reviewedBy " +
+           "WHERE c.deletedAt IS NULL " +
+           "AND (:employeeId IS NULL OR c.employee.id = :employeeId) " +
+           "AND (:status IS NULL OR c.status = :status) " +
+           "ORDER BY c.submittedAt DESC")
+    Page<CashCollection> findFiltered(@Param("employeeId") Long employeeId,
+                                      @Param("status") CollectionStatus status,
+                                      Pageable pageable);
+
     @Query("SELECT COUNT(c) FROM CashCollection c WHERE c.status = :status AND c.deletedAt IS NULL")
     long countByStatus(@Param("status") CollectionStatus status);
 }

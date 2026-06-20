@@ -89,7 +89,7 @@ export default function NotificationBell() {
         </svg>
         {count > 0 && (
           <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-            {count > 9 ? '9+' : count}
+            {count > 99 ? '99+' : count}
           </span>
         )}
       </button>

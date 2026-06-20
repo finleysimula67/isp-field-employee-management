@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { appNavigate } from '../lib/navigate'
 
 const client = axios.create({
   baseURL: 'https://allinone-backend-xoh0.onrender.com/api',
@@ -20,7 +21,7 @@ client.interceptors.response.use(
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+        appNavigate('/login')
       }
     }
     return Promise.reject(err)

@@ -47,7 +47,6 @@ export function useWebSocket({ onNotification, onCountUpdate }: UseWebSocketOpti
         }
       },
       onWebSocketClose: () => {
-        retriesRef.current++
         if (retriesRef.current >= maxRetries) {
           client.deactivate()
         }

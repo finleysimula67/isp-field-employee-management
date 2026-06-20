@@ -3,17 +3,20 @@ package com.workflow.dto;
 import com.workflow.entity.Role;
 import com.workflow.entity.WageType;
 import com.workflow.entity.AuthType;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public class EmployeeRequest {
-    private String email;
-    private String name;
+    @NotBlank @Email private String email;
+    @NotBlank private String name;
     private String phone;
-    private Role role;
+    @NotNull private Role role;
     private Long branchId;
     private String password;
-    private AuthType authType;
-    private WageType wageType;
+    @NotNull private AuthType authType;
+    @NotNull private WageType wageType;
     private BigDecimal dailyRate;
     private BigDecimal hourlyWage;
     private BigDecimal totalLeaveDaysPerYear;

@@ -4,10 +4,13 @@ import com.workflow.dto.*;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -16,6 +19,7 @@ import java.util.UUID;
 
 @Service
 public class AuthService {
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
     private final EmployeeRepository employeeRepository;
     private final BranchRepository branchRepository;
     private final EmailAllowListRepository emailAllowListRepository;
@@ -36,6 +40,7 @@ public class AuthService {
         this.emailService = emailService;
     }
 
+    @Transactional(readOnly = true)
     public LoginResponse loginWithEmail(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
@@ -47,9 +52,12 @@ public class AuthService {
         return buildResponse(jwtService.generateToken(employee), employee);
     }
 
+    @Transactional
     public LoginResponse loginWithGoogle(String email, String name, String googleId) {
         Employee employee = employeeRepository.findByEmail(email).orElse(null);
         if (employee == null) {
+            if (!emailAllowListRepository.existsByEmail(email))
+                throw new RuntimeException("Email not authorized: " + email);
             employee = employeeRepository.save(
                 new Employee(email, name, Role.FIELD_EMPLOYEE, null, googleId, AuthType.GOOGLE_ONLY,
                     null, true, false, null, null, null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.valueOf(5000)));
@@ -62,6 +70,7 @@ public class AuthService {
         return buildResponse(token, employee);
     }
 
+    @Transactional
     public LoginResponse register(EmployeeRequest request) {
         if (!emailAllowListRepository.existsByEmail(request.getEmail()))
             throw new RuntimeException("Email not authorized: " + request.getEmail());
@@ -79,8 +88,10 @@ public class AuthService {
         return buildResponse(jwtService.generateToken(employee), employee);
     }
 
+    @Transactional(readOnly = true)
     public boolean isEmailAllowed(String email) { return emailAllowListRepository.existsByEmail(email); }
 
+    @Transactional
     public void forgotPassword(String email) {
         Employee employee = employeeRepository.findByEmail(email).orElse(null);
         if (employee == null) return;
@@ -93,6 +104,7 @@ public class AuthService {
         emailService.sendPasswordResetEmail(email, resetLink);
     }
 
+    @Transactional
     public void resetPassword(String token, String newPassword) {
         String hashedToken = hashToken(token);
         Employee employee = employeeRepository.findByResetToken(hashedToken)

@@ -2,8 +2,9 @@ import axios from 'axios'
 import { appNavigate } from '../lib/navigate'
 
 const client = axios.create({
-  baseURL: 'https://allinone-backend-xoh0.onrender.com/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://allinone-backend-xoh0.onrender.com/api',
   headers: { 'Content-Type': 'application/json' },
+  timeout: 30000,
 })
 
 client.interceptors.request.use((config) => {

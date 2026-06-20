@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -92,7 +93,7 @@ class DailyLogServiceTest {
         DailyLogRequest request = createRequest(employee.getId());
         request.setStartTime("09:00");
         request.setEndTime("17:00");
-        request.setHoursWorked(8.0);
+        request.setHoursWorked(BigDecimal.valueOf(8.0));
         DailyLog result = dailyLogService.createDailyLog(request, employee.getId());
         assertEquals(LocalTime.of(9, 0), result.getStartTime());
         assertEquals(LocalTime.of(17, 0), result.getEndTime());

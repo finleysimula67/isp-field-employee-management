@@ -5,6 +5,8 @@ import com.workflow.dto.AttendanceResponse.AttendanceStats;
 import com.workflow.dto.WageSummaryResponse;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -14,6 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class AttendanceService {
+    private static final Logger log = LoggerFactory.getLogger(AttendanceService.class);
     private final EmployeeRepository employeeRepository;
     private final DailyLogRepository dailyLogRepository;
     private final LeaveRequestRepository leaveRequestRepository;

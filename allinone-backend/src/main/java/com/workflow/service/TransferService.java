@@ -5,6 +5,8 @@ import com.workflow.entity.AuditLog;
 import com.workflow.entity.Employee;
 import com.workflow.entity.TransferLog;
 import com.workflow.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,7 @@ import java.util.*;
 @Service
 @Transactional
 public class TransferService {
+    private static final Logger log = LoggerFactory.getLogger(TransferService.class);
 
     private final EmployeeRepository employeeRepository;
     private final DailyLogRepository dailyLogRepository;

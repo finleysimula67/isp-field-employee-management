@@ -20,6 +20,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.branch")
     List<Employee> findAllWithBranch();
 
+    @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.branch WHERE e.id = :id")
+    Optional<Employee> findByIdWithBranch(@Param("id") Long id);
+
     @Modifying
     @Query("UPDATE Employee e SET e.isActive = false, e.isOwner = false WHERE e.id = :id")
     int deactivateAndRemoveOwnership(@Param("id") Long id);

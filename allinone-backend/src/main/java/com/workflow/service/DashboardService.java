@@ -2,6 +2,8 @@ package com.workflow.service;
 
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.*;
@@ -10,6 +12,7 @@ import java.util.Map;
 
 @Service
 public class DashboardService {
+    private static final Logger log = LoggerFactory.getLogger(DashboardService.class);
     private final EmployeeRepository employeeRepository;
     private final DailyLogRepository dailyLogRepository;
     private final LeaveRequestRepository leaveRequestRepository;

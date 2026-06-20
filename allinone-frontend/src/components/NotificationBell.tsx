@@ -40,12 +40,12 @@ export default function NotificationBell() {
   useWebSocket({ onNotification, onCountUpdate })
 
   const fetchData = useCallback(() => {
-    getUnreadCount().then((res) => setCount(res.data?.count ?? res.data ?? 0)).catch(() => {})
+    getUnreadCount().then((res) => setCount(res.data?.count ?? res.data ?? 0)).catch((err) => console.error(err))
   }, [])
 
   const openDropdown = useCallback(() => {
     setOpen(true)
-    getNotifications().then((res) => setNotifications(res.data?.slice?.(0, 5) ?? res.data ?? [])).catch(() => {})
+    getNotifications().then((res) => setNotifications(res.data?.slice?.(0, 5) ?? res.data ?? [])).catch((err) => console.error(err))
   }, [])
 
   useEffect(() => {

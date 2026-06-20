@@ -15,6 +15,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ActiveProfiles("test")
 @WebMvcTest(controllers = AuthController.class,
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
         classes = {JwtAuthenticationFilter.class, OAuth2SuccessHandler.class}),
@@ -71,11 +73,14 @@ class AuthControllerTest {
         request.setEmail("new@test.com");
         request.setName("New User");
         request.setPassword("password");
+        request.setRole(com.workflow.entity.Role.FIELD_EMPLOYEE);
+        request.setAuthType(com.workflow.entity.AuthType.LOCAL_ONLY);
+        request.setWageType(com.workflow.entity.WageType.DAILY);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Registration successful"))
                 .andExpect(jsonPath("$.data.token").value("jwt-token"));
     }

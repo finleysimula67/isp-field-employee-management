@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,9 +71,19 @@ class AuthServiceTest {
         assertDoesNotThrow(() -> authService.forgotPassword("unknown@test.com"));
     }
 
+    private String sha256(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : hash) hex.append(String.format("%02x", b));
+            return hex.toString();
+        } catch (Exception e) { throw new RuntimeException(e); }
+    }
+
     @Test
     void resetPassword_shouldResetWithValidToken() {
-        employee.setResetToken("valid-token");
+        employee.setResetToken(sha256("valid-token"));
         employee.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
         employeeRepository.save(employee);
 
@@ -160,6 +172,7 @@ class AuthServiceTest {
 
     @Test
     void loginWithGoogle_shouldCreateAndRejectNewUnapprovedUser() {
+        emailAllowListRepository.save(new EmailAllowList("new@test.com"));
         assertThrows(RuntimeException.class,
                 () -> authService.loginWithGoogle("new@test.com", "New User", "new-123"));
         // User should have been created in DB but not approved

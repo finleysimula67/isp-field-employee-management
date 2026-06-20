@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    @Query("SELECT n FROM Notification n WHERE n.recipient.id = :recipientId AND n.deletedAt IS NULL ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n LEFT JOIN FETCH n.recipient WHERE n.recipient.id = :recipientId AND n.deletedAt IS NULL ORDER BY n.createdAt DESC")
     List<Notification> findByRecipientIdOrderByCreatedAtDesc(@Param("recipientId") Long recipientId);
 
     @Query("SELECT COUNT(n) FROM Notification n WHERE n.recipient.id = :recipientId AND (n.isRead IS NULL OR n.isRead = false) AND n.deletedAt IS NULL")

@@ -49,7 +49,7 @@ public class CashCollectionController {
     @PostMapping
     public ResponseEntity<ApiResponse<CashCollectionResponse>> create(@RequestBody CashCollectionRequest request,
                                                                         @AuthenticationPrincipal Employee employee) {
-        return ResponseEntity.ok(ApiResponse.ok("Cash collection submitted",
+        return ResponseEntity.status(201).body(ApiResponse.ok("Cash collection submitted",
                 toResponse(cashCollectionService.createCashCollection(request, employee.getId()))));
     }
 
@@ -100,10 +100,10 @@ public class CashCollectionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+    public ResponseEntity<Void> delete(@PathVariable Long id,
                                                      @AuthenticationPrincipal Employee employee) {
         cashCollectionService.softDeleteCashCollection(id, employee);
-        return ResponseEntity.ok(ApiResponse.ok("Cash collection deleted", null));
+        return ResponseEntity.status(204).build();
     }
 
     @PostMapping("/batch-delete")

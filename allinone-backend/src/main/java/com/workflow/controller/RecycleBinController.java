@@ -1,5 +1,6 @@
 package com.workflow.controller;
 
+import com.workflow.dto.ApiResponse;
 import com.workflow.entity.Employee;
 import com.workflow.entity.RecycleBin;
 import com.workflow.service.RecycleBinService;
@@ -19,33 +20,33 @@ public class RecycleBinController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','BRANCH_MANAGER')")
-    public ResponseEntity<Page<RecycleBin>> getAll(
+    public ResponseEntity<ApiResponse<Page<RecycleBin>>> getAll(
             @RequestParam(required = false) String entityType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return ResponseEntity.ok(recycleBinService.getAll(entityType, page, size));
+        return ResponseEntity.ok(ApiResponse.ok(recycleBinService.getAll(entityType, page, size)));
     }
 
     @GetMapping("/count")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','BRANCH_MANAGER')")
-    public ResponseEntity<Map<String, Long>> getCount(
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getCount(
             @RequestParam(required = false) String entityType) {
-        return ResponseEntity.ok(Map.of("count", recycleBinService.count(entityType)));
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("count", recycleBinService.count(entityType))));
     }
 
     @PostMapping("/{id}/restore")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','BRANCH_MANAGER')")
-    public ResponseEntity<?> restore(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<Void>> restore(@PathVariable Long id,
                                      @AuthenticationPrincipal Employee actor) {
         recycleBinService.restore(id, actor);
-        return ResponseEntity.ok(Map.of("message", "Record restored successfully"));
+        return ResponseEntity.ok(ApiResponse.ok("Record restored successfully", null));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<?> permanentDelete(@PathVariable Long id,
+    public ResponseEntity<Void> permanentDelete(@PathVariable Long id,
                                              @AuthenticationPrincipal Employee actor) {
         recycleBinService.permanentDelete(id, actor);
-        return ResponseEntity.ok(Map.of("message", "Record permanently deleted"));
+        return ResponseEntity.status(204).build();
     }
 }

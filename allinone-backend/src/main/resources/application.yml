@@ -17,7 +17,7 @@ spring:
       connection-timeout: 5000
       maximum-pool-size: 5
       minimum-idle: 1
-      initialization-fail-timeout: -1
+      initialization-fail-timeout: 30000
 
   jpa:
     open-in-view: false
@@ -77,7 +77,7 @@ management:
 
   endpoint:
     health:
-      show-details: always
+      show-details: when-authorized
 
 app:
   frontend-url: ${APP_FRONTEND_URL:https://allinone-rolpa.vercel.app}

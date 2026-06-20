@@ -49,9 +49,9 @@ public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
     @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.reviewedBy WHERE d.employee = :employee AND d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
     List<DailyLog> findByEmployeeAndLogDateBetween(@Param("employee") Employee employee, @Param("start") LocalDate start, @Param("end") LocalDate end);
 
-    @Query("SELECT d FROM DailyLog d WHERE d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.branch LEFT JOIN FETCH d.reviewedBy WHERE d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
     List<DailyLog> findByLogDateBetween(@Param("start") LocalDate start, @Param("end") LocalDate end);
-    @Query("SELECT d FROM DailyLog d WHERE d.logDate BETWEEN :start AND :end AND d.status = :status AND d.deletedAt IS NULL")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.branch LEFT JOIN FETCH d.reviewedBy WHERE d.logDate BETWEEN :start AND :end AND d.status = :status AND d.deletedAt IS NULL")
     List<DailyLog> findByLogDateBetweenAndStatus(@Param("start") LocalDate start, @Param("end") LocalDate end, @Param("status") LogStatus status);
     @Query("SELECT COUNT(d) FROM DailyLog d WHERE d.employee = :employee AND d.logDate BETWEEN :start AND :end AND d.status = :status AND d.deletedAt IS NULL")
     long countByEmployeeAndLogDateBetweenAndStatus(@Param("employee") Employee employee, @Param("start") LocalDate start, @Param("end") LocalDate end, @Param("status") LogStatus status);
@@ -64,8 +64,11 @@ public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
     @Query("SELECT COUNT(d) FROM DailyLog d WHERE d.employee.id = :employeeId AND d.status = :status AND d.deletedAt IS NULL")
     long countByEmployeeIdAndStatus(@Param("employeeId") Long employeeId, @Param("status") LogStatus status);
 
-    @Query("SELECT d FROM DailyLog d WHERE d.employee.id = :employeeId AND d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.branch WHERE d.employee.id = :employeeId AND d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
     List<DailyLog> findByEmployeeIdAndLogDateBetween(@Param("employeeId") Long employeeId, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    @Query("SELECT d FROM DailyLog d LEFT JOIN FETCH d.employee LEFT JOIN FETCH d.branch LEFT JOIN FETCH d.reviewedBy WHERE d.id = :id AND d.deletedAt IS NULL")
+    java.util.Optional<DailyLog> findByIdWithEager(@Param("id") Long id);
 
     @Modifying
     @Query(value = "UPDATE daily_logs SET employee_id = :targetId WHERE employee_id = :sourceId", nativeQuery = true)

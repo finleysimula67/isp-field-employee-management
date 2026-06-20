@@ -2,6 +2,8 @@ package com.workflow.service;
 
 import com.workflow.dto.PurgeResult;
 import com.workflow.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +13,7 @@ import java.util.Map;
 @Service
 @Transactional
 public class PurgeService {
+    private static final Logger log = LoggerFactory.getLogger(PurgeService.class);
 
     private final RecycleBinRepository recycleBinRepository;
     private final NotificationRepository notificationRepository;

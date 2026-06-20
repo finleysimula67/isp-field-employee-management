@@ -47,7 +47,7 @@ public class LeaveRequestController {
     @PostMapping
     public ResponseEntity<ApiResponse<LeaveRequestResponse>> create(@Valid @RequestBody LeaveRequestRequest request,
                                                                      @AuthenticationPrincipal Employee employee) {
-        return ResponseEntity.ok(ApiResponse.ok("Leave request submitted",
+        return ResponseEntity.status(201).body(ApiResponse.ok("Leave request submitted",
                 toResponse(leaveRequestService.createLeaveRequest(request, employee.getId()))));
     }
 
@@ -60,10 +60,10 @@ public class LeaveRequestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+    public ResponseEntity<Void> delete(@PathVariable Long id,
                                                      @AuthenticationPrincipal Employee employee) {
         leaveRequestService.softDeleteLeaveRequest(id, employee);
-        return ResponseEntity.ok(ApiResponse.ok("Leave request deleted", null));
+        return ResponseEntity.status(204).build();
     }
 
     @PostMapping("/batch-delete")

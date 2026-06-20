@@ -5,6 +5,8 @@ import com.workflow.entity.Employee;
 import com.workflow.entity.Notification;
 import com.workflow.repository.EmployeeRepository;
 import com.workflow.repository.NotificationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import java.util.List;
 
 @Service
 public class NotificationService {
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
     private final NotificationRepository notificationRepository;
     private final EmployeeRepository employeeRepository;
     private final SimpMessagingTemplate messagingTemplate;
@@ -57,7 +60,7 @@ public class NotificationService {
         try {
             messagingTemplate.convertAndSend("/topic/notifications/" + recipientId, toResponse(notification));
         } catch (Exception e) {
-            System.err.println("WebSocket notification broadcast failed: " + e.getMessage());
+            log.warn("WebSocket notification broadcast failed: {}", e.getMessage());
         }
     }
 
@@ -67,7 +70,7 @@ public class NotificationService {
             long count = getUnreadCount(recipientId);
             messagingTemplate.convertAndSend("/topic/notifications/" + recipientId + "/count", count);
         } catch (Exception e) {
-            System.err.println("WebSocket unread count broadcast failed: " + e.getMessage());
+            log.warn("WebSocket unread count broadcast failed: {}", e.getMessage());
         }
     }
 
@@ -78,7 +81,7 @@ public class NotificationService {
             messagingTemplate.convertAndSend("/topic/notifications/" + recipientId, toResponse(notification));
             broadcastUnreadCount(recipientId);
         } catch (Exception e) {
-            System.err.println("WebSocket notification broadcast failed: " + e.getMessage());
+            log.warn("WebSocket notification broadcast failed: {}", e.getMessage());
         }
     }
 

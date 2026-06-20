@@ -32,7 +32,7 @@ public class HolidayService {
     }
 
     public Holiday getHoliday(Long id) {
-        return holidayRepository.findById(id)
+        return holidayRepository.findByIdWithEager(id)
                 .orElseThrow(() -> new RuntimeException("Holiday not found"));
     }
 

@@ -143,7 +143,7 @@ class SalaryAdvanceServiceTest {
         saveLogsWithStatus(employee, 5, LogStatus.APPROVED);
 
         SalaryAdvanceRequest request = new SalaryAdvanceRequest();
-        request.setAmount(500.0);
+        request.setAmount(BigDecimal.valueOf(500.0));
         request.setReason("Test reason");
 
         SalaryAdvance result = salaryAdvanceService.requestAdvance(request, employee.getId());
@@ -157,7 +157,7 @@ class SalaryAdvanceServiceTest {
         saveLogsWithStatus(employee, 1, LogStatus.APPROVED);
 
         SalaryAdvanceRequest request = new SalaryAdvanceRequest();
-        request.setAmount(6000.0);
+        request.setAmount(BigDecimal.valueOf(6000.0));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> salaryAdvanceService.requestAdvance(request, employee.getId()));
@@ -170,7 +170,7 @@ class SalaryAdvanceServiceTest {
 
         ManualAdvanceRequest request = new ManualAdvanceRequest();
         request.setEmployeeId(employee.getId());
-        request.setAmount(2000.0);
+        request.setAmount(BigDecimal.valueOf(2000.0));
         request.setReason("Manual advance");
 
         SalaryAdvance result = salaryAdvanceService.createManualAdvance(request, admin.getId());
@@ -185,7 +185,7 @@ class SalaryAdvanceServiceTest {
 
         ManualAdvanceRequest request = new ManualAdvanceRequest();
         request.setEmployeeId(employee.getId());
-        request.setAmount(10000.0);
+        request.setAmount(BigDecimal.valueOf(10000.0));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> salaryAdvanceService.createManualAdvance(request, admin.getId()));

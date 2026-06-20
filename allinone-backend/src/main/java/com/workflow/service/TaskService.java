@@ -40,7 +40,7 @@ public class TaskService {
     }
 
     public Task getTask(Long id) {
-        return taskRepository.findById(id)
+        return taskRepository.findByIdWithEager(id)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
     }
 

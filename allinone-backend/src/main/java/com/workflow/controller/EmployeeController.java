@@ -31,7 +31,7 @@ public class EmployeeController {
     @PostMapping
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<EmployeeResponse>> create(@RequestBody EmployeeRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok("Employee created", employeeService.createEmployee(request)));
+        return ResponseEntity.status(201).body(ApiResponse.ok("Employee created", employeeService.createEmployee(request)));
     }
 
     @PutMapping("/{id}")
@@ -48,9 +48,9 @@ public class EmployeeController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
-        return ResponseEntity.ok(ApiResponse.ok("Employee deactivated", null));
+        return ResponseEntity.status(204).build();
     }
 
     @PutMapping("/transfer-ownership/{targetId}")

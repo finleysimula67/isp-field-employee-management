@@ -28,7 +28,7 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     @Query("SELECT l FROM LeaveRequest l LEFT JOIN FETCH l.employee LEFT JOIN FETCH l.reviewedBy WHERE l.status = :status AND l.deletedAt IS NULL ORDER BY l.submittedAt ASC")
     List<LeaveRequest> findByStatusOrderBySubmittedAtAsc(@Param("status") LeaveStatus status);
 
-    @Query("SELECT l FROM LeaveRequest l WHERE l.employee = :employee AND l.deletedAt IS NULL")
+    @Query("SELECT l FROM LeaveRequest l LEFT JOIN FETCH l.employee LEFT JOIN FETCH l.reviewedBy WHERE l.employee = :employee AND l.deletedAt IS NULL")
     List<LeaveRequest> findByEmployee(@Param("employee") Employee employee);
 
     @Query("SELECT l FROM LeaveRequest l LEFT JOIN FETCH l.employee LEFT JOIN FETCH l.reviewedBy " +
@@ -58,6 +58,9 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT l FROM LeaveRequest l WHERE l.id = :id")
     java.util.Optional<LeaveRequest> findByIdWithLock(@Param("id") Long id);
+
+    @Query("SELECT l FROM LeaveRequest l LEFT JOIN FETCH l.employee LEFT JOIN FETCH l.reviewedBy WHERE l.id = :id AND l.deletedAt IS NULL")
+    java.util.Optional<LeaveRequest> findByIdWithEager(@Param("id") Long id);
 
     @Modifying
     @Query(value = "UPDATE leave_requests SET employee_id = :targetId WHERE employee_id = :sourceId", nativeQuery = true)

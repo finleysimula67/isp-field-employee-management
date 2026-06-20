@@ -1,17 +1,23 @@
 package com.workflow.service;
 
+import com.workflow.dto.ChangePasswordRequest;
 import com.workflow.dto.EmployeeRequest;
 import com.workflow.dto.EmployeeResponse;
+import com.workflow.dto.UpdateProfileRequest;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class EmployeeService {
+    private static final Logger log = LoggerFactory.getLogger(EmployeeService.class);
     private final EmployeeRepository employeeRepository;
     private final BranchRepository branchRepository;
     private final AuditLogService auditLogService;
@@ -22,6 +28,7 @@ public class EmployeeService {
         this.employeeRepository = er; this.branchRepository = br; this.auditLogService = als; this.passwordEncoder = pe;
     }
 
+    @Transactional
     public EmployeeResponse createEmployee(EmployeeRequest request) {
         if (employeeRepository.existsByEmail(request.getEmail()))
             throw new RuntimeException("Email already exists");
@@ -51,8 +58,9 @@ public class EmployeeService {
         return toResponse(employee);
     }
 
+    @Transactional
     public EmployeeResponse updateEmployee(Long id, EmployeeRequest request) {
-        Employee employee = employeeRepository.findById(id)
+        Employee employee = employeeRepository.findByIdWithBranch(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         if (request.getName() != null) employee.setName(request.getName());
         if (request.getPhone() != null) employee.setPhone(request.getPhone());
@@ -70,17 +78,20 @@ public class EmployeeService {
         return toResponse(employeeRepository.save(employee));
     }
 
+    @Transactional(readOnly = true)
     public List<EmployeeResponse> getAllEmployees() {
         return employeeRepository.findAllWithBranch().stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public EmployeeResponse getEmployee(Long id) {
-        return toResponse(employeeRepository.findById(id)
+        return toResponse(employeeRepository.findByIdWithBranch(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found")));
     }
 
+    @Transactional
     public EmployeeResponse approveEmployee(Long id) {
-        Employee e = employeeRepository.findById(id)
+        Employee e = employeeRepository.findByIdWithBranch(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         e.setIsAccountApproved(true);
         e = employeeRepository.save(e);
@@ -88,6 +99,7 @@ public class EmployeeService {
         return toResponse(e);
     }
 
+    @Transactional
     public EmployeeResponse transferOwnership(Long currentOwnerId, Long targetId) {
         Employee current = employeeRepository.findById(currentOwnerId)
                 .orElseThrow(() -> new RuntimeException("Current owner not found"));
@@ -109,12 +121,34 @@ public class EmployeeService {
         return toResponse(target);
     }
 
+    @Transactional
     public void deleteEmployee(Long id) {
         Employee e = employeeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         e.setIsActive(false);
         employeeRepository.save(e);
         auditLogService.log("Employee", id, "DEACTIVATED", null, null, e.getEmail());
+    }
+
+    @Transactional
+    public EmployeeResponse updateProfile(Long id, UpdateProfileRequest request) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        if (request.getName() != null) employee.setName(request.getName());
+        if (request.getPhone() != null) employee.setPhone(request.getPhone());
+        return toResponse(employeeRepository.save(employee));
+    }
+
+    @Transactional
+    public void changePassword(Long id, ChangePasswordRequest request) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        if (employee.getAuthType() == AuthType.GOOGLE_ONLY)
+            throw new RuntimeException("Google accounts don't have a password");
+        if (!passwordEncoder.matches(request.getCurrentPassword(), employee.getPasswordHash()))
+            throw new RuntimeException("Current password is incorrect");
+        employee.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        employeeRepository.save(employee);
     }
 
     private EmployeeResponse toResponse(Employee e) {
@@ -130,6 +164,7 @@ public class EmployeeService {
         r.setDailyRate(e.getDailyRate()); r.setHourlyWage(e.getHourlyWage());
         r.setTotalLeaveDaysPerYear(e.getTotalLeaveDaysPerYear());
         r.setRemainingLeaveDays(e.getRemainingLeaveDays());
+        r.setCarryOverLeave(e.getCarryOverLeave());
         r.setMaxAdvanceLimit(e.getMaxAdvanceLimit());
         r.setCreatedAt(e.getCreatedAt());
         return r;

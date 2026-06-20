@@ -43,7 +43,7 @@ public class LeaveRequestService {
     }
 
     public LeaveRequest getLeaveRequest(Long id) {
-        return leaveRequestRepository.findById(id)
+        return leaveRequestRepository.findByIdWithEager(id)
                 .orElseThrow(() -> new RuntimeException("Leave request not found"));
     }
 
@@ -94,7 +94,7 @@ public class LeaveRequestService {
                         + request.getLeaveType() + " leave (" + startDate + " to " + endDate + ").\n\n"
                         + "Reason: " + (request.getReason() != null ? request.getReason() : "N/A"));
             } catch (Exception e) {
-                System.err.println("Leave request notification email skipped: " + e.getMessage());
+                log.warn("Leave request notification email skipped: {}", e.getMessage());
             }
         }
 
@@ -136,7 +136,7 @@ public class LeaveRequestService {
                     + ") has been " + newStatus.name() + ".\n\nComment: "
                     + (request.getReviewComment() != null ? request.getReviewComment() : "N/A"));
         } catch (Exception e) {
-            System.err.println("Leave review notification email skipped: " + e.getMessage());
+            log.warn("Leave review notification email skipped: {}", e.getMessage());
         }
         LeaveRequest saved = leaveRequestRepository.save(leaveRequest);
         auditLogService.log("LeaveRequest", id, "REVIEWED", "PENDING", newStatus.name(), reviewer.getEmail());

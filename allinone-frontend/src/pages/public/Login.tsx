@@ -5,7 +5,7 @@ import client from '../../api/client'
 import { useAuth } from '../../contexts/AuthContext'
 import type { Employee } from '../../types'
 
-const baseURL = client.defaults.baseURL?.replace('/api', '') || 'https://allinone-backend-xoh0.onrender.com'
+const baseURL = (import.meta.env.VITE_API_URL || 'https://allinone-backend-xoh0.onrender.com').replace('/api', '')
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')

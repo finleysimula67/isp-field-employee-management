@@ -51,7 +51,7 @@ public class DailyLogService {
     }
 
     public DailyLog getDailyLog(Long id) {
-        return dailyLogRepository.findById(id)
+        return dailyLogRepository.findByIdWithEager(id)
                 .orElseThrow(() -> new RuntimeException("Daily log not found"));
     }
 
@@ -59,46 +59,46 @@ public class DailyLogService {
     public DailyLog createDailyLog(DailyLogRequest request, Long currentUserId) {
         Employee employee = employeeRepository.findById(request.getEmployeeId())
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
-        DailyLog log = new DailyLog();
-        log.setEmployee(employee);
+        DailyLog dailyLog = new DailyLog();
+        dailyLog.setEmployee(employee);
         if (request.getBranchId() != null)
-            branchRepository.findById(request.getBranchId()).ifPresent(log::setBranch);
+            branchRepository.findById(request.getBranchId()).ifPresent(dailyLog::setBranch);
         LocalDate logDate = request.getLogDate() != null ? LocalDate.parse(request.getLogDate()) : LocalDate.now();
         if (logDate.isAfter(LocalDate.now()))
             throw new RuntimeException("Log date cannot be in the future");
-        log.setLogDate(logDate);
-        if (request.getStartTime() != null) log.setStartTime(LocalTime.parse(request.getStartTime()));
-        if (request.getEndTime() != null) log.setEndTime(LocalTime.parse(request.getEndTime()));
-        if (log.getStartTime() != null && log.getEndTime() != null && log.getEndTime().isBefore(log.getStartTime()))
+        dailyLog.setLogDate(logDate);
+        if (request.getStartTime() != null) dailyLog.setStartTime(LocalTime.parse(request.getStartTime()));
+        if (request.getEndTime() != null) dailyLog.setEndTime(LocalTime.parse(request.getEndTime()));
+        if (dailyLog.getStartTime() != null && dailyLog.getEndTime() != null && dailyLog.getEndTime().isBefore(dailyLog.getStartTime()))
             throw new RuntimeException("End time must be after start time");
         if (request.getHoursWorked() != null) {
-            log.setHoursWorked(request.getHoursWorked());
-        } else if (log.getStartTime() != null && log.getEndTime() != null) {
-            long mins = ChronoUnit.MINUTES.between(log.getStartTime(), log.getEndTime());
-            log.setHoursWorked(BigDecimal.valueOf(mins / 60.0).setScale(2, java.math.RoundingMode.HALF_UP));
+            dailyLog.setHoursWorked(request.getHoursWorked());
+        } else if (dailyLog.getStartTime() != null && dailyLog.getEndTime() != null) {
+            long mins = ChronoUnit.MINUTES.between(dailyLog.getStartTime(), dailyLog.getEndTime());
+            dailyLog.setHoursWorked(BigDecimal.valueOf(mins / 60.0).setScale(2, java.math.RoundingMode.HALF_UP));
         }
-        if (request.getCategory() != null) log.setCategory(LogCategory.valueOf(request.getCategory()));
-        if (request.getLocationDescription() != null) log.setLocationDescription(request.getLocationDescription());
-        if (request.getLocationLat() != null) log.setLocationLat(BigDecimal.valueOf(request.getLocationLat()));
-        if (request.getLocationLng() != null) log.setLocationLng(BigDecimal.valueOf(request.getLocationLng()));
-        log.setWorkDescription(request.getWorkDescription());
+        if (request.getCategory() != null) dailyLog.setCategory(LogCategory.valueOf(request.getCategory()));
+        if (request.getLocationDescription() != null) dailyLog.setLocationDescription(request.getLocationDescription());
+        if (request.getLocationLat() != null) dailyLog.setLocationLat(BigDecimal.valueOf(request.getLocationLat()));
+        if (request.getLocationLng() != null) dailyLog.setLocationLng(BigDecimal.valueOf(request.getLocationLng()));
+        dailyLog.setWorkDescription(request.getWorkDescription());
         if (request.getPhotoUrls() != null && !request.getPhotoUrls().isEmpty()) {
-            log.setPhotoUrls(String.join(",", request.getPhotoUrls()));
+            dailyLog.setPhotoUrls(String.join(",", request.getPhotoUrls()));
         }
-        if (request.getAssignedTaskId() != null) log.setAssignedTaskId(request.getAssignedTaskId());
+        if (request.getAssignedTaskId() != null) dailyLog.setAssignedTaskId(request.getAssignedTaskId());
 
-        logDate = log.getLogDate();
+        logDate = dailyLog.getLogDate();
         boolean hasApprovedDuplicate = dailyLogRepository.findByEmployeeAndLogDateBetween(employee, logDate, logDate)
-                .stream().anyMatch(l -> l.getStatus() == LogStatus.APPROVED && !l.getId().equals(log.getId()));
+                .stream().anyMatch(l -> l.getStatus() == LogStatus.APPROVED && !l.getId().equals(dailyLog.getId()));
 
         if (hasApprovedDuplicate) {
-            log.setStatus(LogStatus.REJECTED);
-            log.setReviewComment("Auto-rejected: Duplicate entry - employee already has an approved log for " + logDate);
+            dailyLog.setStatus(LogStatus.REJECTED);
+            dailyLog.setReviewComment("Auto-rejected: Duplicate entry - employee already has an approved log for " + logDate);
         } else {
-            log.setStatus(LogStatus.PENDING);
+            dailyLog.setStatus(LogStatus.PENDING);
         }
 
-        DailyLog saved = dailyLogRepository.save(log);
+        DailyLog saved = dailyLogRepository.save(dailyLog);
         auditLogService.log("DailyLog", saved.getId(), "CREATED", null, saved.getStatus().name(), employee.getEmail());
 
         List<Employee> admins = employeeRepository.findByRoleIn(
@@ -117,11 +117,11 @@ public class DailyLogService {
 
             // 🛡️ Safely handle email notification submission
             try {
-                emailService.sendEmail(admin.getEmail(), "New Daily Log: " + employee.getName(),
-                        employee.getName() + " submitted a daily log for " + log.getLogDate()
+                    emailService.sendEmail(admin.getEmail(), "New Daily Log: " + employee.getName(),
+                            employee.getName() + " submitted a daily log for " + dailyLog.getLogDate()
                         + ".\n\nDescription: " + (request.getWorkDescription() != null ? request.getWorkDescription() : "N/A"));
             } catch (Exception e) {
-                System.err.println("Outbound notification email skipped: Network or mail server unreachable.");
+                log.warn("Outbound notification email skipped: Network or mail server unreachable.");
             }
         }
 
@@ -130,34 +130,34 @@ public class DailyLogService {
 
     @Transactional
     public DailyLog reviewDailyLog(Long id, DailyLogReviewRequest request, Long reviewerId) {
-        DailyLog log = dailyLogRepository.findById(id)
+        DailyLog dailyLog = dailyLogRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Daily log not found"));
-        if (log.getStatus() != LogStatus.PENDING)
+        if (dailyLog.getStatus() != LogStatus.PENDING)
             throw new RuntimeException("Daily log is not in PENDING status");
         Employee reviewer = employeeRepository.findById(reviewerId)
                 .orElseThrow(() -> new RuntimeException("Reviewer not found"));
         LogStatus newStatus = LogStatus.valueOf(request.getStatus());
-        log.setStatus(newStatus);
-        log.setReviewComment(request.getReviewComment());
-        log.setReviewedBy(reviewer);
-        log.setReviewedAt(LocalDateTime.now());
+        dailyLog.setStatus(newStatus);
+        dailyLog.setReviewComment(request.getReviewComment());
+        dailyLog.setReviewedBy(reviewer);
+        dailyLog.setReviewedAt(LocalDateTime.now());
         if (newStatus == LogStatus.REJECTED || newStatus == LogStatus.NEEDS_REVISION) {
             Notification notification = new Notification();
-            notification.setRecipient(log.getEmployee());
+            notification.setRecipient(dailyLog.getEmployee());
             notification.setType("DAILY_LOG_REVIEW");
             notification.setTitle("Daily Log " + newStatus.name());
             notification.setBody(request.getReviewComment());
             notification.setRelatedEntityType("DailyLog");
-            notification.setRelatedEntityId(log.getId());
+            notification.setRelatedEntityId(dailyLog.getId());
             notificationRepository.save(notification);
             notificationService.broadcastNotificationToRecipient(notification);
         }
-        DailyLog saved = dailyLogRepository.save(log);
+        DailyLog saved = dailyLogRepository.save(dailyLog);
         auditLogService.log("DailyLog", id, "REVIEWED", "PENDING", newStatus.name(), reviewer.getEmail());
 
         if (newStatus == LogStatus.APPROVED) {
-            Employee emp = log.getEmployee();
-            LocalDate logDate = log.getLogDate() != null ? log.getLogDate() : LocalDate.now();
+            Employee emp = dailyLog.getEmployee();
+            LocalDate logDate = dailyLog.getLogDate() != null ? dailyLog.getLogDate() : LocalDate.now();
             LocalDate periodStart = logDate.withDayOfMonth(1);
             LocalDate periodEnd = logDate.withDayOfMonth(logDate.lengthOfMonth());
             String periodLabel = periodStart.getMonthValue() + "/" + periodStart.getYear();
@@ -225,7 +225,7 @@ public class DailyLogService {
                 emailService.sendEmail(emp.getEmail(), "Daily Log Approved",
                         "Your daily log for " + logDate + " has been approved.");
             } catch (Exception e) {
-                System.err.println("Approval confirmation email skipped: Network or mail server unreachable.");
+                log.warn("Approval confirmation email skipped: Network or mail server unreachable.");
             }
         }
 

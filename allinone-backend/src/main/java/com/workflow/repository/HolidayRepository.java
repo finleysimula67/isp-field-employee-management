@@ -13,6 +13,9 @@ public interface HolidayRepository extends JpaRepository<Holiday, Long> {
     @Query("SELECT h FROM Holiday h LEFT JOIN FETCH h.createdBy WHERE h.deletedAt IS NULL ORDER BY h.date ASC")
     List<Holiday> findAllWithEager();
 
+    @Query("SELECT h FROM Holiday h LEFT JOIN FETCH h.createdBy WHERE h.id = :id AND h.deletedAt IS NULL")
+    Optional<Holiday> findByIdWithEager(@Param("id") Long id);
+
     @Query("SELECT h FROM Holiday h WHERE h.date = :date AND h.deletedAt IS NULL")
     Optional<Holiday> findByDate(@Param("date") LocalDate date);
 

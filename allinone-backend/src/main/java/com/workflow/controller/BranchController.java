@@ -34,15 +34,15 @@ public class BranchController {
     public ResponseEntity<ApiResponse<BranchResponse>> create(
             @RequestParam String name, @RequestParam(required = false) String code,
             @RequestParam(required = false) String address) {
-        return ResponseEntity.ok(ApiResponse.ok("Branch created", branchService.createBranch(name, code, address)));
+        return ResponseEntity.status(201).body(ApiResponse.ok("Branch created", branchService.createBranch(name, code, address)));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+    public ResponseEntity<Void> delete(@PathVariable Long id,
                                                      @AuthenticationPrincipal Employee employee) {
         branchService.softDeleteBranch(id, employee);
-        return ResponseEntity.ok(ApiResponse.ok("Branch deleted", null));
+        return ResponseEntity.status(204).build();
     }
 
     @PutMapping("/{id}")

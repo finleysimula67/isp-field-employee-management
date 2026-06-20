@@ -47,7 +47,7 @@ public class TaskController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<ApiResponse<TaskResponse>> create(@RequestBody TaskRequest request,
                                                              @AuthenticationPrincipal Employee employee) {
-        return ResponseEntity.ok(ApiResponse.ok("Task created", toResponse(taskService.createTask(request, employee.getId()))));
+        return ResponseEntity.status(201).body(ApiResponse.ok("Task created", toResponse(taskService.createTask(request, employee.getId()))));
     }
 
     @PatchMapping("/{id}/status")
@@ -66,10 +66,10 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+    public ResponseEntity<Void> delete(@PathVariable Long id,
                                                      @AuthenticationPrincipal Employee employee) {
         taskService.softDeleteTask(id, employee);
-        return ResponseEntity.ok(ApiResponse.ok("Task deleted", null));
+        return ResponseEntity.status(204).build();
     }
 
     @PostMapping("/batch-delete")

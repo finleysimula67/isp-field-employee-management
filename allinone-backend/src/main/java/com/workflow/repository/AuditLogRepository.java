@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long>, JpaSpecificationExecutor<AuditLog> {
-    @Query("SELECT a FROM AuditLog a WHERE a.deletedAt IS NULL ORDER BY a.createdAt DESC")
+    @Query("SELECT a FROM AuditLog a LEFT JOIN FETCH a.actor WHERE a.deletedAt IS NULL ORDER BY a.createdAt DESC")
     List<AuditLog> findAllByOrderByCreatedAtDesc();
 
     @Modifying

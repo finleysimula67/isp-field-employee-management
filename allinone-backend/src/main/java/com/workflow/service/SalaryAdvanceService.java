@@ -97,7 +97,7 @@ public class SalaryAdvanceService {
                         + String.format("%.0f", request.getAmount())
                         + ".\n\nReason: " + (request.getReason() != null ? request.getReason() : "N/A"));
             } catch (Exception e) {
-                System.err.println("Advance request notification email skipped: " + e.getMessage());
+                log.warn("Advance request notification email skipped: {}", e.getMessage());
             }
         }
 
@@ -135,7 +135,7 @@ public class SalaryAdvanceService {
                     + " has been " + newStatus.name() + ".\n\nNotes: "
                     + (request.getNotes() != null ? request.getNotes() : "N/A"));
         } catch (Exception e) {
-            System.err.println("Advance review notification email skipped: " + e.getMessage());
+            log.warn("Advance review notification email skipped: {}", e.getMessage());
         }
         SalaryAdvance saved = salaryAdvanceRepository.save(advance);
         auditLogService.log("SalaryAdvance", id, "REVIEWED", "PENDING", newStatus.name(), reviewer.getEmail());
@@ -181,7 +181,7 @@ public class SalaryAdvanceService {
                     + " has been disbursed by " + createdBy.getName() + "."
                     + (request.getReason() != null ? "\n\nReason: " + request.getReason() : ""));
         } catch (Exception e) {
-            System.err.println("Manual advance notification email skipped: " + e.getMessage());
+            log.warn("Manual advance notification email skipped: {}", e.getMessage());
         }
         auditLogService.log("SalaryAdvance", saved.getId(), "MANUAL_CREATED", null, "DISBURSED", employee.getEmail());
         return saved;

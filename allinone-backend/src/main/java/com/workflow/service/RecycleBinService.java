@@ -7,6 +7,8 @@ import com.workflow.entity.*;
 import com.workflow.repository.RecycleBinRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +20,7 @@ import java.util.Map;
 
 @Service
 public class RecycleBinService {
+    private static final Logger log = LoggerFactory.getLogger(RecycleBinService.class);
     private final RecycleBinRepository recycleBinRepository;
     private final AuditLogService auditLogService;
     private final ObjectMapper objectMapper;

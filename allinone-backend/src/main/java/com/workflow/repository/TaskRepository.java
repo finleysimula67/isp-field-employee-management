@@ -33,6 +33,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
                             @Param("status") TaskStatus status,
                             Pageable pageable);
 
+    @Query("SELECT t FROM Task t LEFT JOIN FETCH t.assignedBy LEFT JOIN FETCH t.assignedTo WHERE t.id = :id AND t.deletedAt IS NULL")
+    java.util.Optional<Task> findByIdWithEager(@Param("id") Long id);
+
     @Query("SELECT COUNT(t) FROM Task t WHERE t.status = :status AND t.deletedAt IS NULL")
     long countByStatus(@Param("status") TaskStatus status);
 

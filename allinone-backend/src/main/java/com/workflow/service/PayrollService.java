@@ -4,6 +4,8 @@ import com.workflow.dto.PayrollBatchRequest;
 import com.workflow.dto.PayrollCalculateRequest;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class PayrollService {
+    private static final Logger log = LoggerFactory.getLogger(PayrollService.class);
     private final PayrollRecordRepository payrollRecordRepository;
     private final DailyLogRepository dailyLogRepository;
     private final EmployeeRepository employeeRepository;
@@ -78,7 +81,7 @@ public class PayrollService {
     }
 
     public PayrollRecord getPayrollRecord(Long id) {
-        return payrollRecordRepository.findById(id)
+        return payrollRecordRepository.findByIdWithEmployee(id)
                 .orElseThrow(() -> new RuntimeException("Payroll record not found"));
     }
 

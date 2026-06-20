@@ -4,6 +4,7 @@ import com.workflow.dto.*;
 import com.workflow.security.JwtTokenProvider;
 import com.workflow.service.AuthService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
@@ -26,7 +27,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<LoginResponse>> register(@Valid @RequestBody EmployeeRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok("Registration successful", authService.register(request)));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Registration successful", authService.register(request)));
     }
 
     @GetMapping("/check-email")

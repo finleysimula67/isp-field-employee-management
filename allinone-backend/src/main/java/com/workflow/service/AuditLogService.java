@@ -3,6 +3,8 @@ package com.workflow.service;
 import com.workflow.entity.AuditLog;
 import com.workflow.entity.Employee;
 import com.workflow.repository.AuditLogRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import java.util.List;
 
 @Service
 public class AuditLogService {
+    private static final Logger log = LoggerFactory.getLogger(AuditLogService.class);
     private final AuditLogRepository auditLogRepository;
 
     public AuditLogService(AuditLogRepository alr) { this.auditLogRepository = alr; }

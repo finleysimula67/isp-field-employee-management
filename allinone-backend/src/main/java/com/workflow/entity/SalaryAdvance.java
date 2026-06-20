@@ -20,6 +20,7 @@ public class SalaryAdvance implements SoftDeletable {
     @Column(columnDefinition = "TEXT") private String notes;
     @Column(name = "deleted_at") private LocalDateTime deletedAt;
     @Column(name = "deleted_by") private Long deletedBy;
+    @Version @Column(name = "version") private Integer version;
 
     public SalaryAdvance() {}
 
@@ -38,6 +39,7 @@ public class SalaryAdvance implements SoftDeletable {
     public String getNotes() { return notes; } public void setNotes(String notes) { this.notes = notes; }
     public LocalDateTime getDeletedAt() { return deletedAt; } public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
     public Long getDeletedBy() { return deletedBy; } public void setDeletedBy(Long deletedBy) { this.deletedBy = deletedBy; }
+    public Integer getVersion() { return version; } public void setVersion(Integer version) { this.version = version; }
 
     @PrePersist protected void onCreate() {
         if (status == null) status = AdvanceStatus.PENDING;

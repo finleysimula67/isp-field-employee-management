@@ -37,6 +37,9 @@ public interface CashCollectionRepository extends JpaRepository<CashCollection, 
                                       @Param("status") CollectionStatus status,
                                       Pageable pageable);
 
+    @Query("SELECT c FROM CashCollection c LEFT JOIN FETCH c.employee LEFT JOIN FETCH c.reviewedBy WHERE c.id = :id AND c.deletedAt IS NULL")
+    java.util.Optional<CashCollection> findByIdWithEager(@Param("id") Long id);
+
     @Query("SELECT COUNT(c) FROM CashCollection c WHERE c.status = :status AND c.deletedAt IS NULL")
     long countByStatus(@Param("status") CollectionStatus status);
 

@@ -18,6 +18,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ActiveProfiles("test")
 @WebMvcTest(controllers = EmployeeController.class,
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
         classes = {JwtAuthenticationFilter.class, OAuth2SuccessHandler.class}),
@@ -91,7 +93,7 @@ class EmployeeControllerTest {
         mockMvc.perform(post("/api/employees")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Employee created"))
                 .andExpect(jsonPath("$.data.name").value("Charlie"));
     }
@@ -114,8 +116,7 @@ class EmployeeControllerTest {
     @Test
     void delete_shouldDeactivate() throws Exception {
         mockMvc.perform(delete("/api/employees/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Employee deactivated"));
+                .andExpect(status().isNoContent());
     }
 
     @Test

@@ -35,9 +35,9 @@ public class MonthlyLockoutController {
     @PostMapping("/lock")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<LockoutStatusResponse>> lock(@RequestParam String yearMonth,
-                                                                    @AuthenticationPrincipal Employee employee) {
+                                                                     @AuthenticationPrincipal Employee employee) {
         MonthlyLockout lockout = monthlyLockoutService.lockMonth(yearMonth, employee.getId());
-        return ResponseEntity.ok(ApiResponse.ok("Month locked", toResponse(lockout)));
+        return ResponseEntity.status(201).body(ApiResponse.ok("Month locked", toResponse(lockout)));
     }
 
     @PostMapping("/unlock")

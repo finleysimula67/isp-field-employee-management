@@ -45,7 +45,7 @@ public class CashCollectionService {
     }
 
     public CashCollection getCashCollection(Long id) {
-        return cashCollectionRepository.findById(id)
+        return cashCollectionRepository.findByIdWithEager(id)
                 .orElseThrow(() -> new RuntimeException("Cash collection not found"));
     }
 
@@ -85,7 +85,7 @@ public class CashCollectionService {
             try {
                 notificationService.broadcastNotificationToRecipient(notif);
             } catch (Exception e) {
-                System.err.println("Cash collection notification broadcast skipped: " + e.getMessage());
+                log.warn("Cash collection notification broadcast skipped: {}", e.getMessage());
             }
 
             try {
@@ -94,7 +94,7 @@ public class CashCollectionService {
                         + " from " + request.getCustomerName()
                         + ".\n\nDetails: " + (request.getDescription() != null ? request.getDescription() : "N/A"));
             } catch (Exception e) {
-                System.err.println("Cash collection notification email skipped: " + e.getMessage());
+                log.warn("Cash collection notification email skipped: {}", e.getMessage());
             }
         }
 
@@ -143,7 +143,7 @@ public class CashCollectionService {
                     + " (" + collection.getAmount() + ") has been " + newStatus.name()
                     + ".\n\nComment: " + (request.getReviewComment() != null ? request.getReviewComment() : "N/A"));
         } catch (Exception e) {
-            System.err.println("Cash collection review email skipped: " + e.getMessage());
+            log.warn("Cash collection review email skipped: {}", e.getMessage());
         }
 
         return saved;
@@ -203,7 +203,7 @@ public class CashCollectionService {
                         + " (" + c.getAmount() + ") has been " + newStatus.name()
                         + ".\n\nComment: " + (request.getReviewComment() != null ? request.getReviewComment() : "N/A"));
             } catch (Exception e) {
-                System.err.println("Cash collection review email skipped: " + e.getMessage());
+            log.warn("Cash collection review email skipped: {}", e.getMessage());
             }
         }
         return cashCollectionRepository.findByIdInWithEager(ids);

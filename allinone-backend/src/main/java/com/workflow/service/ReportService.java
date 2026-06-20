@@ -12,6 +12,8 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ReportService {
+    private static final Logger log = LoggerFactory.getLogger(ReportService.class);
     private final DailyLogRepository dailyLogRepository;
     private final EmployeeRepository employeeRepository;
     private final BranchRepository branchRepository;

@@ -4,6 +4,8 @@ import com.workflow.dto.LockoutStatusResponse;
 import com.workflow.dto.LockoutUnlockRequest;
 import com.workflow.entity.*;
 import com.workflow.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,7 @@ import java.util.List;
 
 @Service
 public class MonthlyLockoutService {
+    private static final Logger log = LoggerFactory.getLogger(MonthlyLockoutService.class);
     private final MonthlyLockoutRepository monthlyLockoutRepository;
     private final DailyLogRepository dailyLogRepository;
     private final EmployeeRepository employeeRepository;

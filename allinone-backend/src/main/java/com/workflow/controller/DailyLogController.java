@@ -61,7 +61,7 @@ public class DailyLogController {
     public ResponseEntity<ApiResponse<DailyLogResponse>> create(@RequestBody DailyLogRequest request,
                                                                  @AuthenticationPrincipal Employee employee) {
         request.setEmployeeId(employee.getId());
-        return ResponseEntity.ok(ApiResponse.ok("Daily log submitted", toResponse(dailyLogService.createDailyLog(request, employee.getId()))));
+        return ResponseEntity.status(201).body(ApiResponse.ok("Daily log submitted", toResponse(dailyLogService.createDailyLog(request, employee.getId()))));
     }
 
     @PutMapping("/{id}/review")
@@ -73,10 +73,10 @@ public class DailyLogController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+    public ResponseEntity<Void> delete(@PathVariable Long id,
                                                      @AuthenticationPrincipal Employee employee) {
         dailyLogService.softDeleteDailyLog(id, employee);
-        return ResponseEntity.ok(ApiResponse.ok("Daily log deleted", null));
+        return ResponseEntity.status(204).build();
     }
 
     @PostMapping("/batch-delete")

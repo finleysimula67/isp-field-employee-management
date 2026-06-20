@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
@@ -16,8 +17,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Order(1)
 public class RateLimitingFilter implements Filter {
     private static final Logger log = LoggerFactory.getLogger(RateLimitingFilter.class);
-    private static final int MAX_REQUESTS = 10;
-    private static final long WINDOW_MS = 60_000;
+    @Value("${app.rate-limit.max-requests:10}")
+    private int MAX_REQUESTS;
+    @Value("${app.rate-limit.window-ms:60000}")
+    private long WINDOW_MS;
     private final Map<String, Window> attempts = new ConcurrentHashMap<>();
 
     @Override

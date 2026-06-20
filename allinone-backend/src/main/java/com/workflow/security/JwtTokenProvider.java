@@ -41,7 +41,9 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void validate() {
-        log.info("JWT secret key length: {} bytes (minimum recommended: {})", rawSecret.length(), MIN_SECRET_LENGTH);
+        if (log.isDebugEnabled()) {
+            log.debug("JWT secret key length: {} bytes (minimum recommended: {})", rawSecret.length(), MIN_SECRET_LENGTH);
+        }
     }
 
     public String generateToken(Long userId, String email, String role) {

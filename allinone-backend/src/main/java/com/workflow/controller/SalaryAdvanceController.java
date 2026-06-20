@@ -60,7 +60,7 @@ public class SalaryAdvanceController {
     @PostMapping
     public ResponseEntity<ApiResponse<SalaryAdvanceResponse>> request(@RequestBody SalaryAdvanceRequest request,
                                                                        @AuthenticationPrincipal Employee employee) {
-        return ResponseEntity.ok(ApiResponse.ok("Advance requested",
+        return ResponseEntity.status(201).body(ApiResponse.ok("Advance requested",
                 toResponse(salaryAdvanceService.requestAdvance(request, employee.getId()))));
     }
 
@@ -74,10 +74,10 @@ public class SalaryAdvanceController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
+    public ResponseEntity<Void> delete(@PathVariable Long id,
                                                      @AuthenticationPrincipal Employee employee) {
         salaryAdvanceService.softDeleteSalaryAdvance(id, employee);
-        return ResponseEntity.ok(ApiResponse.ok("Salary advance deleted", null));
+        return ResponseEntity.status(204).build();
     }
 
     @PostMapping("/batch-delete")

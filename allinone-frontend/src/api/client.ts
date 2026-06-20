@@ -5,9 +5,7 @@ const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://allinone-backend-xoh0.onrender.com/api',
   headers: { 'Content-Type': 'application/json' },
   timeout: 120000,
-  // ✅ Never follow redirects via axios — if the backend sends a 302,
-  // let it fail loudly instead of silently chasing it cross-origin
-  maxRedirects: 0,
+  maxRedirects: 0, // ✅ never chase redirects cross-origin
 })
 
 client.interceptors.request.use((config) => {
@@ -21,16 +19,13 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (res) => res,
   (err) => {
-    // ✅ Ignore redirect errors (3xx) — these are expected on cold starts
-    // and should not trigger logout or navigation
+    // ✅ ignore 3xx — don't treat redirects as auth failures
     if (err.response?.status >= 300 && err.response?.status < 400) {
       return Promise.reject(err)
     }
-
     if (err.response?.status === 401 && !err.config?.url?.startsWith('/auth/')) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      // ✅ Guard: don't redirect if already on /login to prevent redirect loop
       if (window.location.pathname !== '/login') {
         appNavigate('/login')
       }

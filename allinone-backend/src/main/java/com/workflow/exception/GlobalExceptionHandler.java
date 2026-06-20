@@ -58,7 +58,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntime(RuntimeException e) {
         log.error("Runtime exception: {}", e.getMessage(), e);
-        return ResponseEntity.badRequest().body(ApiResponse.error("Invalid request"));
+        return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

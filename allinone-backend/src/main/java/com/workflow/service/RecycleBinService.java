@@ -3,9 +3,10 @@ package com.workflow.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.workflow.dto.BatchDeleteRequest;
-import com.workflow.entity.Employee;
-import com.workflow.entity.RecycleBin;
+import com.workflow.entity.*;
 import com.workflow.repository.RecycleBinRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,12 +14,26 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 public class RecycleBinService {
     private final RecycleBinRepository recycleBinRepository;
     private final AuditLogService auditLogService;
     private final ObjectMapper objectMapper;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    private static final Map<String, Class<? extends SoftDeletable>> ENTITY_CLASSES = Map.of(
+        "DailyLog", DailyLog.class,
+        "CashCollection", CashCollection.class,
+        "LeaveRequest", LeaveRequest.class,
+        "Task", Task.class,
+        "Holiday", Holiday.class,
+        "SalaryAdvance", SalaryAdvance.class,
+        "Branch", Branch.class
+    );
 
     public RecycleBinService(RecycleBinRepository rbr, AuditLogService als) {
         this.recycleBinRepository = rbr;
@@ -49,6 +64,17 @@ public class RecycleBinService {
     public void restore(Long recycleBinId, Employee actor) {
         RecycleBin bin = recycleBinRepository.findById(recycleBinId)
                 .orElseThrow(() -> new RuntimeException("Recycle bin entry not found"));
+
+        Class<? extends SoftDeletable> entityClass = ENTITY_CLASSES.get(bin.getEntityType());
+        if (entityClass != null) {
+            SoftDeletable entity = entityManager.find(entityClass, bin.getEntityId());
+            if (entity != null) {
+                entity.setDeletedAt(null);
+                entity.setDeletedBy(null);
+                entityManager.merge(entity);
+            }
+        }
+
         bin.setRestoredAt(LocalDateTime.now());
         bin.setRestoredBy(actor);
         recycleBinRepository.save(bin);

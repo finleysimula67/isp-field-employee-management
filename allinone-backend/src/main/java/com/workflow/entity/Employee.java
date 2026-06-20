@@ -35,7 +35,7 @@ public class Employee {
     @Column(name = "max_advance_limit") private BigDecimal maxAdvanceLimit;
     @Column(name = "created_at", updatable = false) private LocalDateTime createdAt;
     @Column(name = "updated_at") private LocalDateTime updatedAt;
-    @Version @Column(name = "version") private Integer version;
+    // version column intentionally omitted — schema was created without it
 
     public Employee() {}
 
@@ -95,8 +95,6 @@ public class Employee {
     public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public Integer getVersion() { return version; }
-    public void setVersion(Integer version) { this.version = version; }
 
     @PrePersist
     protected void onCreate() {

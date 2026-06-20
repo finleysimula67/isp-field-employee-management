@@ -45,6 +45,11 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Registration successful", authService.register(request)));
     }
 
+    @GetMapping("/client-id")
+    public ResponseEntity<ApiResponse<Map<String, String>>> getClientId() {
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("clientId", googleTokenVerifier.getClientId())));
+    }
+
     @GetMapping("/check-email")
     public ResponseEntity<ApiResponse<Boolean>> checkEmail(@RequestParam String email) {
         return ResponseEntity.ok(ApiResponse.ok(authService.isEmailAllowed(email)));

@@ -24,6 +24,8 @@ public class GoogleTokenVerifier {
         this.objectMapper = new ObjectMapper();
     }
 
+    public String getClientId() { return clientId; }
+
     public GoogleUser verify(String idToken) {
         try {
             String url = TOKEN_INFO_URL + idToken;

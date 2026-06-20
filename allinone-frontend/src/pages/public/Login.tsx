@@ -66,31 +66,40 @@ export default function LoginPage() {
   useEffect(() => {
     if (googleInitRef.current || !window.google?.accounts?.id) return
     googleInitRef.current = true
-    window.google.accounts.id.initialize({
-      client_id: '74808369318-pmgvg483tsmj51m7i2bi6e50fff95kt9.apps.googleusercontent.com',
-      callback: async (res) => {
-        try {
-          setError('')
-          const { data } = await client.post('/auth/google-login', { idToken: res.credential })
-          if (data.success) {
-            const d = data.data
-            const empRes = await client.get('/employees/me')
-            const employeeData = empRes.data.data as Employee
-            authLogin(d.token, employeeData)
-            navigate(d.role === 'SUPER_ADMIN' || d.role === 'BRANCH_MANAGER' ? '/admin' : '/employee')
-          } else {
-            setError(data.message || 'Google login failed')
+    const fromEnv = import.meta.env.VITE_GOOGLE_CLIENT_ID
+    const fallback = '74808369318-pmgvg483tsmj51m7i2bi6e50fff95kt9.apps.googleusercontent.com'
+    const gis = window.google!.accounts!.id
+    const init = (cid: string) => {
+      gis.initialize({
+        client_id: cid,
+        callback: async (res) => {
+          try {
+            setError('')
+            const { data } = await client.post('/auth/google-login', { idToken: res.credential })
+            if (data.success) {
+              const d = data.data
+              const empRes = await client.get('/employees/me')
+              const employeeData = empRes.data.data as Employee
+              authLogin(d.token, employeeData)
+              navigate(d.role === 'SUPER_ADMIN' || d.role === 'BRANCH_MANAGER' ? '/admin' : '/employee')
+            } else {
+              setError(data.message || 'Google login failed')
+            }
+          } catch (err: any) {
+            setError(err.response?.data?.message || 'Google sign-in failed. Please try again.')
           }
-        } catch (err: any) {
-          setError(err.response?.data?.message || 'Google sign-in failed. Please try again.')
         }
-      }
-    })
-    if (googleBtnRef.current) {
-      window.google.accounts.id.renderButton(googleBtnRef.current, {
-        theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', width: 380
       })
+      if (googleBtnRef.current) {
+        gis.renderButton(googleBtnRef.current, {
+          theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', width: 380
+        })
+      }
     }
+    if (fromEnv) { init(fromEnv); return }
+    fetch(`${backendBase}/api/auth/client-id`).then(r => r.json()).then(d => {
+      init(d?.data?.clientId || fallback)
+    }).catch(() => init(fallback))
   }, [warming, authLogin, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {

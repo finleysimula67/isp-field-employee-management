@@ -1,8 +1,11 @@
 import axios from 'axios'
 import { appNavigate } from '../lib/navigate'
 
+const rawUrl = import.meta.env.VITE_API_URL || 'https://allinone-backend-xoh0.onrender.com'
+const apiBase = rawUrl.replace(/\/?(api\/?)?$/, '') + '/api'
+
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://allinone-backend-xoh0.onrender.com/api',
+  baseURL: apiBase,
   headers: { 'Content-Type': 'application/json' },
   timeout: 120000,
   maxRedirects: 0, // ✅ never chase redirects cross-origin

@@ -32,7 +32,6 @@ export default function LoginPage() {
   const [warming, setWarming] = useState(true)
   const [warmFailures, setWarmFailures] = useState(0)
   const [warmExhausted, setWarmExhausted] = useState(false)
-  const MAX_WARM_RETRIES = 30
   const navigate = useNavigate()
   const { login: authLogin } = useAuth()
   const googleBtnRef = useRef<HTMLDivElement>(null)
@@ -42,25 +41,23 @@ export default function LoginPage() {
     let cancelled = false
     let retries = 0
     let timer: ReturnType<typeof setTimeout>
+    const MAX_RETRIES = 30
     const ping = async () => {
       if (cancelled) return
       try {
-        await client.get('/auth/check-email', {
-          params: { email: 'ping' },
-          timeout: 15000,
-          validateStatus: (status) => status < 500,
-        })
+        await fetch(`${backendBase}/api/auth/check-email?email=ping`, { signal: AbortSignal.timeout(15000) })
         if (!cancelled) { setWarming(false); return }
       } catch {
-        if (!cancelled) {
-          retries++; setWarmFailures(retries)
-          if (retries >= MAX_WARM_RETRIES) {
-            if (!cancelled) { setWarming(false); setWarmExhausted(true) }
-            return
-          }
-        }
+        /* server not ready yet */
       }
-      if (!cancelled) timer = setTimeout(ping, 2000)
+      if (!cancelled) {
+        retries++
+        if (retries >= MAX_RETRIES) {
+          setWarming(false); setWarmExhausted(true)
+          return
+        }
+        timer = setTimeout(ping, 2000)
+      }
     }
     ping()
     return () => { cancelled = true; clearTimeout(timer) }

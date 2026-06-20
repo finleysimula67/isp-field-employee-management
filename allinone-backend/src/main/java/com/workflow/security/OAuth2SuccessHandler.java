@@ -44,7 +44,13 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             tokenCookie.setAttribute("SameSite", "Lax");
             response.addCookie(tokenCookie);
 
-            response.sendRedirect(redirectUri);
+            response.sendRedirect(redirectUri
+                + "?token=" + URLEncoder.encode(loginRes.getToken(), StandardCharsets.UTF_8)
+                + "&userId=" + loginRes.getUserId()
+                + "&role=" + URLEncoder.encode(loginRes.getRole(), StandardCharsets.UTF_8)
+                + "&name=" + URLEncoder.encode(loginRes.getName() != null ? loginRes.getName() : "", StandardCharsets.UTF_8)
+                + "&email=" + URLEncoder.encode(loginRes.getEmail() != null ? loginRes.getEmail() : "", StandardCharsets.UTF_8)
+                + "&approved=true");
         } catch (Exception e) {
             String errorMsg = e.getMessage() != null ? e.getMessage() : "oauth_failed";
             if (errorMsg.contains("pending admin approval")) {

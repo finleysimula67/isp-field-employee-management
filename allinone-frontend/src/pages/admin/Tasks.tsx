@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getTasks, createTask, updateTask, deleteTask } from '../../api/tasks'
+import { getTasks, createTask, updateTask, deleteTask, batchDeleteTasks } from '../../api/tasks'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
@@ -42,6 +42,8 @@ export default function TasksPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState(false)
 
   const fetchData = () => {
     setLoading(true)
@@ -134,6 +136,31 @@ export default function TasksPage() {
     }
   }
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === tasks.length) setSelectedIds([])
+    else setSelectedIds(tasks.map(t => t.id))
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    setDeleting(true)
+    try {
+      await batchDeleteTasks({ ids: selectedIds })
+      setConfirmBatchDelete(false)
+      setSelectedIds([])
+      setToast({ message: `${selectedIds.length} task(s) deleted`, type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Batch delete failed', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -208,10 +235,20 @@ export default function TasksPage() {
           <button onClick={fetchData} className="btn-admin">Filter</button>
         </div>
       </div>
+      {selectedIds.length > 0 && (
+        <div className="card p-3 mb-4 flex flex-wrap items-center gap-3 bg-blue-50 border-blue-200">
+          <span className="text-sm font-medium text-blue-800">{selectedIds.length} selected</span>
+          <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
+          <button onClick={() => setConfirmBatchDelete(true)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 font-medium">Delete Selected</button>
+        </div>
+      )}
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
+              <th className="text-left py-3 px-4 w-10">
+                <input type="checkbox" onChange={toggleSelectAll} checked={selectedIds.length === tasks.length && tasks.length > 0} className="rounded" />
+              </th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Assigned To</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Title</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Priority</th>
@@ -224,11 +261,14 @@ export default function TasksPage() {
             {loading ? (
               <Skeleton variant="table-row" count={5} />
             ) : tasks.length === 0 ? (
-              <tr><td colSpan={6} className="py-8 text-center text-gray-400">No tasks yet.</td></tr>
+              <tr><td colSpan={7} className="py-8 text-center text-gray-400">No tasks yet.</td></tr>
             ) : tasks.map((task: any) => {
               const emp = employees.find(e => e.id === task.assignedTo)
               return (
                 <tr key={task.id} className="border-b border-gray-50 hover:bg-gray-50">
+                  <td className="py-3 px-4">
+                    <input type="checkbox" checked={selectedIds.includes(task.id)} onChange={() => toggleSelect(task.id)} className="rounded" />
+                  </td>
                   <td className="py-3 px-4 font-medium">{emp?.name || `#${task.assignedTo}`}</td>
                   <td className="py-3 px-4 text-gray-500">{task.title}</td>
                   <td className="py-3 px-4">
@@ -253,6 +293,7 @@ export default function TasksPage() {
         </table>
       </div>
       <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Task?" message="This task will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
+      <DeleteConfirmModal open={confirmBatchDelete} title={`Delete ${selectedIds.length} Tasks?`} message="These tasks will be soft-deleted and moved to the Recycle Bin." count={selectedIds.length} onConfirm={handleBatchDelete} onCancel={() => setConfirmBatchDelete(false)} loading={deleting} />
     </div>
   )
 }

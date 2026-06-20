@@ -29,3 +29,8 @@ export async function deleteTask(id: number) {
   const res = await client.delete(`/tasks/${id}`)
   return res.data
 }
+
+export async function batchDeleteTasks(data: { ids: number[] }) {
+  const res = await client.post('/tasks/batch-delete', data)
+  return res.data
+}

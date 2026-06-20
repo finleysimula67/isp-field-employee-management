@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { getMonthlyAttendance, getWageSummary } from '../../api/attendance'
+import { getMonthlyAttendance, getWageSummary, batchDeleteAttendance } from '../../api/attendance'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
+import DeleteConfirmModal from '../../components/DeleteConfirmModal'
 
 const STATUS_COLORS: Record<string, string> = {
   PRESENT: 'bg-green-100 text-green-700',
@@ -26,6 +27,10 @@ export default function AttendancePage() {
   const [wages, setWages] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
 
   const daysInMonth = new Date(year, month, 0).getDate()
   const dayHeaders = Array.from({ length: daysInMonth }, (_, i) => i + 1)
@@ -48,6 +53,32 @@ export default function AttendancePage() {
 
   const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === attendance.length) setSelectedIds([])
+    else setSelectedIds(attendance.map(a => a.employeeId))
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    setDeleting(true)
+    try {
+      await batchDeleteAttendance({ ids: selectedIds })
+      setConfirmBatchDelete(false)
+      setSelectedIds([])
+      setDeleteConfirmText('')
+      setToast({ message: `${selectedIds.length} attendance record(s) deleted`, type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Batch delete failed', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div>
       <Toast message={toast?.message || ''} type={toast?.type || 'info'} visible={!!toast} onClose={() => setToast(null)} />
@@ -67,6 +98,14 @@ export default function AttendancePage() {
         </div>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="card p-3 mb-4 flex flex-wrap items-center gap-3 bg-blue-50 border-blue-200">
+          <span className="text-sm font-medium text-blue-800">{selectedIds.length} selected</span>
+          <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
+          <button onClick={() => { setConfirmBatchDelete(true); setDeleteConfirmText('') }} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 font-medium">Delete Selected</button>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-3 mb-4 text-xs">
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-100 border border-green-300" /> Present</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-yellow-100 border border-yellow-300" /> Pending</span>
@@ -84,7 +123,10 @@ export default function AttendancePage() {
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr>
-                <th className="sticky left-0 bg-white z-10 text-left py-2 pr-3 font-medium text-gray-500 min-w-[120px]">Employee</th>
+                <th className="sticky left-0 bg-white z-10 text-left py-2 pr-3 font-medium text-gray-500 w-10">
+                  <input type="checkbox" onChange={toggleSelectAll} checked={selectedIds.length === attendance.length && attendance.length > 0} className="rounded" />
+                </th>
+                <th className="sticky left-8 bg-white z-10 text-left py-2 pr-3 font-medium text-gray-500 min-w-[120px]">Employee</th>
                 <th className="text-left py-2 pr-3 font-medium text-gray-500">Stats</th>
                 {dayHeaders.map(d => (
                   <th key={d} className="w-7 text-center py-2 font-medium text-gray-400">{d}</th>
@@ -96,7 +138,10 @@ export default function AttendancePage() {
                 const s = emp.stats
                 return (
                   <tr key={emp.employeeId} className="border-t border-gray-100">
-                    <td className="sticky left-0 bg-white py-2 pr-3 font-medium text-gray-800 whitespace-nowrap">{emp.employeeName}</td>
+                    <td className="sticky left-0 bg-white py-2 pr-3">
+                      <input type="checkbox" checked={selectedIds.includes(emp.employeeId)} onChange={() => toggleSelect(emp.employeeId)} className="rounded" />
+                    </td>
+                    <td className="sticky left-8 bg-white py-2 pr-3 font-medium text-gray-800 whitespace-nowrap">{emp.employeeName}</td>
                     <td className="py-2 pr-3 text-gray-400 whitespace-nowrap">
                       ✅{s.present} 🟡{s.pending} ❌{s.absent} 🏖️{s.onLeave}
                     </td>
@@ -150,6 +195,34 @@ export default function AttendancePage() {
           </tbody>
         </table>
       </div>
+
+      {/* Batch delete with extra confirmation */}
+      {confirmBatchDelete && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setConfirmBatchDelete(false)}>
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete {selectedIds.length} Attendance Records?</h3>
+            <p className="text-sm text-gray-600 mb-2">This action will permanently delete attendance records. Type <strong>DELETE</strong> to confirm.</p>
+            <p className="text-sm font-medium text-red-600 mb-4">{selectedIds.length} records will be deleted.</p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              placeholder='Type "DELETE" to confirm'
+              className="input-field w-full mb-4"
+            />
+            <div className="flex justify-end gap-3">
+              <button onClick={() => { setConfirmBatchDelete(false); setDeleteConfirmText('') }} disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50">
+                Cancel
+              </button>
+              <button onClick={handleBatchDelete} disabled={deleting || deleteConfirmText !== 'DELETE'}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2">
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

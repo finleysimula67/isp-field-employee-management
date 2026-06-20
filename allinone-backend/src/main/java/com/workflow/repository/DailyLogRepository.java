@@ -6,6 +6,7 @@ import com.workflow.entity.LogStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
@@ -65,4 +66,12 @@ public interface DailyLogRepository extends JpaRepository<DailyLog, Long> {
 
     @Query("SELECT d FROM DailyLog d WHERE d.employee.id = :employeeId AND d.logDate BETWEEN :start AND :end AND d.deletedAt IS NULL")
     List<DailyLog> findByEmployeeIdAndLogDateBetween(@Param("employeeId") Long employeeId, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    @Modifying
+    @Query(value = "UPDATE daily_logs SET employee_id = :targetId WHERE employee_id = :sourceId", nativeQuery = true)
+    int transferEmployeeId(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
+
+    @Modifying
+    @Query(value = "UPDATE daily_logs SET reviewed_by = :targetId WHERE reviewed_by = :sourceId", nativeQuery = true)
+    int transferReviewedBy(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
 }

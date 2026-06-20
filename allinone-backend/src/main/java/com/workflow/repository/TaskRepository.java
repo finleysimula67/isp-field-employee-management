@@ -5,6 +5,7 @@ import com.workflow.entity.TaskStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
@@ -37,4 +38,12 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT COUNT(t) FROM Task t WHERE t.assignedTo.id = :assignedToId AND t.status = :status AND t.deletedAt IS NULL")
     long countByAssignedToIdAndStatus(@Param("assignedToId") Long assignedToId, @Param("status") TaskStatus status);
+
+    @Modifying
+    @Query(value = "UPDATE tasks SET assigned_to = :targetId WHERE assigned_to = :sourceId", nativeQuery = true)
+    int transferAssignedTo(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
+
+    @Modifying
+    @Query(value = "UPDATE tasks SET assigned_by = :targetId WHERE assigned_by = :sourceId", nativeQuery = true)
+    int transferAssignedBy(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
 }

@@ -44,3 +44,8 @@ export async function deleteCashCollection(id: number) {
   const res = await client.delete(`/cash-collections/${id}`)
   return res.data
 }
+
+export async function batchDeleteCashCollections(data: { ids: number[] }) {
+  const res = await client.post('/cash-collections/batch-delete', data)
+  return res.data
+}

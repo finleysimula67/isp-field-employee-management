@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getMyCashCollections, createCashCollection, getMyCashCollectionSummary } from '../../api/cashCollections'
+import { getMyCashCollections, createCashCollection, getMyCashCollectionSummary, deleteCashCollection, batchDeleteCashCollections } from '../../api/cashCollections'
 import { uploadFile } from '../../api/upload'
 import { useAuth } from '../../contexts/AuthContext'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { enqueue } from '../../services/offlineQueue'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
+import DeleteConfirmModal from '../../components/DeleteConfirmModal'
 
 const STATUS_COLORS: Record<string, string> = {
   APPROVED: 'bg-green-100 text-green-700',
@@ -47,6 +48,10 @@ export default function CashCollectionPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState('')
   const [gettingLocation, setGettingLocation] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const daysInMonth = new Date(year, month, 0).getDate()
   const dayHeaders = Array.from({ length: daysInMonth }, (_, i) => i + 1)
@@ -136,6 +141,43 @@ export default function CashCollectionPage() {
       setToast({ message: msg, type: 'error' })
     } finally { setSubmitting(false) }
   }
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  const handleDelete = async () => {
+    if (confirmDeleteId === null) return
+    setDeleting(true)
+    try {
+      await deleteCashCollection(confirmDeleteId)
+      setConfirmDeleteId(null)
+      setToast({ message: 'Cash collection deleted', type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Failed to delete', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    setDeleting(true)
+    try {
+      await batchDeleteCashCollections({ ids: selectedIds })
+      setConfirmBatchDelete(false)
+      setSelectedIds([])
+      setToast({ message: `${selectedIds.length} collection(s) deleted`, type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Batch delete failed', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const canSelect = (c: any) => c.status === 'PENDING'
 
   return (
     <div>
@@ -291,6 +333,13 @@ export default function CashCollectionPage() {
 
           <div className="card p-3 sm:p-4">
             <h3 className="font-display text-sm font-bold text-gray-900 mb-3">Recent Submissions</h3>
+            {selectedIds.length > 0 && (
+              <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+                <span className="text-sm font-medium text-blue-800">{selectedIds.length} selected</span>
+                <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
+                <button onClick={() => setConfirmBatchDelete(true)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 font-medium ml-auto">Delete Selected</button>
+              </div>
+            )}
             <div className="mb-3">
               <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="input-field w-full text-xs">
                 <option value="">All Status</option>
@@ -307,13 +356,25 @@ export default function CashCollectionPage() {
             ) : (
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {collections.map((c: any) => (
-                  <div key={c.id} className="py-2 border-b border-gray-50 last:border-0">
-                    <div className="flex items-center justify-between gap-2">
+                  <div key={c.id} className="flex items-center gap-2 py-2 border-b border-gray-50 last:border-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(c.id)}
+                      onChange={() => toggleSelect(c.id)}
+                      className="rounded shrink-0"
+                      disabled={!canSelect(c)}
+                    />
+                    <div className="flex items-center justify-between gap-2 flex-1">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-gray-900 truncate">{c.customerName}</p>
                         <p className="text-xs text-gray-500 truncate">{c.paymentMethod?.replace(/_/g, ' ')} • Rs. {Number(c.amount).toLocaleString()}</p>
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLORS[c.status] || 'bg-gray-100 text-gray-500'}`}>{c.status === 'PENDING' ? 'Pending' : c.status === 'APPROVED' ? 'Done' : c.status === 'REJECTED' ? 'No' : c.status?.replace(/_/g, ' ')}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[c.status] || 'bg-gray-100 text-gray-500'}`}>{c.status === 'PENDING' ? 'Pending' : c.status === 'APPROVED' ? 'Done' : c.status === 'REJECTED' ? 'No' : c.status?.replace(/_/g, ' ')}</span>
+                        {canSelect(c) && (
+                          <button onClick={() => setConfirmDeleteId(c.id)} className="text-xs text-red-500 hover:text-red-700">✕</button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -322,6 +383,8 @@ export default function CashCollectionPage() {
           </div>
         </div>
       </div>
+      <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Cash Collection?" message="This collection will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
+      <DeleteConfirmModal open={confirmBatchDelete} title={`Delete ${selectedIds.length} Collections?`} message="These cash collections will be soft-deleted and moved to the Recycle Bin." count={selectedIds.length} onConfirm={handleBatchDelete} onCancel={() => setConfirmBatchDelete(false)} loading={deleting} />
     </div>
   )
 }

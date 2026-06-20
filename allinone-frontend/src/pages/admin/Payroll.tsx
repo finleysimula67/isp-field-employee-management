@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getPayrollRecords, calculatePayroll, approvePayroll, markPaid, batchCalculatePayroll } from '../../api/payroll'
+import { getPayrollRecords, calculatePayroll, approvePayroll, markPaid, batchCalculatePayroll, batchDeletePayroll } from '../../api/payroll'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
@@ -22,6 +22,10 @@ export default function PayrollPage() {
   const [calcLoading, setCalcLoading] = useState(false)
   const [batchLoading, setBatchLoading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -93,6 +97,32 @@ export default function PayrollPage() {
 
   const empMap = new Map(employees.map((e: any) => [e.id, e]))
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === records.length) setSelectedIds([])
+    else setSelectedIds(records.map(r => r.id))
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    setDeleting(true)
+    try {
+      await batchDeletePayroll({ ids: selectedIds })
+      setConfirmBatchDelete(false)
+      setSelectedIds([])
+      setDeleteConfirmText('')
+      setToast({ message: `${selectedIds.length} payroll record(s) deleted`, type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Batch delete failed', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div>
       <Toast message={toast?.message || ''} type={toast?.type || 'info'} visible={!!toast} onClose={() => setToast(null)} />
@@ -136,10 +166,20 @@ export default function PayrollPage() {
           <button onClick={fetchData} className="btn-admin">Filter</button>
         </div>
       </div>
+      {selectedIds.length > 0 && (
+        <div className="card p-3 mb-4 flex flex-wrap items-center gap-3 bg-blue-50 border-blue-200">
+          <span className="text-sm font-medium text-blue-800">{selectedIds.length} selected</span>
+          <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
+          <button onClick={() => { setConfirmBatchDelete(true); setDeleteConfirmText('') }} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 font-medium">Delete Selected</button>
+        </div>
+      )}
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
+              <th className="text-left py-3 px-4 w-10">
+                <input type="checkbox" onChange={toggleSelectAll} checked={selectedIds.length === records.length && records.length > 0} className="rounded" />
+              </th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Employee</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Period</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Days/Hours</th>
@@ -153,9 +193,12 @@ export default function PayrollPage() {
             {loading ? (
               <Skeleton variant="table-row" count={5} />
             ) : records.length === 0 ? (
-              <tr><td colSpan={7} className="py-8 text-center text-gray-400">No records found</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-gray-400">No records found</td></tr>
             ) : records.map((rec: any) => (
               <tr key={rec.id} className="border-b border-gray-50 hover:bg-gray-50">
+                <td className="py-3 px-4">
+                  <input type="checkbox" checked={selectedIds.includes(rec.id)} onChange={() => toggleSelect(rec.id)} className="rounded" />
+                </td>
                 <td className="py-3 px-4 font-medium">{empMap.get(rec.employeeId)?.name || `#${rec.employeeId}`}</td>
                 <td className="py-3 px-4 text-gray-500">{rec.periodLabel}</td>
                 <td className="py-3 px-4 text-gray-500">{rec.daysWorked ?? '—'} day{rec.daysWorked !== 1 ? 's' : ''}</td>
@@ -182,6 +225,34 @@ export default function PayrollPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Batch delete with extra confirmation */}
+      {confirmBatchDelete && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setConfirmBatchDelete(false)}>
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete {selectedIds.length} Payroll Records?</h3>
+            <p className="text-sm text-gray-600 mb-2">This action will permanently delete payroll records. Type <strong>DELETE</strong> to confirm.</p>
+            <p className="text-sm font-medium text-red-600 mb-4">{selectedIds.length} records will be deleted.</p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              placeholder='Type "DELETE" to confirm'
+              className="input-field w-full mb-4"
+            />
+            <div className="flex justify-end gap-3">
+              <button onClick={() => { setConfirmBatchDelete(false); setDeleteConfirmText('') }} disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50">
+                Cancel
+              </button>
+              <button onClick={handleBatchDelete} disabled={deleting || deleteConfirmText !== 'DELETE'}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2">
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

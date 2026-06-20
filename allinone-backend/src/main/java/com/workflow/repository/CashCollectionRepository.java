@@ -5,6 +5,7 @@ import com.workflow.entity.CollectionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
@@ -38,4 +39,12 @@ public interface CashCollectionRepository extends JpaRepository<CashCollection, 
 
     @Query("SELECT COUNT(c) FROM CashCollection c WHERE c.status = :status AND c.deletedAt IS NULL")
     long countByStatus(@Param("status") CollectionStatus status);
+
+    @Modifying
+    @Query(value = "UPDATE cash_collections SET employee_id = :targetId WHERE employee_id = :sourceId", nativeQuery = true)
+    int transferEmployeeId(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
+
+    @Modifying
+    @Query(value = "UPDATE cash_collections SET reviewed_by = :targetId WHERE reviewed_by = :sourceId", nativeQuery = true)
+    int transferReviewedBy(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
 }

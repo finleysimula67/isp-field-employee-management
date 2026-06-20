@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
@@ -57,4 +58,12 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT l FROM LeaveRequest l WHERE l.id = :id")
     java.util.Optional<LeaveRequest> findByIdWithLock(@Param("id") Long id);
+
+    @Modifying
+    @Query(value = "UPDATE leave_requests SET employee_id = :targetId WHERE employee_id = :sourceId", nativeQuery = true)
+    int transferEmployeeId(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
+
+    @Modifying
+    @Query(value = "UPDATE leave_requests SET reviewed_by = :targetId WHERE reviewed_by = :sourceId", nativeQuery = true)
+    int transferReviewedBy(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
 }

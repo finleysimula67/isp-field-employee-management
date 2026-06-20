@@ -36,6 +36,8 @@ import ManualLogsPage from './pages/admin/ManualLogs'
 import CashCollectionsPage from './pages/admin/CashCollections'
 import RecycleBinPage from './pages/admin/RecycleBin'
 import ProfilePage from './pages/admin/Profile'
+import PurgePage from './pages/admin/Purge'
+import TransferOwnershipPage from './pages/admin/TransferOwnership'
 
 import EmpDashboard from './pages/employee/Dashboard'
 import EmpAttendancePage from './pages/employee/Attendance'
@@ -95,6 +97,8 @@ export default function App() {
           <Route path="cash-collections" element={<CashCollectionsPage />} />
           <Route path="recycle-bin" element={<RecycleBinPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="purge" element={<PurgePage />} />
+          <Route path="transfer-ownership" element={<TransferOwnershipPage />} />
         </Route>
 
         <Route

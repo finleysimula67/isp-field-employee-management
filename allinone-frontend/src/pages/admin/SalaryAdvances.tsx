@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getAdvances, reviewAdvance, manualAdvance, getBalanceForEmployee, deleteSalaryAdvance } from '../../api/salaryAdvances'
+import { getAdvances, reviewAdvance, manualAdvance, getBalanceForEmployee, deleteSalaryAdvance, batchDeleteSalaryAdvances } from '../../api/salaryAdvances'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
@@ -27,6 +27,8 @@ export default function SalaryAdvancesPage() {
   const [employeeBalance, setEmployeeBalance] = useState<any>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState(false)
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -102,6 +104,31 @@ export default function SalaryAdvancesPage() {
     }
   }
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === advances.length) setSelectedIds([])
+    else setSelectedIds(advances.map(a => a.id))
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    setDeleting(true)
+    try {
+      await batchDeleteSalaryAdvances({ ids: selectedIds })
+      setConfirmBatchDelete(false)
+      setSelectedIds([])
+      setToast({ message: `${selectedIds.length} advance(s) deleted`, type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Batch delete failed', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -163,10 +190,20 @@ export default function SalaryAdvancesPage() {
         </div>
       </div>
       <Toast message={toast?.message || ''} type={toast?.type || 'info'} visible={!!toast} onClose={() => setToast(null)} />
+      {selectedIds.length > 0 && (
+        <div className="card p-3 mb-4 flex flex-wrap items-center gap-3 bg-blue-50 border-blue-200">
+          <span className="text-sm font-medium text-blue-800">{selectedIds.length} selected</span>
+          <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
+          <button onClick={() => setConfirmBatchDelete(true)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 font-medium">Delete Selected</button>
+        </div>
+      )}
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
+              <th className="text-left py-3 px-4 w-10">
+                <input type="checkbox" onChange={toggleSelectAll} checked={selectedIds.length === advances.length && advances.length > 0} className="rounded" />
+              </th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Employee</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Amount</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Date</th>
@@ -180,9 +217,12 @@ export default function SalaryAdvancesPage() {
             {loading ? (
               <Skeleton variant="table-row" count={5} />
             ) : advances.length === 0 ? (
-              <tr><td colSpan={7} className="py-8 text-center text-gray-400">No advances found</td></tr>
+              <tr><td colSpan={8} className="py-8 text-center text-gray-400">No advances found</td></tr>
             ) : advances.map((adv: any) => (
               <tr key={adv.id} className="border-b border-gray-50 hover:bg-gray-50">
+                <td className="py-3 px-4">
+                  <input type="checkbox" checked={selectedIds.includes(adv.id)} onChange={() => toggleSelect(adv.id)} className="rounded" />
+                </td>
                 <td className="py-3 px-4 font-medium">{empMap.get(adv.employeeId)?.name || `#${adv.employeeId}`}</td>
                 <td className="py-3 px-4 text-gray-500">Rs. {Number(adv.amount).toFixed(2)}</td>
                 <td className="py-3 px-4 text-gray-500">{adv.requestDate?.slice(0, 10) || '—'}</td>
@@ -229,6 +269,7 @@ export default function SalaryAdvancesPage() {
         </table>
       </div>
       <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Salary Advance?" message="This advance will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
+      <DeleteConfirmModal open={confirmBatchDelete} title={`Delete ${selectedIds.length} Advances?`} message="These salary advances will be soft-deleted and moved to the Recycle Bin." count={selectedIds.length} onConfirm={handleBatchDelete} onCancel={() => setConfirmBatchDelete(false)} loading={deleting} />
     </div>
   )
 }

@@ -19,3 +19,8 @@ export async function deleteBranch(id: number) {
   const res = await client.delete(`/branches/${id}`)
   return res.data
 }
+
+export async function batchDeleteBranches(data: { ids: number[] }) {
+  const res = await client.post('/branches/batch-delete', data)
+  return res.data
+}

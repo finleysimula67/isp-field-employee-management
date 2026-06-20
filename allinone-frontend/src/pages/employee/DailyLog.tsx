@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { getMyLogs, createDailyLog } from '../../api/dailyLogs'
+import { getMyLogs, createDailyLog, deleteDailyLog, batchDeleteDailyLogs } from '../../api/dailyLogs'
 import { uploadFile } from '../../api/upload'
 import { useAuth } from '../../contexts/AuthContext'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
@@ -7,6 +7,7 @@ import { enqueue } from '../../services/offlineQueue'
 import TimePicker from '../../components/TimePicker'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
+import DeleteConfirmModal from '../../components/DeleteConfirmModal'
 
 const categories = [
   'NEW_FIBER_CONNECTION',
@@ -54,6 +55,10 @@ export default function DailyLogPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState('')
   const [gettingLocation, setGettingLocation] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchLogs = useCallback(() => {
     setLoading(true)
@@ -136,6 +141,43 @@ export default function DailyLogPage() {
     }
   }
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  const handleDelete = async () => {
+    if (confirmDeleteId === null) return
+    setDeleting(true)
+    try {
+      await deleteDailyLog(confirmDeleteId)
+      setConfirmDeleteId(null)
+      setToast({ message: 'Daily log deleted', type: 'success' })
+      fetchLogs()
+    } catch {
+      setToast({ message: 'Failed to delete log', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    setDeleting(true)
+    try {
+      await batchDeleteDailyLogs({ ids: selectedIds })
+      setConfirmBatchDelete(false)
+      setSelectedIds([])
+      setToast({ message: `${selectedIds.length} log(s) deleted`, type: 'success' })
+      fetchLogs()
+    } catch {
+      setToast({ message: 'Batch delete failed', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const canSelect = (log: any) => log.status === 'PENDING'
+
   return (
     <div>
       <h1 className="font-display text-xl font-bold text-gray-900 mb-6">Daily Log</h1>
@@ -203,6 +245,13 @@ export default function DailyLogPage() {
         </div>
         <div className="lg:col-span-2 card p-4">
           <h2 className="font-display text-base font-bold text-gray-900 mb-4">My Recent Logs</h2>
+          {selectedIds.length > 0 && (
+            <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+              <span className="text-sm font-medium text-blue-800">{selectedIds.length} selected</span>
+              <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
+              <button onClick={() => setConfirmBatchDelete(true)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 font-medium ml-auto">Delete Selected</button>
+            </div>
+          )}
           <div className="flex gap-2 mb-4">
             <input type="date" value={filterDate} onChange={e => { setFilterDate(e.target.value); fetchLogs() }} className="input-field flex-1" />
             <select value={filterCategory} onChange={e => { setFilterCategory(e.target.value); fetchLogs() }} className="input-field flex-1">
@@ -219,23 +268,39 @@ export default function DailyLogPage() {
           ) : (
             <div className="space-y-2">
               {logs.map((log: any) => (
-                <div key={log.id} className="flex items-center justify-between py-2 border-b border-gray-50">
-                  <div className="flex items-center gap-2">
-                    {log.photoUrls?.[0] && (
-                      <img src={log.photoUrls[0]} className="h-8 w-8 object-cover rounded" />
-                    )}
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{log.logDate}</p>
-                      <p className="text-xs text-gray-500">{log.category?.replace(/_/g, ' ')} • {log.hoursWorked ?? '—'}h</p>
+                <div key={log.id} className="flex items-center gap-2 py-2 border-b border-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(log.id)}
+                    onChange={() => toggleSelect(log.id)}
+                    className="rounded shrink-0"
+                    disabled={!canSelect(log)}
+                  />
+                  <div className="flex items-center justify-between flex-1 gap-2">
+                    <div className="flex items-center gap-2">
+                      {log.photoUrls?.[0] && (
+                        <img src={log.photoUrls[0]} className="h-8 w-8 object-cover rounded" />
+                      )}
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{log.logDate}</p>
+                        <p className="text-xs text-gray-500">{log.category?.replace(/_/g, ' ')} • {log.hoursWorked ?? '—'}h</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={statusColors[log.status] || 'badge-pending'}>{log.status?.replace(/_/g, ' ')}</span>
+                      {canSelect(log) && (
+                        <button onClick={() => setConfirmDeleteId(log.id)} className="text-xs text-red-500 hover:text-red-700">✕</button>
+                      )}
                     </div>
                   </div>
-                  <span className={statusColors[log.status] || 'badge-pending'}>{log.status?.replace(/_/g, ' ')}</span>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
+      <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Daily Log?" message="This log will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
+      <DeleteConfirmModal open={confirmBatchDelete} title={`Delete ${selectedIds.length} Logs?`} message="These logs will be soft-deleted and moved to the Recycle Bin." count={selectedIds.length} onConfirm={handleBatchDelete} onCancel={() => setConfirmBatchDelete(false)} loading={deleting} />
     </div>
   )
 }

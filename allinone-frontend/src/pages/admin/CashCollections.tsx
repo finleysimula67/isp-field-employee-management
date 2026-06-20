@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
-import { getCashCollections, getCashCollectionSummary, reviewCashCollection, batchReviewCashCollections, createCashCollectionAdmin, deleteCashCollection } from '../../api/cashCollections'
+import { getCashCollections, getCashCollectionSummary, reviewCashCollection, batchReviewCashCollections, createCashCollectionAdmin, deleteCashCollection, batchDeleteCashCollections } from '../../api/cashCollections'
 import { getEmployees } from '../../api/employees'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
@@ -36,6 +36,8 @@ export default function CashCollectionsPage() {
   const [addForm, setAddForm] = useState({ employeeId: '', customerName: '', customerPhone: '', customerAddress: '', amount: '', paymentMethod: '', serviceType: '', description: '' })
   const [addSubmitting, setAddSubmitting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const daysInMonth = new Date(year, month, 0).getDate()
   const dayHeaders = Array.from({ length: daysInMonth }, (_, i) => i + 1)
@@ -141,6 +143,22 @@ export default function CashCollectionsPage() {
     } catch {
       setToast({ message: 'Batch review failed', type: 'error' })
     } finally { setBatchProcessing(false) }
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    setDeleting(true)
+    try {
+      await batchDeleteCashCollections({ ids: selectedIds })
+      setConfirmBatchDelete(false)
+      setSelectedIds([])
+      setToast({ message: `${selectedIds.length} collection(s) deleted`, type: 'success' })
+      fetchList()
+    } catch {
+      setToast({ message: 'Batch delete failed', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const handleManualAdd = async (e: React.FormEvent) => {
@@ -331,6 +349,7 @@ export default function CashCollectionsPage() {
                 {batchProcessing ? 'Processing...' : `Apply ${batchAction}`}
               </button>
               <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
+              <button onClick={() => setConfirmBatchDelete(true)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 font-medium">Delete Selected</button>
             </div>
           )}
           <div className="card overflow-x-auto">
@@ -446,6 +465,7 @@ export default function CashCollectionsPage() {
       )}
 
       <DeleteConfirmModal open={confirmDelete !== null} title="Delete Cash Collection?" message="This collection will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={() => { if (confirmDelete !== null) handleDelete(confirmDelete) }} onCancel={() => setConfirmDelete(null)} />
+      <DeleteConfirmModal open={confirmBatchDelete} title={`Delete ${selectedIds.length} Collections?`} message="These cash collections will be soft-deleted and moved to the Recycle Bin." count={selectedIds.length} onConfirm={handleBatchDelete} onCancel={() => setConfirmBatchDelete(false)} loading={deleting} />
 
       {showAddModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>

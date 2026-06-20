@@ -2,6 +2,7 @@ package com.workflow.repository;
 
 import com.workflow.entity.EmailAllowList;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.Optional;
@@ -12,4 +13,8 @@ public interface EmailAllowListRepository extends JpaRepository<EmailAllowList, 
 
     @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM EmailAllowList e WHERE e.email = :email AND e.deletedAt IS NULL")
     boolean existsByEmail(@Param("email") String email);
+
+    @Modifying
+    @Query(value = "UPDATE email_allow_list SET added_by = :targetId WHERE added_by = :sourceId", nativeQuery = true)
+    int transferAddedBy(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
 }

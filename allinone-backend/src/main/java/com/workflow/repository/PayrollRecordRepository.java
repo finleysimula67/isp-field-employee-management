@@ -4,6 +4,7 @@ import com.workflow.entity.PayrollRecord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
@@ -23,4 +24,12 @@ public interface PayrollRecordRepository extends JpaRepository<PayrollRecord, Lo
 
     @Query("SELECT p FROM PayrollRecord p JOIN FETCH p.employee WHERE p.id = :id AND p.deletedAt IS NULL")
     java.util.Optional<PayrollRecord> findByIdWithEmployee(@Param("id") Long id);
+
+    @Modifying
+    @Query(value = "UPDATE payroll_records SET employee_id = :targetId WHERE employee_id = :sourceId", nativeQuery = true)
+    int transferEmployeeId(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
+
+    @Modifying
+    @Query(value = "UPDATE payroll_records SET paid_by = :targetId WHERE paid_by = :sourceId", nativeQuery = true)
+    int transferPaidBy(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
 }

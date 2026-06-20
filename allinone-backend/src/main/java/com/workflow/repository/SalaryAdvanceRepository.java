@@ -5,6 +5,7 @@ import com.workflow.entity.SalaryAdvance;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
@@ -34,4 +35,12 @@ public interface SalaryAdvanceRepository extends JpaRepository<SalaryAdvance, Lo
 
     @Query("SELECT s FROM SalaryAdvance s JOIN FETCH s.employee WHERE s.id = :id AND s.deletedAt IS NULL")
     java.util.Optional<SalaryAdvance> findByIdWithEmployee(@Param("id") Long id);
+
+    @Modifying
+    @Query(value = "UPDATE salary_advances SET employee_id = :targetId WHERE employee_id = :sourceId", nativeQuery = true)
+    int transferEmployeeId(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
+
+    @Modifying
+    @Query(value = "UPDATE salary_advances SET approved_by = :targetId WHERE approved_by = :sourceId", nativeQuery = true)
+    int transferApprovedBy(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
 }

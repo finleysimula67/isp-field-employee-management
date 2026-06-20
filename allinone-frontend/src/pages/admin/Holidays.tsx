@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getHolidays, createHoliday, deleteHoliday } from '../../api/holidays'
+import { getHolidays, createHoliday, deleteHoliday, batchDeleteHolidays } from '../../api/holidays'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
 import DeleteConfirmModal from '../../components/DeleteConfirmModal'
@@ -12,6 +12,8 @@ export default function HolidaysPage() {
   const [submitting, setSubmitting] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState(false)
 
   const fetchData = () => {
     setLoading(true)
@@ -47,6 +49,31 @@ export default function HolidaysPage() {
     finally { setDeleting(false) }
   }
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === holidays.length) setSelectedIds([])
+    else setSelectedIds(holidays.map(h => h.id))
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    setDeleting(true)
+    try {
+      await batchDeleteHolidays({ ids: selectedIds })
+      setConfirmBatchDelete(false)
+      setSelectedIds([])
+      setToast({ message: `${selectedIds.length} holiday(s) deleted`, type: 'success' })
+      fetchData()
+    } catch {
+      setToast({ message: 'Batch delete failed', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -79,10 +106,20 @@ export default function HolidaysPage() {
           </div>
         </form>
       </div>
+      {selectedIds.length > 0 && (
+        <div className="card p-3 mb-4 flex flex-wrap items-center gap-3 bg-blue-50 border-blue-200">
+          <span className="text-sm font-medium text-blue-800">{selectedIds.length} selected</span>
+          <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
+          <button onClick={() => setConfirmBatchDelete(true)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 font-medium">Delete Selected</button>
+        </div>
+      )}
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
+              <th className="text-left py-3 px-4 w-10">
+                <input type="checkbox" onChange={toggleSelectAll} checked={selectedIds.length === holidays.length && holidays.length > 0} className="rounded" />
+              </th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Date</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Name</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Recurring</th>
@@ -94,9 +131,12 @@ export default function HolidaysPage() {
             {loading ? (
               <Skeleton variant="table-row" count={5} />
             ) : holidays.length === 0 ? (
-              <tr><td colSpan={5} className="py-8 text-center text-gray-400">Nothing here yet</td></tr>
+              <tr><td colSpan={6} className="py-8 text-center text-gray-400">Nothing here yet</td></tr>
             ) : holidays.map((h: any) => (
               <tr key={h.id} className="border-b border-gray-50 hover:bg-gray-50">
+                <td className="py-3 px-4">
+                  <input type="checkbox" checked={selectedIds.includes(h.id)} onChange={() => toggleSelect(h.id)} className="rounded" />
+                </td>
                 <td className="py-3 px-4 font-medium">{h.date}</td>
                 <td className="py-3 px-4 text-gray-500">{h.name}</td>
                 <td className="py-3 px-4">{h.isRecurring ? 'Yes' : 'No'}</td>
@@ -110,6 +150,7 @@ export default function HolidaysPage() {
         </table>
       </div>
       <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Holiday?" message="This holiday will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
+      <DeleteConfirmModal open={confirmBatchDelete} title={`Delete ${selectedIds.length} Holidays?`} message="These holidays will be soft-deleted and moved to the Recycle Bin." count={selectedIds.length} onConfirm={handleBatchDelete} onCancel={() => setConfirmBatchDelete(false)} loading={deleting} />
     </div>
   )
 }

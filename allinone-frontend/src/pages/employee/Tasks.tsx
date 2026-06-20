@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { getMyTasks, updateTaskStatus } from '../../api/tasks'
+import { getMyTasks, updateTaskStatus, deleteTask, batchDeleteTasks } from '../../api/tasks'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
+import DeleteConfirmModal from '../../components/DeleteConfirmModal'
 
 const priorityColors: Record<string, string> = {
   LOW: 'bg-gray-100 text-gray-700',
@@ -24,6 +25,10 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('All')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [confirmBatchDelete, setConfirmBatchDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const fetchTasks = () => {
     setLoading(true)
@@ -46,6 +51,43 @@ export default function TasksPage() {
     }
   }
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  const handleDelete = async () => {
+    if (confirmDeleteId === null) return
+    setDeleting(true)
+    try {
+      await deleteTask(confirmDeleteId)
+      setConfirmDeleteId(null)
+      setToast({ message: 'Task deleted', type: 'success' })
+      fetchTasks()
+    } catch {
+      setToast({ message: 'Failed to delete task', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.length === 0) return
+    setDeleting(true)
+    try {
+      await batchDeleteTasks({ ids: selectedIds })
+      setConfirmBatchDelete(false)
+      setSelectedIds([])
+      setToast({ message: `${selectedIds.length} task(s) deleted`, type: 'success' })
+      fetchTasks()
+    } catch {
+      setToast({ message: 'Batch delete failed', type: 'error' })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const canSelect = (task: any) => task.status === 'OPEN'
+
   return (
     <div>
       <h1 className="font-display text-xl font-bold text-gray-900 mb-6">My Tasks</h1>
@@ -65,6 +107,13 @@ export default function TasksPage() {
         ))}
       </div>
       <Toast message={toast?.message || ''} type={toast?.type || 'info'} visible={!!toast} onClose={() => setToast(null)} />
+      {selectedIds.length > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+          <span className="text-sm font-medium text-blue-800">{selectedIds.length} selected</span>
+          <button onClick={() => setSelectedIds([])} className="btn-ghost text-xs">Clear</button>
+          <button onClick={() => setConfirmBatchDelete(true)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 font-medium ml-auto">Delete Selected</button>
+        </div>
+      )}
       {loading ? (
         <Skeleton variant="card" count={4} />
       ) : tasks.length === 0 ? (
@@ -73,38 +122,51 @@ export default function TasksPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {tasks.map((task: any) => (
             <div key={task.id} className="card p-4">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-display font-bold text-gray-900 text-sm">{task.title}</h3>
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${priorityColors[task.priority] || 'bg-gray-100 text-gray-700'}`}>
-                  {task.priority}
-                </span>
-              </div>
-              {task.description && (
-                <p className="text-xs text-gray-500 mb-2">{task.description}</p>
-              )}
-              <div className="flex items-center justify-between mb-2">
-                <span className={statusColors[task.status] || 'badge-pending'}>{task.status?.replace(/_/g, ' ')}</span>
-                <span className="text-xs text-gray-400">Scheduled: {task.scheduledDate || '—'}</span>
-              </div>
-              {(task.customerName || task.customerPhone) && (
-                <div className="bg-gray-50 rounded-md p-2 mb-3">
-                  {task.customerName && <p className="text-xs text-gray-600"><strong>Customer:</strong> {task.customerName}</p>}
-                  {task.customerPhone && <p className="text-xs text-gray-600"><strong>Phone:</strong> {task.customerPhone}</p>}
-                  {task.customerAddress && <p className="text-xs text-gray-600"><strong>Address:</strong> {task.customerAddress}</p>}
+              <div className="flex items-start gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(task.id)}
+                  onChange={() => toggleSelect(task.id)}
+                  className="rounded mt-0.5 shrink-0"
+                  disabled={!canSelect(task)}
+                />
+                <div className="flex-1">
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-display font-bold text-gray-900 text-sm">{task.title}</h3>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${priorityColors[task.priority] || 'bg-gray-100 text-gray-700'}`}>
+                      {task.priority}
+                    </span>
+                  </div>
+                  {task.description && (
+                    <p className="text-xs text-gray-500 mb-2">{task.description}</p>
+                  )}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={statusColors[task.status] || 'badge-pending'}>{task.status?.replace(/_/g, ' ')}</span>
+                    <span className="text-xs text-gray-400">Scheduled: {task.scheduledDate || '—'}</span>
+                  </div>
+                  {(task.customerName || task.customerPhone) && (
+                    <div className="bg-gray-50 rounded-md p-2 mb-3">
+                      {task.customerName && <p className="text-xs text-gray-600"><strong>Customer:</strong> {task.customerName}</p>}
+                      {task.customerPhone && <p className="text-xs text-gray-600"><strong>Phone:</strong> {task.customerPhone}</p>}
+                      {task.customerAddress && <p className="text-xs text-gray-600"><strong>Address:</strong> {task.customerAddress}</p>}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    {task.status === 'OPEN' && (
+                      <button onClick={() => handleStatusUpdate(task.id, 'IN_PROGRESS')} className="btn-primary text-xs flex-1">Mark In Progress</button>
+                    )}
+                    {task.status === 'IN_PROGRESS' && (
+                      <button onClick={() => handleStatusUpdate(task.id, 'COMPLETED')} className="btn-primary text-xs flex-1">Mark Complete</button>
+                    )}
+                  </div>
                 </div>
-              )}
-              <div className="flex gap-2">
-                {task.status === 'OPEN' && (
-                  <button onClick={() => handleStatusUpdate(task.id, 'IN_PROGRESS')} className="btn-primary text-xs flex-1">Mark In Progress</button>
-                )}
-                {task.status === 'IN_PROGRESS' && (
-                  <button onClick={() => handleStatusUpdate(task.id, 'COMPLETED')} className="btn-primary text-xs flex-1">Mark Complete</button>
-                )}
               </div>
             </div>
           ))}
         </div>
       )}
+      <DeleteConfirmModal open={confirmDeleteId !== null} title="Delete Task?" message="This task will be soft-deleted and moved to the Recycle Bin. This action can be undone." onConfirm={handleDelete} onCancel={() => setConfirmDeleteId(null)} loading={deleting} />
+      <DeleteConfirmModal open={confirmBatchDelete} title={`Delete ${selectedIds.length} Tasks?`} message="These tasks will be soft-deleted and moved to the Recycle Bin." count={selectedIds.length} onConfirm={handleBatchDelete} onCancel={() => setConfirmBatchDelete(false)} loading={deleting} />
     </div>
   )
 }

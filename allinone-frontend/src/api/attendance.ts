@@ -19,3 +19,8 @@ export async function getMyWageSummary(month: number, year: number) {
   const res = await client.get('/attendance/my/wages', { params: { month, year } })
   return res.data
 }
+
+export async function batchDeleteAttendance(data: { ids: number[] }) {
+  const res = await client.post('/attendance/batch-delete', data)
+  return res.data
+}

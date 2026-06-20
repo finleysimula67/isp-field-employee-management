@@ -29,3 +29,8 @@ export async function batchCalculatePayroll(data: { periodStart: string; periodE
   const res = await client.post('/payroll/batch-calculate', data)
   return res.data
 }
+
+export async function batchDeletePayroll(data: { ids: number[] }) {
+  const res = await client.post('/payroll/batch-delete', data)
+  return res.data
+}

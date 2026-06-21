@@ -78,6 +78,7 @@ export default function LoginPage() {
             const { data } = await client.post('/auth/google-login', { idToken: res.credential })
             if (data.success) {
               const d = data.data
+              localStorage.setItem('token', d.token)
               const empRes = await client.get('/employees/me')
               const employeeData = empRes.data.data as Employee
               authLogin(d.token, employeeData)

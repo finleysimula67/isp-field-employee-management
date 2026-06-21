@@ -1,5 +1,7 @@
 package com.workflow.websocket;
 
+import com.workflow.entity.Employee;
+import com.workflow.repository.EmployeeRepository;
 import com.workflow.security.JwtTokenProvider;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -11,9 +13,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuthChannelInterceptor implements ChannelInterceptor {
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmployeeRepository employeeRepository;
 
-    public AuthChannelInterceptor(JwtTokenProvider jwtTokenProvider) {
+    public AuthChannelInterceptor(JwtTokenProvider jwtTokenProvider, EmployeeRepository employeeRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.employeeRepository = employeeRepository;
     }
 
     @Override
@@ -25,7 +29,11 @@ public class AuthChannelInterceptor implements ChannelInterceptor {
                 String token = authHeader.substring(7);
                 if (jwtTokenProvider.validateToken(token)) {
                     Long userId = jwtTokenProvider.getUserIdFromToken(token);
-                    accessor.setUser(new StompPrincipal(userId.toString(), userId));
+                    Employee employee = employeeRepository.findById(userId).orElse(null);
+                    if (employee != null && Boolean.TRUE.equals(employee.getIsActive())
+                            && Boolean.TRUE.equals(employee.getIsAccountApproved())) {
+                        accessor.setUser(new StompPrincipal(userId.toString(), userId));
+                    }
                 }
             }
         }

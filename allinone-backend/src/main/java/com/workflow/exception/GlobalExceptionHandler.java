@@ -32,7 +32,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException e) {
         log.warn("Data integrity violation: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error("Data conflict: " + e.getMostSpecificCause().getMessage()));
+        String msg = e.getMostSpecificCause() != null ? e.getMostSpecificCause().getMessage() : null;
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(msg != null ? msg : "Data conflict"));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)

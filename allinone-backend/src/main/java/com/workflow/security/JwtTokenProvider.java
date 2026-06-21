@@ -46,12 +46,13 @@ public class JwtTokenProvider {
         }
     }
 
-    public String generateToken(Long userId, String email, String role) {
+    public String generateToken(Long userId, String email, String role, int tokenVersion) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + jwtExpirationMs);
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("email", email).claim("role", role)
+                .claim("tokenVersion", tokenVersion)
                 .issuedAt(now).expiration(expiry)
                 .signWith(jwtSecret).compact();
     }
@@ -60,6 +61,12 @@ public class JwtTokenProvider {
         Claims claims = Jwts.parser().verifyWith(jwtSecret).build()
                 .parseSignedClaims(token).getPayload();
         return Long.parseLong(claims.getSubject());
+    }
+
+    public int getTokenVersionFromToken(String token) {
+        Claims claims = Jwts.parser().verifyWith(jwtSecret).build()
+                .parseSignedClaims(token).getPayload();
+        return claims.get("tokenVersion", Integer.class);
     }
 
     public boolean validateToken(String token) {

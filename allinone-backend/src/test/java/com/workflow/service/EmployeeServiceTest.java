@@ -13,6 +13,8 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -149,8 +151,8 @@ class EmployeeServiceTest {
         req.setPassword("pass123");
         employeeService.createEmployee(req);
 
-        List<EmployeeResponse> all = employeeService.getAllEmployees();
-        assertEquals(2, all.size());
+        Page<EmployeeResponse> page = employeeService.getAllEmployees(Pageable.unpaged());
+        assertEquals(2, page.getTotalElements());
     }
 
     @Test

@@ -15,8 +15,8 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
     hikari:
       connection-timeout: 5000
-      maximum-pool-size: 5
-      minimum-idle: 1
+      maximum-pool-size: 30
+      minimum-idle: 5
       initialization-fail-timeout: 30000
 
   jpa:
@@ -32,7 +32,8 @@ spring:
           time_zone: Asia/Kathmandu
 
   flyway:
-    enabled: false
+    enabled: true
+    baseline-on-migrate: true
 
   mail:
     host: smtp.gmail.com
@@ -80,7 +81,7 @@ app:
 
   jwt:
     secret: ${APP_JWT_SECRET}
-    expiration-ms: 2592000000
+    expiration-ms: 31536000000
 
   auth:
     allowed-emails: ${ALLOWED_EMAILS}

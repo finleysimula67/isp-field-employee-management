@@ -33,6 +33,7 @@ public class Employee {
     @Column(name = "phone") private String phone;
     @Column(name = "is_owner") private Boolean isOwner;
     @Column(name = "max_advance_limit") private BigDecimal maxAdvanceLimit;
+    @Column(name = "token_version") private Integer tokenVersion;
     @Column(name = "created_at", updatable = false) private LocalDateTime createdAt;
     @Column(name = "updated_at") private LocalDateTime updatedAt;
     // version column intentionally omitted — schema was created without it
@@ -48,7 +49,7 @@ public class Employee {
         this.isActive = isActive; this.isAccountApproved = isAccountApproved; this.wageType = wageType;
         this.dailyRate = dailyRate; this.hourlyWage = hourlyWage;
         this.remainingLeaveDays = remainingLeaveDays; this.carryOverLeave = carryOverLeave;
-        this.isOwner = false; this.maxAdvanceLimit = maxAdvanceLimit;
+        this.isOwner = false; this.maxAdvanceLimit = maxAdvanceLimit; this.tokenVersion = 0;
     }
 
     public Long getId() { return id; }
@@ -77,6 +78,8 @@ public class Employee {
     public void setIsOwner(Boolean isOwner) { this.isOwner = isOwner; }
     public BigDecimal getMaxAdvanceLimit() { return maxAdvanceLimit; }
     public void setMaxAdvanceLimit(BigDecimal maxAdvanceLimit) { this.maxAdvanceLimit = maxAdvanceLimit; }
+    public Integer getTokenVersion() { return tokenVersion; }
+    public void setTokenVersion(Integer tokenVersion) { this.tokenVersion = tokenVersion; }
     public WageType getWageType() { return wageType; }
     public void setWageType(WageType wageType) { this.wageType = wageType; }
     public BigDecimal getDailyRate() { return dailyRate; }
@@ -106,6 +109,7 @@ public class Employee {
         if (remainingLeaveDays == null) remainingLeaveDays = BigDecimal.ZERO;
         if (carryOverLeave == null) carryOverLeave = BigDecimal.ZERO;
         if (maxAdvanceLimit == null) maxAdvanceLimit = BigDecimal.valueOf(5000);
+        if (tokenVersion == null) tokenVersion = 0;
     }
     @PreUpdate
     protected void onUpdate() { updatedAt = LocalDateTime.now(); }

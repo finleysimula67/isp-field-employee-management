@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     Optional<Employee> findByIsOwnerTrue();
@@ -20,10 +22,18 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.branch")
     List<Employee> findAllWithBranch();
 
+    @Query(value = "SELECT e FROM Employee e LEFT JOIN FETCH e.branch",
+           countQuery = "SELECT COUNT(e) FROM Employee e")
+    Page<Employee> findAllWithBranch(Pageable pageable);
+
     @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.branch WHERE e.id = :id")
     Optional<Employee> findByIdWithBranch(@Param("id") Long id);
 
     @Modifying
     @Query("UPDATE Employee e SET e.isActive = false, e.isOwner = false WHERE e.id = :id")
     int deactivateAndRemoveOwnership(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Employee e SET e.tokenVersion = COALESCE(e.tokenVersion, 0) + 1 WHERE e.id = :id")
+    int incrementTokenVersion(@Param("id") Long id);
 }

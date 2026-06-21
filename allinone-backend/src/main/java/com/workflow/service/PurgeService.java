@@ -55,25 +55,25 @@ public class PurgeService {
         Map<String, Integer> counts = new LinkedHashMap<>();
         int total = 0;
 
-        total += deleteTable("RecycleBin", recycleBinRepository::count, recycleBinRepository::deleteAll, counts);
-        total += deleteTable("Notification", notificationRepository::count, notificationRepository::deleteAll, counts);
-        total += deleteTable("AuditLog", auditLogRepository::count, auditLogRepository::deleteAll, counts);
-        total += deleteTable("MonthlyLockout", monthlyLockoutRepository::count, monthlyLockoutRepository::deleteAll, counts);
-        total += deleteTable("PayrollRecord", payrollRecordRepository::count, payrollRecordRepository::deleteAll, counts);
-        total += deleteTable("SalaryAdvance", salaryAdvanceRepository::count, salaryAdvanceRepository::deleteAll, counts);
-        total += deleteTable("DailyLog", dailyLogRepository::count, dailyLogRepository::deleteAll, counts);
-        total += deleteTable("CashCollection", cashCollectionRepository::count, cashCollectionRepository::deleteAll, counts);
-        total += deleteTable("LeaveRequest", leaveRequestRepository::count, leaveRequestRepository::deleteAll, counts);
-        total += deleteTable("Task", taskRepository::count, taskRepository::deleteAll, counts);
-        total += deleteTable("Holiday", holidayRepository::count, holidayRepository::deleteAll, counts);
+        total += deleteTable("RecycleBin", recycleBinRepository::count, recycleBinRepository::deleteAllInBatch, counts);
+        total += deleteTable("Notification", notificationRepository::count, notificationRepository::deleteAllInBatch, counts);
+        total += deleteTable("AuditLog", auditLogRepository::count, auditLogRepository::deleteAllInBatch, counts);
+        total += deleteTable("MonthlyLockout", monthlyLockoutRepository::count, monthlyLockoutRepository::deleteAllInBatch, counts);
+        total += deleteTable("PayrollRecord", payrollRecordRepository::count, payrollRecordRepository::deleteAllInBatch, counts);
+        total += deleteTable("SalaryAdvance", salaryAdvanceRepository::count, salaryAdvanceRepository::deleteAllInBatch, counts);
+        total += deleteTable("DailyLog", dailyLogRepository::count, dailyLogRepository::deleteAllInBatch, counts);
+        total += deleteTable("CashCollection", cashCollectionRepository::count, cashCollectionRepository::deleteAllInBatch, counts);
+        total += deleteTable("LeaveRequest", leaveRequestRepository::count, leaveRequestRepository::deleteAllInBatch, counts);
+        total += deleteTable("Task", taskRepository::count, taskRepository::deleteAllInBatch, counts);
+        total += deleteTable("Holiday", holidayRepository::count, holidayRepository::deleteAllInBatch, counts);
 
         return new PurgeResult(counts, total);
     }
 
-    private int deleteTable(String name, Counter counter, Runnable deleter, Map<String, Integer> counts) {
+    private int deleteTable(String name, Counter counter, BatchDeleter deleter, Map<String, Integer> counts) {
         int before = (int) counter.count();
         if (before > 0) {
-            deleter.run();
+            deleter.deleteAllInBatch();
         }
         counts.put(name, before);
         return before;
@@ -82,5 +82,10 @@ public class PurgeService {
     @FunctionalInterface
     private interface Counter {
         long count();
+    }
+
+    @FunctionalInterface
+    private interface BatchDeleter {
+        void deleteAllInBatch();
     }
 }

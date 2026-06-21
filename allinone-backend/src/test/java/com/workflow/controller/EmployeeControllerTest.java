@@ -22,6 +22,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -61,12 +64,13 @@ class EmployeeControllerTest {
 
     @Test
     void getAll_shouldReturnEmployees() throws Exception {
-        when(employeeService.getAllEmployees())
-                .thenReturn(List.of(createResponse(1L, "Alice", "FIELD_EMPLOYEE")));
+        Page<EmployeeResponse> page = new PageImpl<>(List.of(createResponse(1L, "Alice", "FIELD_EMPLOYEE")));
+        when(employeeService.getAllEmployees(any(Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(get("/api/employees"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].name").value("Alice"));
+                .andExpect(jsonPath("$.data.content[0].name").value("Alice"));
     }
 
     @Test

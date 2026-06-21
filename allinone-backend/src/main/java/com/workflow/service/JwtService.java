@@ -14,6 +14,7 @@ public class JwtService {
     public JwtService(JwtTokenProvider jwtTokenProvider) { this.jwtTokenProvider = jwtTokenProvider; }
 
     public String generateToken(Employee employee) {
-        return jwtTokenProvider.generateToken(employee.getId(), employee.getEmail(), employee.getRole().name());
+        return jwtTokenProvider.generateToken(employee.getId(), employee.getEmail(), employee.getRole().name(),
+                employee.getTokenVersion() != null ? employee.getTokenVersion() : 0);
     }
 }

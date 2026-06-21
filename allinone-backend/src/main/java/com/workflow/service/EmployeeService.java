@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class EmployeeService {
@@ -62,9 +64,10 @@ public class EmployeeService {
     public EmployeeResponse updateEmployee(Long id, EmployeeRequest request) {
         Employee employee = employeeRepository.findByIdWithBranch(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
+        boolean sensitiveChanged = false;
         if (request.getName() != null) employee.setName(request.getName());
         if (request.getPhone() != null) employee.setPhone(request.getPhone());
-        if (request.getRole() != null) employee.setRole(request.getRole());
+        if (request.getRole() != null) { employee.setRole(request.getRole()); sensitiveChanged = true; }
         if (request.getBranchId() != null)
             employee.setBranch(branchRepository.findById(request.getBranchId())
                     .orElseThrow(() -> new RuntimeException("Branch not found with id " + request.getBranchId())));
@@ -75,12 +78,14 @@ public class EmployeeService {
         if (request.getRemainingLeaveDays() != null) employee.setRemainingLeaveDays(request.getRemainingLeaveDays());
         if (request.getCarryOverLeave() != null) employee.setCarryOverLeave(request.getCarryOverLeave());
         if (request.getMaxAdvanceLimit() != null) employee.setMaxAdvanceLimit(request.getMaxAdvanceLimit());
-        return toResponse(employeeRepository.save(employee));
+        employee = employeeRepository.save(employee);
+        if (sensitiveChanged) employeeRepository.incrementTokenVersion(id);
+        return toResponse(employee);
     }
 
     @Transactional(readOnly = true)
-    public List<EmployeeResponse> getAllEmployees() {
-        return employeeRepository.findAllWithBranch().stream().map(this::toResponse).collect(Collectors.toList());
+    public Page<EmployeeResponse> getAllEmployees(Pageable pageable) {
+        return employeeRepository.findAllWithBranch(pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -95,6 +100,7 @@ public class EmployeeService {
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
         e.setIsAccountApproved(true);
         e = employeeRepository.save(e);
+        employeeRepository.incrementTokenVersion(id);
         auditLogService.log("Employee", id, "APPROVED", null, null, e.getEmail());
         return toResponse(e);
     }
@@ -149,6 +155,7 @@ public class EmployeeService {
             throw new RuntimeException("Current password is incorrect");
         employee.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         employeeRepository.save(employee);
+        employeeRepository.incrementTokenVersion(id);
     }
 
     private EmployeeResponse toResponse(Employee e) {

@@ -29,7 +29,7 @@ public class RateLimitingFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         String path = req.getRequestURI();
 
-        if (path.startsWith("/api/auth/")) {
+        if (path.startsWith("/api/")) {
             String ip = getClientIp(req);
             Window window = attempts.compute(ip, (k, v) -> {
                 long now = System.currentTimeMillis();

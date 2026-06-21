@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { login } from '../../api/auth'
+import { login, verifyOtp } from '../../api/auth'
 import client from '../../api/client'
 import { useAuth } from '../../contexts/AuthContext'
 import type { Employee } from '../../types'
@@ -32,6 +32,11 @@ export default function LoginPage() {
   const [warming, setWarming] = useState(true)
   const [warmFailures, setWarmFailures] = useState(0)
   const [warmExhausted, setWarmExhausted] = useState(false)
+  const [showOtpInput, setShowOtpInput] = useState(false)
+  const [otpEmail, setOtpEmail] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [otpError, setOtpError] = useState('')
+  const [otpVerifying, setOtpVerifying] = useState(false)
   const navigate = useNavigate()
   const { login: authLogin } = useAuth()
   const googleBtnRef = useRef<HTMLDivElement>(null)
@@ -111,6 +116,11 @@ export default function LoginPage() {
     try {
       const res = await login({ email, password })
       if (res.success) {
+        if (res.data.requiresMfa) {
+          setOtpEmail(email)
+          setShowOtpInput(true)
+          return
+        }
         let employeeData: Employee
         try {
           const empRes = await client.get('/employees/me')
@@ -140,6 +150,29 @@ export default function LoginPage() {
       setError(err.response?.data?.message || 'Invalid email or password')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async () => {
+    setOtpError('')
+    setOtpVerifying(true)
+    try {
+      const res = await verifyOtp(otpEmail, otpCode)
+      if (res.success) {
+        const d = res.data
+        localStorage.setItem('token', d.token)
+        const empRes = await client.get('/employees/me')
+        const employeeData = empRes.data.data as Employee
+        authLogin(d.token, employeeData)
+        setShowOtpInput(false)
+        navigate(d.role === 'SUPER_ADMIN' || d.role === 'BRANCH_MANAGER' ? '/admin' : '/employee')
+      } else {
+        setOtpError(res.message || 'Invalid code')
+      }
+    } catch (err: any) {
+      setOtpError(err.response?.data?.message || 'Verification failed')
+    } finally {
+      setOtpVerifying(false)
     }
   }
 
@@ -223,6 +256,43 @@ export default function LoginPage() {
           </div>
         </form>
       </div>
+
+      {showOtpInput && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Verification Code</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Enter the 6-digit code sent to <strong>{otpEmail}</strong>
+            </p>
+            {otpError && (
+              <div className="bg-red-50 text-red-700 text-sm px-4 py-2 rounded-md mb-4">{otpError}</div>
+            )}
+            <input
+              type="text"
+              maxLength={6}
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+              className="input-field w-full text-center text-2xl font-bold tracking-[8px]"
+              placeholder="000000"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === 'Enter') handleVerifyOtp() }}
+            />
+            <button
+              onClick={handleVerifyOtp}
+              disabled={otpCode.length !== 6 || otpVerifying}
+              className="btn-primary w-full mt-4 disabled:opacity-50"
+            >
+              {otpVerifying ? 'Verifying...' : 'Verify'}
+            </button>
+            <button
+              onClick={() => { setShowOtpInput(false); setOtpCode(''); setOtpError('') }}
+              className="text-sm text-gray-500 hover:text-gray-700 mt-3 w-full text-center"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

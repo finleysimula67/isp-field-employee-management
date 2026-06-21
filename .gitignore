@@ -6,6 +6,7 @@
 *.log
 uploads/
 db/
+!**/resources/db/migration/
 backend*.log
 
 /allinone-frontend/node_modules

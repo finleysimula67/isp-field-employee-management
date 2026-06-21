@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getProfile, updateProfile, changePassword } from '../../api/profile'
+import { enableMfa, disableMfa } from '../../api/auth'
 import { useAuth } from '../../contexts/AuthContext'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
@@ -12,6 +13,7 @@ export default function ProfilePage() {
   const [passForm, setPassForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
   const [changingPass, setChangingPass] = useState(false)
+  const [mfaToggling, setMfaToggling] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
   useEffect(() => {
@@ -52,6 +54,23 @@ export default function ProfilePage() {
     finally { setChangingPass(false) }
   }
 
+  const handleToggleMfa = async () => {
+    setMfaToggling(true)
+    setToast(null)
+    try {
+      if (profile.mfaEnabled) {
+        await disableMfa()
+        setProfile((p: any) => ({ ...p, mfaEnabled: false }))
+        setToast({ message: 'MFA disabled', type: 'success' })
+      } else {
+        await enableMfa()
+        setProfile((p: any) => ({ ...p, mfaEnabled: true }))
+        setToast({ message: 'MFA enabled — you will be prompted for a code on next login', type: 'success' })
+      }
+    } catch { setToast({ message: 'Failed to update MFA setting', type: 'error' }) }
+    finally { setMfaToggling(false) }
+  }
+
   if (loading) return <Skeleton variant="card" count={3} />
   if (!profile) return <p className="text-gray-400 text-sm">Nothing here yet</p>
 
@@ -67,7 +86,14 @@ export default function ProfilePage() {
             <div><span className="text-xs text-gray-500 block">Email</span><span className="text-sm text-gray-900">{profile.email}</span></div>
             <div><span className="text-xs text-gray-500 block">Role</span><span className="text-sm text-gray-900">{profile.role?.replace('_', ' ')}</span></div>
             <div><span className="text-xs text-gray-500 block">Branch</span><span className="text-sm text-gray-900">{profile.branchName || '—'}</span></div>
+            <div>
+              <span className="text-xs text-gray-500 block">Two-Factor Auth</span>
+              <span className="text-sm text-gray-900">{profile.mfaEnabled ? 'Enabled' : 'Disabled'}</span>
+            </div>
           </div>
+          <button onClick={handleToggleMfa} disabled={mfaToggling} className={`text-sm font-medium px-3 py-1.5 rounded-lg border mb-6 ${profile.mfaEnabled ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-brand-600 border-brand-200 hover:bg-brand-50'} disabled:opacity-50`}>
+            {mfaToggling ? 'Updating...' : profile.mfaEnabled ? 'Disable MFA' : 'Enable MFA'}
+          </button>
           <h3 className="font-display font-bold text-gray-900 mb-3">Edit Profile</h3>
           <form onSubmit={handleSave} className="space-y-4">
             <div>

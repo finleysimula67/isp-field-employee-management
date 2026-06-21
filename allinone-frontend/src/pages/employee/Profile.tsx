@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getProfile, updateProfile, changePassword } from '../../api/profile'
 import { getEmployeeStats } from '../../api/dashboard'
+import { enableMfa, disableMfa } from '../../api/auth'
 import { useAuth } from '../../contexts/AuthContext'
 import Toast from '../../components/Toast'
 import Skeleton from '../../components/Skeleton'
@@ -14,6 +15,7 @@ export default function EmpProfilePage() {
   const [passForm, setPassForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
   const [changingPass, setChangingPass] = useState(false)
+  const [mfaToggling, setMfaToggling] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
   useEffect(() => {
@@ -50,6 +52,23 @@ export default function EmpProfilePage() {
       setPassForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
     } catch { setToast({ message: 'Failed to change password', type: 'error' }) }
     finally { setChangingPass(false) }
+  }
+
+  const handleToggleMfa = async () => {
+    setMfaToggling(true)
+    setToast(null)
+    try {
+      if (profile.mfaEnabled) {
+        await disableMfa()
+        setProfile((p: any) => ({ ...p, mfaEnabled: false }))
+        setToast({ message: 'MFA disabled', type: 'success' })
+      } else {
+        await enableMfa()
+        setProfile((p: any) => ({ ...p, mfaEnabled: true }))
+        setToast({ message: 'MFA enabled — you will be prompted for a code on next login', type: 'success' })
+      }
+    } catch { setToast({ message: 'Failed to update MFA setting', type: 'error' }) }
+    finally { setMfaToggling(false) }
   }
 
   if (loading) {
@@ -107,7 +126,14 @@ export default function EmpProfilePage() {
                 {!profile.wageType ? '—' : ''}
               </span>
             </div>
+            <div>
+              <span className="text-xs text-gray-500 block">Two-Factor Auth</span>
+              <span className="text-sm text-gray-900">{profile.mfaEnabled ? 'Enabled' : 'Disabled'}</span>
+            </div>
           </div>
+          <button onClick={handleToggleMfa} disabled={mfaToggling} className={`text-sm font-medium px-3 py-1.5 rounded-lg border mb-6 ${profile.mfaEnabled ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-emerald-600 border-emerald-200 hover:bg-emerald-50'} disabled:opacity-50`}>
+            {mfaToggling ? 'Updating...' : profile.mfaEnabled ? 'Disable MFA' : 'Enable MFA'}
+          </button>
           <h3 className="font-display font-bold text-gray-900 mb-3">Edit Name</h3>
           <form onSubmit={handleSave} className="space-y-4">
             <div>

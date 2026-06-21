@@ -40,6 +40,7 @@ export interface LoginResponse {
   name: string
   role: string
   userId: number
+  requiresMfa?: boolean
 }
 
 export interface ApiResponse<T> {

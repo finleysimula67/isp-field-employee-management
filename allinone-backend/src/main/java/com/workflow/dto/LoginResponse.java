@@ -7,6 +7,7 @@ public class LoginResponse {
     private String role;
     private Long userId;
     private String message;
+    private boolean requiresMfa;
 
     public LoginResponse() {}
     public LoginResponse(String token, String email, String name, String role, Long userId, String message) {
@@ -26,10 +27,12 @@ public class LoginResponse {
     public void setUserId(Long userId) { this.userId = userId; }
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+    public boolean isRequiresMfa() { return requiresMfa; }
+    public void setRequiresMfa(boolean requiresMfa) { this.requiresMfa = requiresMfa; }
 
     public static LoginResponseBuilder builder() { return new LoginResponseBuilder(); }
     public static class LoginResponseBuilder {
-        private String token, email, name, role, message; private Long userId;
+        private String token, email, name, role, message; private Long userId; private boolean requiresMfa;
         LoginResponseBuilder() {}
         public LoginResponseBuilder token(String token) { this.token = token; return this; }
         public LoginResponseBuilder email(String email) { this.email = email; return this; }
@@ -37,6 +40,7 @@ public class LoginResponse {
         public LoginResponseBuilder role(String role) { this.role = role; return this; }
         public LoginResponseBuilder userId(Long userId) { this.userId = userId; return this; }
         public LoginResponseBuilder message(String message) { this.message = message; return this; }
-        public LoginResponse build() { return new LoginResponse(token, email, name, role, userId, message); }
+        public LoginResponseBuilder requiresMfa(boolean requiresMfa) { this.requiresMfa = requiresMfa; return this; }
+        public LoginResponse build() { var r = new LoginResponse(token, email, name, role, userId, message); r.setRequiresMfa(requiresMfa); return r; }
     }
 }

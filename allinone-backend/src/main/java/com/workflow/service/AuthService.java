@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -49,6 +50,41 @@ public class AuthService {
         if (!Boolean.TRUE.equals(employee.getIsAccountApproved())) {
             throw new RuntimeException("Your account is pending admin approval. Please ask your manager.");
         }
+        if (Boolean.TRUE.equals(employee.getMfaEnabled())) {
+            String code = generateOtp();
+            String hashedCode = hashToken(code);
+            employee.setMfaCode(hashedCode);
+            employee.setMfaCodeExpiry(LocalDateTime.now().plusMinutes(5));
+            employeeRepository.save(employee);
+            emailService.sendOtpEmail(employee.getEmail(), code);
+            LoginResponse resp = buildResponse(null, employee);
+            resp.setRequiresMfa(true);
+            resp.setMessage("Verification code sent to your email");
+            return resp;
+        }
+        return buildResponse(jwtService.generateToken(employee), employee);
+    }
+
+    @Transactional
+    public LoginResponse verifyOtp(String email, String code) {
+        Employee employee = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        if (employee.getMfaCode() == null || employee.getMfaCodeExpiry() == null) {
+            throw new RuntimeException("No verification code pending. Please log in again.");
+        }
+        if (employee.getMfaCodeExpiry().isBefore(LocalDateTime.now())) {
+            employee.setMfaCode(null);
+            employee.setMfaCodeExpiry(null);
+            employeeRepository.save(employee);
+            throw new RuntimeException("Verification code expired. Please log in again.");
+        }
+        String hashedInput = hashToken(code);
+        if (!hashedInput.equals(employee.getMfaCode())) {
+            throw new RuntimeException("Invalid verification code");
+        }
+        employee.setMfaCode(null);
+        employee.setMfaCodeExpiry(null);
+        employeeRepository.save(employee);
         return buildResponse(jwtService.generateToken(employee), employee);
     }
 
@@ -116,6 +152,12 @@ public class AuthService {
         employee.setResetToken(null);
         employee.setResetTokenExpiry(null);
         employeeRepository.save(employee);
+    }
+
+    private String generateOtp() {
+        SecureRandom random = new SecureRandom();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
     }
 
     private String hashToken(String token) {

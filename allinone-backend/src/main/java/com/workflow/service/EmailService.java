@@ -28,6 +28,16 @@ public class EmailService {
     }
 
     @Async
+    public void sendOtpEmail(String to, String code) {
+        sendHtmlEmail(to, "Your login verification code",
+                "<p style=\"font-size: 16px;\">Use the code below to complete your login:</p>"
+                + "<div style=\"font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center; "
+                + "background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">"
+                + code + "</div>"
+                + "<p style=\"color: #6b7280;\">This code expires in 5 minutes. If you didn't request this, ignore it.</p>");
+    }
+
+    @Async
     public void sendEmail(String to, String subject, String body) {
         sendHtmlEmail(to, subject, "<p>" + body.replace("\n", "<br>") + "</p>");
     }

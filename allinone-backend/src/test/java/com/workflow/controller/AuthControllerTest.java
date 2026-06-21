@@ -3,6 +3,7 @@ package com.workflow.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.config.TestSecurityBeans;
 import com.workflow.dto.*;
+import com.workflow.repository.EmployeeRepository;
 import com.workflow.security.GoogleTokenVerifier;
 import com.workflow.security.JwtAuthenticationFilter;
 import com.workflow.security.JwtTokenProvider;
@@ -38,6 +39,7 @@ class AuthControllerTest {
     @MockitoBean private AuthService authService;
     @MockitoBean private JwtTokenProvider jwtTokenProvider;
     @MockitoBean private GoogleTokenVerifier googleTokenVerifier;
+    @MockitoBean private EmployeeRepository employeeRepository;
 
     @Test
     void login_shouldReturnToken() throws Exception {

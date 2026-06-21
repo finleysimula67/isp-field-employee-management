@@ -30,6 +30,9 @@ public class Employee {
     @Column(name = "carry_over_leave") private BigDecimal carryOverLeave;
     @Column(name = "reset_token") private String resetToken;
     @Column(name = "reset_token_expiry") private LocalDateTime resetTokenExpiry;
+    @Column(name = "mfa_enabled") private Boolean mfaEnabled;
+    @Column(name = "mfa_code") private String mfaCode;
+    @Column(name = "mfa_code_expiry") private LocalDateTime mfaCodeExpiry;
     @Column(name = "phone") private String phone;
     @Column(name = "is_owner") private Boolean isOwner;
     @Column(name = "max_advance_limit") private BigDecimal maxAdvanceLimit;
@@ -72,6 +75,12 @@ public class Employee {
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
     public Boolean getIsAccountApproved() { return isAccountApproved; }
     public void setIsAccountApproved(Boolean isAccountApproved) { this.isAccountApproved = isAccountApproved; }
+    public Boolean getMfaEnabled() { return mfaEnabled; }
+    public void setMfaEnabled(Boolean mfaEnabled) { this.mfaEnabled = mfaEnabled; }
+    public String getMfaCode() { return mfaCode; }
+    public void setMfaCode(String mfaCode) { this.mfaCode = mfaCode; }
+    public LocalDateTime getMfaCodeExpiry() { return mfaCodeExpiry; }
+    public void setMfaCodeExpiry(LocalDateTime mfaCodeExpiry) { this.mfaCodeExpiry = mfaCodeExpiry; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
     public Boolean getIsOwner() { return isOwner; }

@@ -7,6 +7,10 @@ import com.workflow.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.workflow.entity.Employee;
+import com.workflow.repository.EmployeeRepository;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
@@ -16,12 +20,15 @@ public class AuthController {
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
     private final GoogleTokenVerifier googleTokenVerifier;
+    private final EmployeeRepository employeeRepository;
 
     public AuthController(AuthService authService, JwtTokenProvider jwtTokenProvider,
-                          GoogleTokenVerifier googleTokenVerifier) {
+                          GoogleTokenVerifier googleTokenVerifier,
+                          EmployeeRepository employeeRepository) {
         this.authService = authService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.googleTokenVerifier = googleTokenVerifier;
+        this.employeeRepository = employeeRepository;
     }
 
     @PostMapping("/login")
@@ -75,5 +82,32 @@ public class AuthController {
             return ResponseEntity.ok(ApiResponse.ok(Map.of("valid", valid)));
         }
         return ResponseEntity.ok(ApiResponse.ok(Map.of("valid", false)));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<LoginResponse>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(authService.verifyOtp(request.getEmail(), request.getCode())));
+    }
+
+    @PostMapping("/mfa/enable")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> enableMfa(@AuthenticationPrincipal Employee admin) {
+        Employee employee = employeeRepository.findById(admin.getId())
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        employee.setMfaEnabled(true);
+        employeeRepository.save(employee);
+        return ResponseEntity.ok(new ApiResponse<>(true, "MFA enabled", null));
+    }
+
+    @PostMapping("/mfa/disable")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'BRANCH_MANAGER')")
+    public ResponseEntity<ApiResponse<Void>> disableMfa(@AuthenticationPrincipal Employee admin) {
+        Employee employee = employeeRepository.findById(admin.getId())
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        employee.setMfaEnabled(false);
+        employee.setMfaCode(null);
+        employee.setMfaCodeExpiry(null);
+        employeeRepository.save(employee);
+        return ResponseEntity.ok(new ApiResponse<>(true, "MFA disabled", null));
     }
 }

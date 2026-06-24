@@ -37,20 +37,46 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        if (!emailAllowListRepository.existsByEmail("admin@workflow.com"))
+            emailAllowListRepository.save(new EmailAllowList("admin@workflow.com"));
+
+        employeeRepository.findByEmail("admin@workflow.com").ifPresentOrElse(admin -> {
+            boolean changed = false;
+            if (!passwordEncoder.matches("admin123", admin.getPasswordHash())) {
+                admin.setPasswordHash(passwordEncoder.encode("admin123"));
+                changed = true;
+            }
+            if (!Boolean.TRUE.equals(admin.getIsActive())) {
+                admin.setIsActive(true);
+                changed = true;
+            }
+            if (!Boolean.TRUE.equals(admin.getIsAccountApproved())) {
+                admin.setIsAccountApproved(true);
+                changed = true;
+            }
+            if (changed) {
+                employeeRepository.save(admin);
+                log.info("Fixed admin account");
+            }
+        }, () -> {
+            Branch hq = branchRepository.save(new Branch("Head Office", "HQ", "Kathmandu, Nepal"));
+            Employee admin = new Employee("admin@workflow.com", "Super Admin", Role.SUPER_ADMIN, hq,
+                    null, AuthType.LOCAL_ONLY, passwordEncoder.encode("admin123"),
+                    true, true, null, null, null, BigDecimal.valueOf(20), BigDecimal.ZERO, BigDecimal.valueOf(5000));
+            admin.setIsOwner(true);
+            employeeRepository.save(admin);
+            branchRepository.save(new Branch("Pokhara Branch", "PKH", "Pokhara, Nepal"));
+            log.info("Created admin account + branches");
+        });
+
         if (employeeRepository.count() > 0) return;
 
-        emailAllowListRepository.save(new EmailAllowList("admin@workflow.com"));
         emailAllowListRepository.save(new EmailAllowList("employee@workflow.com"));
         emailAllowListRepository.save(new EmailAllowList("manager@workflow.com"));
 
-        Branch hq = branchRepository.save(new Branch("Head Office", "HQ", "Kathmandu, Nepal"));
-        Branch pkh = branchRepository.save(new Branch("Pokhara Branch", "PKH", "Pokhara, Nepal"));
-
-        Employee admin = new Employee("admin@workflow.com", "Super Admin", Role.SUPER_ADMIN, hq,
-                null, AuthType.LOCAL_ONLY, passwordEncoder.encode("admin123"),
-                true, true, null, null, null, BigDecimal.valueOf(20), BigDecimal.ZERO, BigDecimal.valueOf(5000));
-        admin.setIsOwner(true);
-        employeeRepository.save(admin);
+        Employee admin = employeeRepository.findByEmail("admin@workflow.com").orElseThrow();
+        Branch hq = branchRepository.findById(1L).orElseThrow();
+        Branch pkh = branchRepository.findById(2L).orElseThrow();
 
         Employee manager = employeeRepository.save(new Employee("manager@workflow.com", "Branch Manager", Role.BRANCH_MANAGER, hq,
                 null, AuthType.LOCAL_ONLY, passwordEncoder.encode("manager123"),

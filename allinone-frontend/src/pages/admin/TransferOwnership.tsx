@@ -24,8 +24,8 @@ export default function TransferOwnershipPage() {
 
   const activeEmployees = employees.filter((e) => e.isActive)
 
-  const sourceEmp = employees.find((e) => e.id === sourceId)
-  const targetEmp = employees.find((e) => e.id === targetId)
+  const sourceEmp = (employees || []).find((e) => e.id === sourceId)
+  const targetEmp = (employees || []).find((e) => e.id === targetId)
   const transferCount = result?.totalTransferred ?? 0
 
   const handleTransfer = async () => {

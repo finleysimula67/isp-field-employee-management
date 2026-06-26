@@ -3,7 +3,11 @@ import type { Employee, ApiResponse } from '../types'
 
 export async function getEmployees(): Promise<ApiResponse<Employee[]>> {
   const res = await client.get('/employees')
-  return res.data
+  const body = res.data
+  if (body.data && Array.isArray(body.data.content)) {
+    return { ...body, data: body.data.content }
+  }
+  return body
 }
 
 export async function getEmployee(id: number): Promise<ApiResponse<Employee>> {

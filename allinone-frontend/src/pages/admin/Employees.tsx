@@ -139,7 +139,7 @@ export default function EmployeesPage() {
     finally { setTransferring(false) }
   }
 
-  const currentOwner = employees.find(e => e.isOwner)
+  const currentOwner = (employees || []).find(e => e.isOwner)
 
   const filtered = employees.filter(e => {
     if (filter === 'pending') return !e.isAccountApproved

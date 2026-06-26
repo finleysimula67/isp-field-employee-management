@@ -263,7 +263,7 @@ export default function TasksPage() {
             ) : tasks.length === 0 ? (
               <tr><td colSpan={7} className="py-8 text-center text-gray-400">No tasks yet.</td></tr>
             ) : tasks.map((task: any) => {
-              const emp = employees.find(e => e.id === task.assignedTo)
+              const emp = (employees || []).find(e => e.id === task.assignedTo)
               return (
                 <tr key={task.id} className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="py-3 px-4">

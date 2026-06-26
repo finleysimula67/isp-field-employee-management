@@ -69,7 +69,7 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Created admin account + branches");
         });
 
-        if (employeeRepository.count() > 0) return;
+        if (employeeRepository.findByEmail("manager@workflow.com").isPresent()) return;
 
         emailAllowListRepository.save(new EmailAllowList("employee@workflow.com"));
         emailAllowListRepository.save(new EmailAllowList("manager@workflow.com"));

@@ -24,7 +24,7 @@ const priorityColors: Record<string, string> = {
 }
 
 export default function TaskPicker({ tasks, value, onChange }: TaskPickerProps) {
-  const selectedTask = tasks.find(t => String(t.id) === value)
+  const selectedTask = (tasks || []).find(t => String(t.id) === value)
 
   return (
     <div>

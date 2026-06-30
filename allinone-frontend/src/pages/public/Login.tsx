@@ -46,17 +46,12 @@ export default function LoginPage() {
     let cancelled = false
     let retries = 0
     let timer: ReturnType<typeof setTimeout>
-    let warmed = false
     const MAX_RETRIES = 30
-    const warm = async () => {
-      if (cancelled || warmed) return
+    const ping = async () => {
+      if (cancelled) return
       try {
         await fetch(`${backendBase}/api/auth/check-email?email=ping`, { signal: AbortSignal.timeout(15000) })
-        if (cancelled) return
-        warmed = true
-        setWarming(false)
-        fetch(`${backendBase}/api/employees/me`, { signal: AbortSignal.timeout(5000) }).catch(() => {})
-        fetch(`${backendBase}/api/branches`, { signal: AbortSignal.timeout(5000) }).catch(() => {})
+        if (!cancelled) { setWarming(false); return }
       } catch {
         /* server not ready yet */
       }
@@ -66,10 +61,10 @@ export default function LoginPage() {
           setWarming(false); setWarmExhausted(true)
           return
         }
-        timer = setTimeout(warm, 2000)
+        timer = setTimeout(ping, 2000)
       }
     }
-    warm()
+    ping()
     return () => { cancelled = true; clearTimeout(timer) }
   }, [])
 

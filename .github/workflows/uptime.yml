@@ -2,7 +2,7 @@ name: Uptime Monitor
 
 on:
   schedule:
-    - cron: '*/4 * * * *'
+    - cron: '*/14 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wake Render server
-        run: curl -sk --connect-timeout 30 --max-time 60 https://allinone-backend-xoh0.onrender.com/api/auth/check-email?email=ping -o /dev/null -w "%{http_code}"
+        run: curl -sk --connect-timeout 30 --max-time 60 https://allinone-backend-xoh0.onrender.com/api/auth/check-email?email=ping -o /dev/null -w "%{http_code}" || true

@@ -38,10 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
       }
     }).catch(() => {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      setToken(null)
-      setUser(null)
+      // server may be cold-starting — don't clear token
     })
   }, [])
 

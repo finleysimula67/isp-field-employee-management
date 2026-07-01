@@ -42,10 +42,6 @@ public class DataInitializer implements CommandLineRunner {
 
         employeeRepository.findByEmail("admin@workflow.com").ifPresentOrElse(admin -> {
             boolean changed = false;
-            if (!passwordEncoder.matches("admin123", admin.getPasswordHash())) {
-                admin.setPasswordHash(passwordEncoder.encode("admin123"));
-                changed = true;
-            }
             if (!Boolean.TRUE.equals(admin.getIsActive())) {
                 admin.setIsActive(true);
                 changed = true;

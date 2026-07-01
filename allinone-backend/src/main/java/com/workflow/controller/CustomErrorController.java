@@ -6,6 +6,7 @@ import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.Map;
 
@@ -26,6 +27,11 @@ public class CustomErrorController implements ErrorController {
             case 503 -> "Service unavailable";
             default -> "Internal error";
         };
+    }
+
+    @GetMapping("/")
+    public Object root() {
+        return ResponseEntity.ok(Map.of("success", true, "message", "API is running"));
     }
 
     @RequestMapping("/error")

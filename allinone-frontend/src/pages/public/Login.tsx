@@ -50,15 +50,14 @@ export default function LoginPage() {
     const ping = async () => {
       if (cancelled) return
       try {
-        await fetch(`${backendBase}/api/auth/check-email?email=ping`, { signal: AbortSignal.timeout(20000) })
+        await fetch(`${backendBase}/api/auth/check-email?email=ping`, { signal: AbortSignal.timeout(25000) })
         if (!cancelled) {
           setWarming(false)
           fetch(`${backendBase}/api/auth/client-id`, { signal: AbortSignal.timeout(10000) }).catch(() => {})
-          fetch(`${backendBase}/api/employees/me`, { signal: AbortSignal.timeout(10000) }).catch(() => {})
         }
         return
       } catch {
-        /* server not ready yet */
+        if (!cancelled) setWarmFailures(r => r + 1)
       }
       if (!cancelled) {
         retries++

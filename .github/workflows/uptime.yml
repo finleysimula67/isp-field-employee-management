@@ -10,4 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wake Render server
-        run: curl -sk --connect-timeout 30 --max-time 60 https://allinone-backend-xoh0.onrender.com/api/auth/check-email?email=ping -o /dev/null -w "%{http_code}" || true
+        run: |
+          for i in 1 2 3 4 5; do
+            code=$(curl -sk --connect-timeout 45 --max-time 90 \
+              https://allinone-backend-xoh0.onrender.com/api/auth/check-email?email=ping \
+              -o /dev/null -w "%{http_code}" 2>/dev/null || echo "000")
+            echo "Attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          echo "All 5 attempts failed" && exit 0

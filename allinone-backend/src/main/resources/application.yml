@@ -46,6 +46,9 @@ spring:
           auth: true
           starttls:
             enable: true
+          connectiontimeout: 2000
+          timeout: 2000
+          writetimeout: 2000
 
   servlet:
     multipart:
@@ -67,10 +70,6 @@ management:
   endpoint:
     health:
       show-details: when-authorized
-      
-  health:
-    mail:
-      enabled: false  
 
 app:
   frontend-url: ${APP_FRONTEND_URL:https://allinone-rolpa.vercel.app}

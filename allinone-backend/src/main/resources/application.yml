@@ -67,6 +67,10 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+      
+  health:
+    mail:
+      enabled: false  
 
 app:
   frontend-url: ${APP_FRONTEND_URL:https://allinone-rolpa.vercel.app}

@@ -46,9 +46,10 @@ spring:
           auth: true
           starttls:
             enable: true
-          connectiontimeout: 2000
-          timeout: 2000
-          writetimeout: 2000
+        # Correct flat-key notation for JavaMail timeouts
+        mail.smtp.connectiontimeout: 2000
+        mail.smtp.timeout: 2000
+        mail.smtp.writetimeout: 2000
 
   servlet:
     multipart:

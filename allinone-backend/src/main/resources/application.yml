@@ -46,7 +46,6 @@ spring:
           auth: true
           starttls:
             enable: true
-        # Correct flat-key notation for JavaMail timeouts
         mail.smtp.connectiontimeout: 2000
         mail.smtp.timeout: 2000
         mail.smtp.writetimeout: 2000
@@ -71,6 +70,10 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+  health:
+    mail:
+      enabled: false
 
 app:
   frontend-url: ${APP_FRONTEND_URL:https://allinone-rolpa.vercel.app}
